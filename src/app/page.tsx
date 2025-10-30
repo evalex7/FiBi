@@ -24,11 +24,8 @@ export default function LandingPage() {
           <span className="font-bold text-xl">Сімейні фінанси</span>
         </Link>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" asChild>
-            <Link href="/login">Увійти</Link>
-          </Button>
           <Button asChild style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
-            <Link href="/signup">Зареєструватися</Link>
+            <Link href="/dashboard">Почати</Link>
           </Button>
         </div>
       </header>
@@ -48,7 +45,7 @@ export default function LandingPage() {
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button size="lg" asChild style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
-                    <Link href="/signup">Почати</Link>
+                    <Link href="/dashboard">Почати</Link>
                   </Button>
                 </div>
               </div>

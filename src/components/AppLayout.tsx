@@ -79,10 +79,10 @@ export default function AppLayout({
           <SidebarFooter>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Вийти">
+                <SidebarMenuButton asChild tooltip="На головну">
                   <Link href="/">
                     <LogOut />
-                    <span>Вийти</span>
+                    <span>На головну</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -96,31 +96,6 @@ export default function AppLayout({
               <SidebarTrigger className="md:hidden" />
               <h1 className="text-2xl font-semibold font-headline">{pageTitle}</h1>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Avatar className="cursor-pointer">
-                  <AvatarImage
-                    src="https://picsum.photos/seed/user-avatar/40/40"
-                    alt="User"
-                  />
-                  <AvatarFallback>JD</AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Мій кабінет</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Профіль</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Вийти</span>
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </header>
           <div className="p-4 md:p-6">{children}</div>
         </main>
