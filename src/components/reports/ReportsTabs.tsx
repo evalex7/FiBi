@@ -111,7 +111,7 @@ export default function ReportsTabs() {
               Огляд доходів та витрат за останні 6 місяців.
             </CardDescription>
           </CardHeader>
-          <CardContent className="pl-2">
+          <CardContent className="pl-0">
             {transactions.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                 Недостатньо даних для відображення графіка.
@@ -119,9 +119,9 @@ export default function ReportsTabs() {
             ) : (
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} accessibilityLayer margin={{ left: -20, right: 10 }}>
+                <BarChart data={monthlyData} accessibilityLayer margin={{ left: 0, right: 16 }}>
                   <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                  <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={80} fontSize={12} />
+                  <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                   <ChartTooltip
                     cursor={false}
                     content={<ChartTooltipContent indicator="dot" />}
