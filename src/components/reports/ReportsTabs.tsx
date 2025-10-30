@@ -119,7 +119,7 @@ export default function ReportsTabs() {
             ) : (
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} accessibilityLayer margin={{ left: -20 }}>
+                <BarChart data={monthlyData} accessibilityLayer margin={{ left: -20, right: 10 }}>
                   <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                   <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={80} fontSize={12} />
                   <ChartTooltip
