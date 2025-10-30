@@ -36,7 +36,7 @@ import { allCategories } from '@/lib/category-icons';
 import { useMemo } from 'react';
 
 const formatCurrency = (amount: number) =>
-  `${(amount / 1000).toFixed(0)} тис.`;
+  `${(amount / 1000).toFixed(0)}k`;
   
 const chartConfig = {
   income: { label: "Дохід", color: "hsl(var(--chart-2))" },
@@ -119,7 +119,7 @@ export default function ReportsTabs() {
             ) : (
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} accessibilityLayer margin={{ left: 0, right: 16 }}>
+                <BarChart data={monthlyData} accessibilityLayer margin={{ left: -20, right: 16 }}>
                   <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                   <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                   <ChartTooltip
