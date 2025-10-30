@@ -35,7 +35,7 @@ export default function LandingPage() {
             <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline">
+                  <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none font-headline">
                     Візьміть під контроль фінанси вашої родини
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
@@ -69,7 +69,7 @@ export default function LandingPage() {
                 <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">
                   Ключові риси
                 </div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl font-headline">
                   Все, що вам потрібно для успіху
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
