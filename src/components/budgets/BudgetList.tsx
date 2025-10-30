@@ -6,25 +6,57 @@ import { mockBudgets } from '@/lib/data';
 import { categoryIcons } from '@/lib/category-icons';
 import { allCategories } from '@/lib/category-icons';
 import { useTransactions } from '@/contexts/transactions-context';
+import { useState, useEffect } from 'react';
+
+type FormattedBudget = {
+  id: string;
+  category: string;
+  amount: number;
+  spent: number;
+  progress: number;
+  remaining: number;
+  formattedAmount: string;
+  formattedSpent: string;
+  formattedRemaining: string;
+};
 
 export default function BudgetList() {
   const { transactions } = useTransactions();
+  const [formattedBudgets, setFormattedBudgets] = useState<FormattedBudget[]>([]);
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('uk-UA', {
-      style: 'currency',
-      currency: 'UAH',
-    }).format(amount);
+  useEffect(() => {
+    const formatCurrency = (amount: number) =>
+      new Intl.NumberFormat('uk-UA', {
+        style: 'currency',
+        currency: 'UAH',
+      }).format(amount);
 
-  const spentAmounts = transactions.reduce((acc, t) => {
-    if (t.type === 'expense') {
+    const spentAmounts = transactions.reduce((acc, t) => {
+      if (t.type === 'expense') {
         const budgetCategory = mockBudgets.find(b => b.category === t.category);
         if (budgetCategory) {
-            acc[t.category] = (acc[t.category] || 0) + t.amount;
+          acc[t.category] = (acc[t.category] || 0) + t.amount;
         }
-    }
-    return acc;
-  }, {} as Record<string, number>);
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    const newFormattedBudgets = mockBudgets.map(budget => {
+      const spent = spentAmounts[budget.category] || 0;
+      const progress = (spent / budget.amount) * 100;
+      const remaining = budget.amount - spent;
+      return {
+        ...budget,
+        spent,
+        progress,
+        remaining,
+        formattedAmount: formatCurrency(budget.amount),
+        formattedSpent: formatCurrency(spent),
+        formattedRemaining: formatCurrency(remaining),
+      };
+    });
+    setFormattedBudgets(newFormattedBudgets);
+  }, [transactions]);
 
   return (
     <Card>
@@ -33,10 +65,7 @@ export default function BudgetList() {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {mockBudgets.map((budget) => {
-            const spent = spentAmounts[budget.category] || 0;
-            const progress = (spent / budget.amount) * 100;
-            const remaining = budget.amount - spent;
+          {formattedBudgets.map((budget) => {
             const categoryInfo = allCategories.find(c => c.label === budget.category);
             const Icon = categoryInfo ? categoryIcons[categoryInfo.label] : null;
 
@@ -50,19 +79,19 @@ export default function BudgetList() {
                   <div className="text-sm text-muted-foreground">
                     <span
                       className={`font-semibold ${
-                        remaining < 0 ? 'text-destructive' : 'text-foreground'
+                        budget.remaining < 0 ? 'text-destructive' : 'text-foreground'
                       }`}
                     >
-                      {formatCurrency(spent)}
+                      {budget.formattedSpent}
                     </span>{' '}
-                    / {formatCurrency(budget.amount)}
+                    / {budget.formattedAmount}
                   </div>
                 </div>
-                <Progress value={progress} />
+                <Progress value={budget.progress} />
                 <p className="text-right text-xs text-muted-foreground mt-1">
-                  {remaining >= 0
-                    ? `${formatCurrency(remaining)} залишилось`
-                    : `${formatCurrency(Math.abs(remaining))} перевищено`}
+                  {budget.remaining >= 0
+                    ? `${budget.formattedRemaining} залишилось`
+                    : `${formatCurrency(Math.abs(budget.remaining))} перевищено`}
                 </p>
               </div>
             );

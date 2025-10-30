@@ -3,22 +3,13 @@
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTransactions } from '@/contexts/transactions-context';
+import { useState, useEffect } from 'react';
 
 export default function SummaryCards() {
   const { transactions } = useTransactions();
-
-  const { income, expenses, balance } = transactions.reduce(
-    (acc, transaction) => {
-      if (transaction.type === 'income') {
-        acc.income += transaction.amount;
-      } else {
-        acc.expenses += transaction.amount;
-      }
-      acc.balance = acc.income - acc.expenses;
-      return acc;
-    },
-    { income: 0, expenses: 0, balance: 0 }
-  );
+  const [formattedIncome, setFormattedIncome] = useState('');
+  const [formattedExpenses, setFormattedExpenses] = useState('');
+  const [formattedBalance, setFormattedBalance] = useState('');
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('uk-UA', {
@@ -26,6 +17,25 @@ export default function SummaryCards() {
       currency: 'UAH',
     }).format(amount);
   };
+  
+  useEffect(() => {
+    const { income, expenses, balance } = transactions.reduce(
+      (acc, transaction) => {
+        if (transaction.type === 'income') {
+          acc.income += transaction.amount;
+        } else {
+          acc.expenses += transaction.amount;
+        }
+        acc.balance = acc.income - acc.expenses;
+        return acc;
+      },
+      { income: 0, expenses: 0, balance: 0 }
+    );
+    setFormattedIncome(formatCurrency(income));
+    setFormattedExpenses(formatCurrency(expenses));
+    setFormattedBalance(formatCurrency(balance));
+  }, [transactions]);
+
 
   return (
     <div className="grid gap-4 md:grid-cols-3">
@@ -35,7 +45,7 @@ export default function SummaryCards() {
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(income)}</div>
+          <div className="text-2xl font-bold">{formattedIncome}</div>
           <p className="text-xs text-muted-foreground">Цього місяця</p>
         </CardContent>
       </Card>
@@ -45,7 +55,7 @@ export default function SummaryCards() {
           <TrendingDown className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(expenses)}</div>
+          <div className="text-2xl font-bold">{formattedExpenses}</div>
           <p className="text-xs text-muted-foreground">Цього місяця</p>
         </CardContent>
       </Card>
@@ -55,7 +65,7 @@ export default function SummaryCards() {
           <Wallet className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(balance)}</div>
+          <div className="text-2xl font-bold">{formattedBalance}</div>
           <p className="text-xs text-muted-foreground">Поточний баланс</p>
         </CardContent>
       </Card>

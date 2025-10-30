@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -37,20 +37,32 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 
+type FormattedTransaction = Transaction & { formattedAmount: string };
+
 export default function RecentTransactions() {
   const { transactions, deleteTransaction } = useTransactions();
-  const sortedTransactions = [...transactions].sort((a, b) => b.date.getTime() - a.date.getTime());
+  const [sortedTransactions, setSortedTransactions] = useState<FormattedTransaction[]>([]);
   
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('uk-UA', {
-      style: 'currency',
-      currency: 'UAH',
-    }).format(amount);
-  };
   
+  useEffect(() => {
+    const formatCurrency = (amount: number) => {
+      return new Intl.NumberFormat('uk-UA', {
+        style: 'currency',
+        currency: 'UAH',
+      }).format(amount);
+    };
+
+    const newSorted = [...transactions]
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .map(t => ({...t, formattedAmount: formatCurrency(t.amount)}));
+    
+    setSortedTransactions(newSorted);
+
+  }, [transactions]);
+
+
   const handleDelete = () => {
     if (transactionToDelete) {
       deleteTransaction(transactionToDelete.id);
@@ -115,7 +127,7 @@ export default function RecentTransactions() {
                       )}
                     >
                       {transaction.type === 'income' ? '+' : '-'}
-                      {formatCurrency(transaction.amount)}
+                      {transaction.formattedAmount}
                     </div>
                     <TransactionActions transaction={transaction} />
                   </div>
@@ -163,7 +175,7 @@ export default function RecentTransactions() {
                       )}
                     >
                       {transaction.type === 'income' ? '+' : '-'}
-                      {formatCurrency(transaction.amount)}
+                      {transaction.formattedAmount}
                     </TableCell>
                     <TableCell>
                       <TransactionActions transaction={transaction} />
