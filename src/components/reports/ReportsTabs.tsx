@@ -25,7 +25,6 @@ import {
 } from 'recharts';
 import {
   ChartContainer,
-  ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
@@ -33,11 +32,23 @@ import {
 } from '@/components/ui/chart';
 import { useTransactions } from '@/contexts/transactions-context';
 import { allCategories } from '@/lib/category-icons';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { subMonths, startOfDay } from 'date-fns';
 
-const formatCurrency = (amount: number) =>
-  `${(amount / 1000).toFixed(0)}k`;
-  
+const formatCurrency = (amount: number) => {
+  if (amount >= 1000) {
+    return `${(amount / 1000).toFixed(0)}k`;
+  }
+  return `${amount}`;
+}
+
 const chartConfig = {
   income: { label: "Дохід", color: "hsl(var(--chart-2))" },
   expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
@@ -46,38 +57,28 @@ const chartConfig = {
 
 export default function ReportsTabs() {
   const { transactions } = useTransactions();
+  const [period, setPeriod] = useState('3'); // Default to 3 months
 
-  const monthlyData = useMemo(() => {
-    const data: { [key: string]: { month: string; income: number; expenses: number } } = {};
-    const monthNames = ["Січ", "Лют", "Бер", "Кві", "Тра", "Чер", "Лип", "Сер", "Вер", "Жов", "Лис", "Гру"];
-  
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-    sixMonthsAgo.setDate(1);
-    sixMonthsAgo.setHours(0, 0, 0, 0);
+  const incomeVsExpenseData = useMemo(() => {
+    const monthsToSubtract = parseInt(period);
+    const startDate = startOfDay(subMonths(new Date(), monthsToSubtract));
 
-    for (let i = 0; i < 6; i++) {
-        const date = new Date(sixMonthsAgo.getFullYear(), sixMonthsAgo.getMonth() + i, 1);
-        const month = monthNames[date.getMonth()];
-        data[month] = { month, income: 0, expenses: 0 };
-    }
-
-    transactions.forEach(t => {
-      const transactionDate = new Date(t.date);
-      if (transactionDate >= sixMonthsAgo) {
-        const month = monthNames[transactionDate.getMonth()];
-        if (data[month]) {
-            if (t.type === 'income') {
-                data[month].income += t.amount;
-            } else {
-                data[month].expenses += t.amount;
-            }
+    const { income, expenses } = transactions.reduce(
+      (acc, t) => {
+        if (new Date(t.date) >= startDate) {
+          if (t.type === 'income') {
+            acc.income += t.amount;
+          } else {
+            acc.expenses += t.amount;
+          }
         }
-      }
-    });
-  
-    return Object.values(data);
-  }, [transactions]);
+        return acc;
+      },
+      { income: 0, expenses: 0 }
+    );
+
+    return [{ name: 'vs', income, expenses }];
+  }, [transactions, period]);
   
   const categoryData = useMemo(() => {
       const data: { [key: string]: number } = {};
@@ -87,7 +88,7 @@ export default function ReportsTabs() {
               data[t.category] = (data[t.category] || 0) + t.amount;
           });
       
-      return Object.entries(data).map(([name, value]) => ({ name, value }));
+      return Object.entries(data).map(([name, value]) => ({ name, value, fill: `hsl(var(--chart-${(Object.keys(data).indexOf(name) % 5) + 1}))` }));
   }, [transactions]);
   
   const pieChartConfig = useMemo(() => categoryData.reduce((acc, entry, index) => {
@@ -108,8 +109,21 @@ export default function ReportsTabs() {
           <CardHeader>
             <CardTitle>Дохід vs. Витрати</CardTitle>
             <CardDescription>
-              Огляд доходів та витрат за останні 6 місяців.
+              Огляд доходів та витрат за обраний період.
             </CardDescription>
+             <div className="pt-2">
+              <Select value={period} onValueChange={setPeriod}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Оберіть період" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Останній місяць</SelectItem>
+                  <SelectItem value="3">Останні 3 місяці</SelectItem>
+                  <SelectItem value="6">Останні 6 місяців</SelectItem>
+                  <SelectItem value="12">Останній рік</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent className="pl-0">
             {transactions.length === 0 ? (
@@ -119,19 +133,17 @@ export default function ReportsTabs() {
             ) : (
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} accessibilityLayer margin={{ left: -20, right: 16 }}>
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                <BarChart data={incomeVsExpenseData} accessibilityLayer margin={{ left: -20, right: 16 }}>
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
                   <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
-                  />
+                  <ChartTooltipContent indicator="dot" cursor={false} />
                   <Bar dataKey="income" fill="var(--color-income)" radius={4} />
                   <Bar
                     dataKey="expenses"
                     fill="var(--color-expenses)"
                     radius={4}
                   />
+                  <ChartLegend content={<ChartLegendContent />} />
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -144,7 +156,7 @@ export default function ReportsTabs() {
           <CardHeader>
             <CardTitle>Витрати по категоріях</CardTitle>
             <CardDescription>
-              Розбивка ваших витрат за поточний місяць.
+              Розбивка ваших витрат за весь час.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
@@ -156,7 +168,7 @@ export default function ReportsTabs() {
           <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <ChartTooltipContent hideLabel />
                     <Pie
                       data={categoryData}
                       dataKey="value"
@@ -196,10 +208,9 @@ export default function ReportsTabs() {
                         );
                       }}
                     >
-                     {categoryData.map((entry, index) => {
-                        const chartColorIndex = (index % 5) + 1;
-                        return <Cell key={`cell-${index}`} fill={`hsl(var(--chart-${chartColorIndex}))`} />
-                     })}
+                     {categoryData.map((entry) => (
+                       <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                     ))}
                     </Pie>
                     <ChartLegend content={<ChartLegendContent nameKey="name" />} />
                   </PieChart>
