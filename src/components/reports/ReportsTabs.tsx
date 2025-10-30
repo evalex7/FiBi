@@ -28,6 +28,7 @@ import {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
+  ChartTooltip,
   type ChartConfig
 } from '@/components/ui/chart';
 import { useTransactions } from '@/contexts/transactions-context';
@@ -136,12 +137,13 @@ export default function ReportsTabs() {
                 <BarChart data={incomeVsExpenseData} accessibilityLayer margin={{ left: -20, right: 16 }}>
                   <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
                   <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
-                  <ChartTooltipContent indicator="dot" cursor={false} />
-                  <Bar dataKey="income" fill="var(--color-income)" radius={4} />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                  <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
                   <Bar
                     dataKey="expenses"
                     fill="var(--color-expenses)"
                     radius={4}
+                    maxBarSize={60}
                   />
                   <ChartLegend content={<ChartLegendContent />} />
                 </BarChart>
