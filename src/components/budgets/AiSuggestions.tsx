@@ -15,13 +15,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BrainCircuit, Loader2 } from 'lucide-react';
 import { getBudgetAdjustmentSuggestions } from '@/ai/flows/budget-adjustment-suggestions';
-import { mockTransactions, mockBudgets } from '@/lib/data';
+import { mockTransactions } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 export default function AiSuggestions() {
   const [financialGoals, setFinancialGoals] = useState(
-    'Save for a down payment on a house and build an emergency fund.'
+    'Назбирати на перший внесок за будинок та створити резервний фонд.'
   );
   const [suggestions, setSuggestions] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +39,7 @@ export default function AiSuggestions() {
       }, {} as Record<string, number>);
 
     const spendingPatternsText = Object.entries(spendingPatterns)
-      .map(([category, amount]) => `${category}: $${amount.toFixed(2)}`)
+      .map(([category, amount]) => `${category}: ${amount.toFixed(2)} грн`)
       .join(', ');
 
     try {
@@ -52,8 +52,8 @@ export default function AiSuggestions() {
       console.error(error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to get AI suggestions. Please try again.',
+        title: 'Помилка',
+        description: 'Не вдалося отримати пропозиції від ШІ. Будь ласка, спробуйте ще раз.',
       });
     } finally {
       setIsLoading(false);
@@ -66,25 +66,25 @@ export default function AiSuggestions() {
         <div className="flex items-center gap-3">
             <BrainCircuit className="h-8 w-8 text-primary" />
             <div>
-                <CardTitle>AI Budget Helper</CardTitle>
-                <CardDescription>Get smart saving tips.</CardDescription>
+                <CardTitle>ШІ-помічник з бюджету</CardTitle>
+                <CardDescription>Отримуйте розумні поради щодо економії.</CardDescription>
             </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="financial-goals">Your Financial Goals</Label>
+          <Label htmlFor="financial-goals">Ваші фінансові цілі</Label>
           <Textarea
             id="financial-goals"
             value={financialGoals}
             onChange={(e) => setFinancialGoals(e.target.value)}
-            placeholder="e.g., Save for a vacation, pay off debt..."
+            placeholder="напр., Накопичити на відпустку, погасити борг..."
             rows={3}
           />
         </div>
         {suggestions && (
           <Alert>
-            <AlertTitle>Suggestions</AlertTitle>
+            <AlertTitle>Пропозиції</AlertTitle>
             <AlertDescription>
                 <div className="prose prose-sm dark:prose-invert" dangerouslySetInnerHTML={{ __html: suggestions.replace(/\n/g, '<br />') }} />
             </AlertDescription>
@@ -96,10 +96,10 @@ export default function AiSuggestions() {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing...
+              Аналізуємо...
             </>
           ) : (
-            'Get Suggestions'
+            'Отримати пропозиції'
           )}
         </Button>
       </CardFooter>

@@ -16,32 +16,32 @@ export default function SignupPage() {
     <AuthLayout>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardTitle className="text-2xl">Реєстрація</CardTitle>
           <CardDescription>
-            Create an account to start managing your finances.
+            Створіть обліковий запис, щоб почати керувати своїми фінансами.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="full-name">Full Name</Label>
+            <Label htmlFor="full-name">Повне ім'я</Label>
             <Input id="full-name" placeholder="John Doe" required />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Електронна пошта</Label>
             <Input id="email" type="email" placeholder="m@example.com" required />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Пароль</Label>
             <Input id="password" type="password" required />
           </div>
           <Button type="submit" className="w-full" asChild>
-            <Link href="/dashboard">Create account</Link>
+            <Link href="/dashboard">Створити акаунт</Link>
           </Button>
         </CardContent>
         <div className="mt-4 text-center text-sm p-6 pt-0">
-          Already have an account?{' '}
+          Вже є аккаунт?{' '}
           <Link href="/login" className="underline">
-            Login
+            Увійти
           </Link>
         </div>
       </Card>

@@ -4,17 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { mockBudgets, mockTransactions } from '@/lib/data';
 import { categoryIcons } from '@/lib/category-icons';
+import { incomeCategories } from '@/lib/category-icons';
+import { allCategories } from '@/lib/category-icons';
 
 export default function BudgetList() {
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('en-US', {
+    new Intl.NumberFormat('uk-UA', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'UAH',
     }).format(amount);
 
   const spentAmounts = mockTransactions.reduce((acc, t) => {
     if (t.type === 'expense') {
-      acc[t.category] = (acc[t.category] || 0) + t.amount;
+        const budgetCategory = mockBudgets.find(b => b.category === t.category);
+        if (budgetCategory) {
+            acc[t.category] = (acc[t.category] || 0) + t.amount;
+        }
     }
     return acc;
   }, {} as Record<string, number>);
@@ -22,7 +27,7 @@ export default function BudgetList() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Monthly Budgets</CardTitle>
+        <CardTitle>Місячні бюджети</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -30,7 +35,8 @@ export default function BudgetList() {
             const spent = spentAmounts[budget.category] || 0;
             const progress = (spent / budget.amount) * 100;
             const remaining = budget.amount - spent;
-            const Icon = categoryIcons[budget.category];
+            const categoryInfo = allCategories.find(c => c.label === budget.category);
+            const Icon = categoryInfo ? categoryIcons[categoryInfo.label] : null;
 
             return (
               <div key={budget.id}>
@@ -53,8 +59,8 @@ export default function BudgetList() {
                 <Progress value={progress} />
                 <p className="text-right text-xs text-muted-foreground mt-1">
                   {remaining >= 0
-                    ? `${formatCurrency(remaining)} remaining`
-                    : `${formatCurrency(Math.abs(remaining))} over`}
+                    ? `${formatCurrency(remaining)} залишилось`
+                    : `${formatCurrency(Math.abs(remaining))} перевищено`}
                 </p>
               </div>
             );

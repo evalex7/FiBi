@@ -7,14 +7,14 @@ import { PlusCircle } from 'lucide-react';
 
 export default function DashboardPage() {
   return (
-    <AppLayout pageTitle="Dashboard">
+    <AppLayout pageTitle="Панель">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-foreground/80">Overview</h2>
+            <h2 className="text-xl font-semibold text-foreground/80">Огляд</h2>
             <AddTransactionDialog>
               <Button style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Add Transaction
+                Додати транзакцію
               </Button>
             </AddTransactionDialog>
         </div>

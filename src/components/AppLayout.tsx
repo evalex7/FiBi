@@ -34,9 +34,9 @@ import {
 import { Logo } from './Logo';
 
 const menuItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/budgets', label: 'Budgets', icon: Target },
-  { href: '/reports', label: 'Reports', icon: BarChart2 },
+  { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
+  { href: '/budgets', label: 'Бюджети', icon: Target },
+  { href: '/reports', label: 'Звіти', icon: BarChart2 },
 ];
 
 export default function AppLayout({
@@ -55,7 +55,7 @@ export default function AppLayout({
           <SidebarHeader>
             <div className="flex items-center gap-2">
               <Logo className="w-7 h-7 text-primary" />
-              <span className="text-xl font-semibold">Family Finances</span>
+              <span className="text-xl font-semibold">Сімейні фінанси</span>
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -79,10 +79,10 @@ export default function AppLayout({
           <SidebarFooter>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Log out">
+                <SidebarMenuButton asChild tooltip="Вийти">
                   <Link href="/">
                     <LogOut />
-                    <span>Log out</span>
+                    <span>Вийти</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -107,16 +107,16 @@ export default function AppLayout({
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>Мій кабінет</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <span>Профіль</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/">
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
+                    <span>Вийти</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>

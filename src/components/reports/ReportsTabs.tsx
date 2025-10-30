@@ -32,13 +32,14 @@ import {
   type ChartConfig
 } from '@/components/ui/chart';
 import { mockTransactions } from '@/lib/data';
+import { allCategories } from '@/lib/category-icons';
 
 const formatCurrency = (amount: number) =>
-  `$${(amount / 1000).toFixed(1)}k`;
+  `${(amount / 1000).toFixed(1)} тис. грн`;
   
 const aggregateMonthlyData = () => {
   const data: { [key: string]: { month: string; income: number; expenses: number } } = {};
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthNames = ["Січ", "Лют", "Бер", "Кві", "Тра", "Чер", "Лип", "Сер", "Вер", "Жов", "Лис", "Гру"];
 
   mockTransactions.forEach(t => {
     const month = monthNames[t.date.getMonth()];
@@ -68,31 +69,33 @@ const aggregateCategoryData = () => {
 
 
 const chartConfig = {
-  income: { label: "Income", color: "hsl(var(--chart-2))" },
-  expenses: { label: "Expenses", color: "hsl(var(--chart-1))" },
+  income: { label: "Дохід", color: "hsl(var(--chart-2))" },
+  expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
 
 
 export default function ReportsTabs() {
   const monthlyData = aggregateMonthlyData();
   const categoryData = aggregateCategoryData();
+  
   const pieChartConfig = categoryData.reduce((acc, entry, index) => {
-    acc[entry.name] = { label: entry.name, color: `hsl(var(--chart-${index + 1}))`};
+    const categoryInfo = allCategories.find(c => c.label === entry.name);
+    acc[entry.name] = { label: categoryInfo ? categoryInfo.label : entry.name, color: `hsl(var(--chart-${index + 1}))`};
     return acc;
   }, {} as ChartConfig);
 
   return (
     <Tabs defaultValue="overview">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="overview">Income vs. Expense</TabsTrigger>
-        <TabsTrigger value="categories">Category Breakdown</TabsTrigger>
+        <TabsTrigger value="overview">Дохід vs. Витрати</TabsTrigger>
+        <TabsTrigger value="categories">Розбивка по категоріях</TabsTrigger>
       </TabsList>
       <TabsContent value="overview">
         <Card>
           <CardHeader>
-            <CardTitle>Income vs. Expense</CardTitle>
+            <CardTitle>Дохід vs. Витрати</CardTitle>
             <CardDescription>
-              A summary of your total income and expenses this month.
+              Підсумок ваших загальних доходів та витрат за цей місяць.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -119,9 +122,9 @@ export default function ReportsTabs() {
       <TabsContent value="categories">
         <Card>
           <CardHeader>
-            <CardTitle>Expense by Category</CardTitle>
+            <CardTitle>Витрати по категоріях</CardTitle>
             <CardDescription>
-              A breakdown of your spending by category for the current month.
+              Розбивка ваших витрат по категоріях за поточний місяць.
             </CardDescription>
           </CardHeader>
           <CardContent>

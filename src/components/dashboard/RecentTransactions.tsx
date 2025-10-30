@@ -14,30 +14,31 @@ import { mockTransactions } from '@/lib/data';
 import { categoryIcons } from '@/lib/category-icons';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { uk } from 'date-fns/locale';
 
 export default function RecentTransactions() {
   const transactions = [...mockTransactions].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('uk-UA', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'UAH',
     }).format(amount);
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Transactions</CardTitle>
+        <CardTitle>Останні транзакції</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Description</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead>Опис</TableHead>
+              <TableHead>Категорія</TableHead>
+              <TableHead>Дата</TableHead>
+              <TableHead className="text-right">Сума</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -55,7 +56,7 @@ export default function RecentTransactions() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {format(transaction.date, 'MMM d, yyyy')}
+                    {format(transaction.date, 'd MMM, yyyy', { locale: uk })}
                   </TableCell>
                   <TableCell
                     className={cn(

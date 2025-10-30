@@ -3,7 +3,7 @@ import ReportsTabs from '@/components/reports/ReportsTabs';
 
 export default function ReportsPage() {
   return (
-    <AppLayout pageTitle="Reports">
+    <AppLayout pageTitle="Звіти">
       <div className="space-y-6">
         <ReportsTabs />
       </div>

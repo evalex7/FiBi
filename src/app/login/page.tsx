@@ -16,28 +16,28 @@ export default function LoginPage() {
     <AuthLayout>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Вхід</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account.
+            Введіть свою електронну пошту нижче, щоб увійти до свого облікового запису.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Електронна пошта</Label>
             <Input id="email" type="email" placeholder="m@example.com" required />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Пароль</Label>
             <Input id="password" type="password" required />
           </div>
           <Button type="submit" className="w-full" asChild>
-            <Link href="/dashboard">Login</Link>
+            <Link href="/dashboard">Увійти</Link>
           </Button>
         </CardContent>
         <div className="mt-4 text-center text-sm p-6 pt-0">
-          Don&apos;t have an account?{' '}
+          Не маєте облікового запису?{' '}
           <Link href="/signup" className="underline">
-            Sign up
+            Зареєструватися
           </Link>
         </div>
       </Card>

@@ -17,11 +17,11 @@ const BudgetAdjustmentSuggestionsInputSchema = z.object({
   spendingPatterns: z
     .string()
     .describe(
-      'A detailed description of the user spending patterns across different categories.'
+      'Детальний опис моделей витрат користувача за різними категоріями.'
     ),
   financialGoals: z
     .string()
-    .describe('The stated financial goals of the user, e.g., saving for a down payment, paying off debt.'),
+    .describe('Заявлені фінансові цілі користувача, напр., заощадження на перший внесок, погашення боргу.'),
 });
 export type BudgetAdjustmentSuggestionsInput = z.infer<typeof BudgetAdjustmentSuggestionsInputSchema>;
 
@@ -29,7 +29,7 @@ const BudgetAdjustmentSuggestionsOutputSchema = z.object({
   suggestions: z
     .string()
     .describe(
-      'A list of suggested adjustments to the budget categories, with explanations for each suggestion.'
+      'Список запропонованих коригувань до категорій бюджету, з поясненнями до кожної пропозиції.'
     ),
 });
 export type BudgetAdjustmentSuggestionsOutput = z.infer<typeof BudgetAdjustmentSuggestionsOutputSchema>;
@@ -44,12 +44,12 @@ const budgetAdjustmentSuggestionsPrompt = ai.definePrompt({
   name: 'budgetAdjustmentSuggestionsPrompt',
   input: {schema: BudgetAdjustmentSuggestionsInputSchema},
   output: {schema: BudgetAdjustmentSuggestionsOutputSchema},
-  prompt: `You are a personal finance advisor. Analyze the user's spending patterns and financial goals to provide budget adjustment suggestions.
+  prompt: `Ви — особистий фінансовий консультант. Проаналізуйте моделі витрат користувача та фінансові цілі, щоб надати пропозиції щодо коригування бюджету.
 
-Spending Patterns: {{{spendingPatterns}}}
-Financial Goals: {{{financialGoals}}}
+Моделі витрат: {{{spendingPatterns}}}
+Фінансові цілі: {{{financialGoals}}}
 
-Provide clear and actionable suggestions to help the user save money and optimize their budget allocation. Focus on specific categories and explain the reasoning behind each suggestion.`,
+Надайте чіткі та дієві пропозиції, які допоможуть користувачеві заощадити гроші та оптимізувати розподіл бюджету. Зосередьтеся на конкретних категоріях і поясніть причину кожної пропозиції. Відповідайте українською мовою.`,
 });
 
 const budgetAdjustmentSuggestionsFlow = ai.defineFlow(

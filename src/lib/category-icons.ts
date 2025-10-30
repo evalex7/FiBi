@@ -16,36 +16,36 @@ import {
 import type { Category } from './types';
 
 export const categoryIcons: { [key: string]: LucideIcon } = {
-  Groceries: ShoppingCart,
-  Transport: Car,
-  Housing: Home,
-  Utilities: Zap,
-  Entertainment: Clapperboard,
-  'Dining Out': Utensils,
-  Health: Heart,
-  Work: Briefcase,
-  Education: GraduationCap,
-  Gifts: Gift,
-  Salary: Landmark,
-  Investments: TrendingUp,
+  'Продукти': ShoppingCart,
+  'Транспорт': Car,
+  'Житло': Home,
+  'Комунальні послуги': Zap,
+  'Розваги': Clapperboard,
+  'Харчування поза домом': Utensils,
+  'Здоров\'я': Heart,
+  'Робота': Briefcase,
+  'Освіта': GraduationCap,
+  'Подарунки': Gift,
+  'Зарплата': Landmark,
+  'Інвестиції': TrendingUp,
 };
 
 export const expenseCategories: Category[] = [
-  { value: 'Groceries', label: 'Groceries', icon: ShoppingCart },
-  { value: 'Transport', label: 'Transport', icon: Car },
-  { value: 'Housing', label: 'Housing', icon: Home },
-  { value: 'Utilities', label: 'Utilities', icon: Zap },
-  { value: 'Entertainment', label: 'Entertainment', icon: Clapperboard },
-  { value: 'Dining Out', label: 'Dining Out', icon: Utensils },
-  { value: 'Health', label: 'Health', icon: Heart },
-  { value: 'Education', label: 'Education', icon: GraduationCap },
-  { value: 'Gifts', label: 'Gifts', icon: Gift },
+  { value: 'Groceries', label: 'Продукти', icon: ShoppingCart },
+  { value: 'Transport', label: 'Транспорт', icon: Car },
+  { value: 'Housing', label: 'Житло', icon: Home },
+  { value: 'Utilities', label: 'Комунальні послуги', icon: Zap },
+  { value: 'Entertainment', label: 'Розваги', icon: Clapperboard },
+  { value: 'Dining Out', label: 'Харчування поза домом', icon: Utensils },
+  { value: 'Health', label: 'Здоров\'я', icon: Heart },
+  { value: 'Education', label: 'Освіта', icon: GraduationCap },
+  { value: 'Gifts', label: 'Подарунки', icon: Gift },
 ];
 
 export const incomeCategories: Category[] = [
-  { value: 'Salary', label: 'Salary', icon: Landmark },
-  { value: 'Investments', label: 'Investments', icon: TrendingUp },
-  { value: 'Gifts', label: 'Gifts', icon: Gift },
+  { value: 'Salary', label: 'Зарплата', icon: Landmark },
+  { value: 'Investments', label: 'Інвестиції', icon: TrendingUp },
+  { value: 'Gifts', label: 'Подарунки', icon: Gift },
 ];
 
 export const allCategories: Category[] = [

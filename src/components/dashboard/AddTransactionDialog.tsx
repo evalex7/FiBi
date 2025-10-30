@@ -30,6 +30,7 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { uk } from 'date-fns/locale';
 import { expenseCategories, incomeCategories } from '@/lib/category-icons';
 import { useToast } from '@/hooks/use-toast';
 
@@ -43,10 +44,10 @@ export default function AddTransactionDialog({ children }: { children: React.Rea
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically handle form submission, e.g., to an API
+    // Тут зазвичай обробляється надсилання форми, наприклад, в API
     toast({
-      title: 'Success!',
-      description: 'Your transaction has been added.',
+      title: 'Успіх!',
+      description: 'Вашу транзакцію було додано.',
     });
     setOpen(false);
   };
@@ -57,14 +58,14 @@ export default function AddTransactionDialog({ children }: { children: React.Rea
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Add Transaction</DialogTitle>
+            <DialogTitle>Додати транзакцію</DialogTitle>
             <DialogDescription>
-              Record a new income or expense to your account.
+              Запишіть новий дохід або витрату до вашого рахунку.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>Type</Label>
+              <Label>Тип</Label>
               <RadioGroup
                 defaultValue="expense"
                 className="flex"
@@ -73,21 +74,21 @@ export default function AddTransactionDialog({ children }: { children: React.Rea
               >
                 <Label className="flex items-center space-x-2 cursor-pointer">
                   <RadioGroupItem value="expense" id="r2" />
-                  <span>Expense</span>
+                  <span>Витрата</span>
                 </Label>
                 <Label className="flex items-center space-x-2 cursor-pointer">
                   <RadioGroupItem value="income" id="r3" />
-                  <span>Income</span>
+                  <span>Дохід</span>
                 </Label>
               </RadioGroup>
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                    <Label htmlFor="amount">Amount</Label>
+                    <Label htmlFor="amount">Сума</Label>
                     <Input id="amount" type="number" placeholder="0.00" required />
                 </div>
                 <div className="grid gap-2">
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="date">Дата</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -98,7 +99,7 @@ export default function AddTransactionDialog({ children }: { children: React.Rea
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, 'PPP') : <span>Pick a date</span>}
+                      {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -107,20 +108,21 @@ export default function AddTransactionDialog({ children }: { children: React.Rea
                       selected={date}
                       onSelect={setDate}
                       initialFocus
+                      locale={uk}
                     />
                   </PopoverContent>
                 </Popover>
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Input id="description" placeholder="e.g., Weekly groceries" required />
+              <Label htmlFor="description">Опис</Label>
+              <Input id="description" placeholder="напр., Щотижневі продукти" required />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Категорія</Label>
               <Select required>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder="Оберіть категорію" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
@@ -136,7 +138,7 @@ export default function AddTransactionDialog({ children }: { children: React.Rea
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Add Transaction</Button>
+            <Button type="submit">Додати транзакcję</Button>
           </DialogFooter>
         </form>
       </DialogContent>

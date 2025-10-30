@@ -21,14 +21,14 @@ export default function LandingPage() {
       <header className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <Link href="#" className="flex items-center gap-2" prefetch={false}>
           <Logo className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl">Family Finances</span>
+          <span className="font-bold text-xl">Сімейні фінанси</span>
         </Link>
         <div className="flex items-center gap-4">
           <Button variant="ghost" asChild>
-            <Link href="/login">Log In</Link>
+            <Link href="/login">Увійти</Link>
           </Button>
           <Button asChild style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
-            <Link href="/signup">Sign Up</Link>
+            <Link href="/signup">Зареєструватися</Link>
           </Button>
         </div>
       </header>
@@ -39,16 +39,16 @@ export default function LandingPage() {
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline">
-                    Take Control of Your Family's Finances
+                    Візьміть під контроль фінанси вашої родини
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    Our intuitive budgeting app helps you track spending, create
-                    budgets, and achieve your financial goals together.
+                    Наш інтуїтивно зрозумілий додаток для бюджетування допоможе вам відстежувати витрати, створювати
+                    бюджети та досягати фінансових цілей разом.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button size="lg" asChild style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
-                    <Link href="/signup">Get Started for Free</Link>
+                    <Link href="/signup">Почати безкоштовно</Link>
                   </Button>
                 </div>
               </div>
@@ -70,14 +70,14 @@ export default function LandingPage() {
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
                 <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">
-                  Key Features
+                  Ключові риси
                 </div>
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
-                  Everything You Need to Succeed
+                  Все, що вам потрібно для успіху
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  From simple expense tracking to AI-powered insights, we've got
-                  you covered.
+                  Від простого відстеження витрат до аналітики на основі штучного інтелекту, ми вас
+                  прикрили.
                 </p>
               </div>
             </div>
@@ -85,37 +85,37 @@ export default function LandingPage() {
               <div className="grid gap-1">
                  <div className="flex items-center gap-3">
                   <PiggyBank className="h-8 w-8 text-primary" />
-                  <h3 className="text-lg font-bold">Expense Tracking</h3>
+                  <h3 className="text-lg font-bold">Відстеження витрат</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Easily record income and expenses. Categorize everything for ultimate clarity.
+                  Легко записуйте доходи та витрати. Категоризуйте все для максимальної ясності.
                 </p>
               </div>
               <div className="grid gap-1">
                 <div className="flex items-center gap-3">
                   <Target className="h-8 w-8 text-primary" />
-                  <h3 className="text-lg font-bold">Budget Creation</h3>
+                  <h3 className="text-lg font-bold">Створення бюджету</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Set monthly budgets for different categories and stay on track with your goals.
+                  Встановлюйте щомісячні бюджети для різних категорій і дотримуйтесь своїх цілей.
                 </p>
               </div>
               <div className="grid gap-1">
                 <div className="flex items-center gap-3">
                   <BarChart className="h-8 w-8 text-primary" />
-                  <h3 className="text-lg font-bold">Financial Reports</h3>
+                  <h3 className="text-lg font-bold">Фінансові звіти</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Visualize your financial health with insightful charts and graphs.
+                  Візуалізуйте своє фінансове здоров'я за допомогою проникливих діаграм та графіків.
                 </p>
               </div>
               <div className="grid gap-1 lg:col-start-2">
                 <div className="flex items-center gap-3">
                   <BrainCircuit className="h-8 w-8 text-primary" />
-                  <h3 className="text-lg font-bold">AI-Powered Insights</h3>
+                  <h3 className="text-lg font-bold">Аналітика на основі ШІ</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Get smart suggestions to optimize your budget and save more money, effortlessly.
+                  Отримуйте розумні пропозиції, щоб оптимізувати свій бюджет і заощаджувати більше грошей, без зусиль.
                 </p>
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function LandingPage() {
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
         <p className="text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} Family Finances. All rights reserved.
+          &copy; {new Date().getFullYear()} Сімейні фінанси. Всі права захищено.
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link
@@ -132,14 +132,14 @@ export default function LandingPage() {
             className="text-xs hover:underline underline-offset-4"
             prefetch={false}
           >
-            Terms of Service
+            Умови обслуговування
           </Link>
           <Link
             href="#"
             className="text-xs hover:underline underline-offset-4"
             prefetch={false}
           >
-            Privacy
+            Конфіденційність
           </Link>
         </nav>
       </footer>
