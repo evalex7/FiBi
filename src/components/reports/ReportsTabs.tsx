@@ -18,7 +18,6 @@ import {
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -26,6 +25,7 @@ import {
 } from 'recharts';
 import {
   ChartContainer,
+  ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
