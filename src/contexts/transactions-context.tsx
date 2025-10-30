@@ -7,6 +7,8 @@ import { mockTransactions } from '@/lib/data';
 interface TransactionsContextType {
   transactions: Transaction[];
   addTransaction: (transaction: Transaction) => void;
+  updateTransaction: (transaction: Transaction) => void;
+  deleteTransaction: (id: string) => void;
 }
 
 const TransactionsContext = createContext<TransactionsContextType | undefined>(undefined);
@@ -18,8 +20,18 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
     setTransactions(prevTransactions => [...prevTransactions, transaction]);
   };
 
+  const updateTransaction = (updatedTransaction: Transaction) => {
+    setTransactions(prevTransactions => 
+      prevTransactions.map(t => t.id === updatedTransaction.id ? updatedTransaction : t)
+    );
+  };
+
+  const deleteTransaction = (id: string) => {
+    setTransactions(prevTransactions => prevTransactions.filter(t => t.id !== id));
+  };
+
   return (
-    <TransactionsContext.Provider value={{ transactions, addTransaction }}>
+    <TransactionsContext.Provider value={{ transactions, addTransaction, updateTransaction, deleteTransaction }}>
       {children}
     </TransactionsContext.Provider>
   );

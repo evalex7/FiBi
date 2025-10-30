@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -15,10 +16,33 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { useTransactions } from '@/contexts/transactions-context';
+import { Button } from '../ui/button';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import EditTransactionSheet from './EditTransactionSheet';
+import type { Transaction } from '@/lib/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/alert-dialog';
 
 export default function RecentTransactions() {
-  const { transactions } = useTransactions();
+  const { transactions, deleteTransaction } = useTransactions();
   const sortedTransactions = [...transactions].sort((a, b) => b.date.getTime() - a.date.getTime());
+  
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('uk-UA', {
@@ -26,6 +50,34 @@ export default function RecentTransactions() {
       currency: 'UAH',
     }).format(amount);
   };
+  
+  const handleDelete = () => {
+    if (transactionToDelete) {
+      deleteTransaction(transactionToDelete.id);
+      setTransactionToDelete(null);
+    }
+  }
+
+  const TransactionActions = ({ transaction }: { transaction: Transaction }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Відкрити меню</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => setEditingTransaction(transaction)}>
+          <Pencil className="mr-2 h-4 w-4" />
+          <span>Редагувати</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTransactionToDelete(transaction)} className="text-destructive">
+          <Trash2 className="mr-2 h-4 w-4" />
+          <span>Видалити</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   return (
     <Card>
@@ -53,16 +105,19 @@ export default function RecentTransactions() {
                       {format(transaction.date, 'd MMM, yyyy', { locale: uk })}
                     </p>
                   </div>
-                  <div
-                    className={cn(
-                      'text-right font-medium text-lg',
-                      transaction.type === 'income'
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                    )}
-                  >
-                    {transaction.type === 'income' ? '+' : '-'}
-                    {formatCurrency(transaction.amount)}
+                   <div className="flex items-center gap-2">
+                    <div
+                      className={cn(
+                        'text-right font-medium text-lg',
+                        transaction.type === 'income'
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                      )}
+                    >
+                      {transaction.type === 'income' ? '+' : '-'}
+                      {formatCurrency(transaction.amount)}
+                    </div>
+                    <TransactionActions transaction={transaction} />
                   </div>
                 </div>
               );
@@ -79,6 +134,7 @@ export default function RecentTransactions() {
                 <TableHead>Категорія</TableHead>
                 <TableHead>Дата</TableHead>
                 <TableHead className="text-right">Сума</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -109,6 +165,9 @@ export default function RecentTransactions() {
                       {transaction.type === 'income' ? '+' : '-'}
                       {formatCurrency(transaction.amount)}
                     </TableCell>
+                    <TableCell>
+                      <TransactionActions transaction={transaction} />
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -118,6 +177,27 @@ export default function RecentTransactions() {
         </>
         )}
       </CardContent>
+      {editingTransaction && (
+          <EditTransactionSheet 
+            transaction={editingTransaction}
+            open={!!editingTransaction}
+            onOpenChange={(isOpen) => !isOpen && setEditingTransaction(null)}
+          />
+      )}
+      <AlertDialog open={!!transactionToDelete} onOpenChange={(isOpen) => !isOpen && setTransactionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ви впевнені?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Цю дію неможливо скасувати. Це назавжди видалить вашу транзакцію.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Скасувати</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Видалити</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
