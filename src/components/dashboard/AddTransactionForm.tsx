@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter
-} from '@/components/ui/card';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,6 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function AddTransactionForm() {
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
   const categories = type === 'income' ? incomeCategories : expenseCategories;
@@ -47,98 +49,107 @@ export default function AddTransactionForm() {
       title: 'Успіх!',
       description: 'Вашу транзакцію було додано.',
     });
+    setOpen(false); // Close the dialog on submit
   };
 
   return (
-    <Card>
-      <form onSubmit={handleSubmit}>
-        <CardHeader>
-          <CardTitle>Додати транзакцію</CardTitle>
-          <CardDescription>
-            Запишіть новий дохід або витрату до вашого рахунку.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label>Тип</Label>
-            <RadioGroup
-              defaultValue="expense"
-              className="flex"
-              value={type}
-              onValueChange={(value: 'income' | 'expense') => setType(value)}
-            >
-              <Label className="flex items-center space-x-2 cursor-pointer">
-                <RadioGroupItem value="expense" id="r2" />
-                <span>Витрата</span>
-              </Label>
-              <Label className="flex items-center space-x-2 cursor-pointer">
-                <RadioGroupItem value="income" id="r3" />
-                <span>Дохід</span>
-              </Label>
-            </RadioGroup>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="w-full" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Додати транзакцію
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Додати транзакцію</DialogTitle>
+            <DialogDescription>
+              Запишіть новий дохід або витрату до вашого рахунку.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="amount">Сума</Label>
-              <Input id="amount" type="number" placeholder="0.00" required />
+              <Label>Тип</Label>
+              <RadioGroup
+                defaultValue="expense"
+                className="flex"
+                value={type}
+                onValueChange={(value: 'income' | 'expense') => setType(value)}
+              >
+                <Label className="flex items-center space-x-2 cursor-pointer">
+                  <RadioGroupItem value="expense" id="r2" />
+                  <span>Витрата</span>
+                </Label>
+                <Label className="flex items-center space-x-2 cursor-pointer">
+                  <RadioGroupItem value="income" id="r3" />
+                  <span>Дохід</span>
+                </Label>
+              </RadioGroup>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="amount">Сума</Label>
+                <Input id="amount" type="number" placeholder="0.00" required />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="date">Дата</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={'outline'}
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !date && 'text-muted-foreground'
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                      initialFocus
+                      locale={uk}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="date">Дата</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={'outline'}
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !date && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                    locale={uk}
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label htmlFor="description">Опис</Label>
+              <Input id="description" placeholder="напр., Щотижневі продукти" required />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="category">Категорія</Label>
+              <Select required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Оберіть категорію" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      <div className="flex items-center gap-2">
+                        <cat.icon className="h-4 w-4" />
+                        {cat.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="description">Опис</Label>
-            <Input id="description" placeholder="напр., Щотижневі продукти" required />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="category">Категорія</Label>
-            <Select required>
-              <SelectTrigger>
-                <SelectValue placeholder="Оберіть категорію" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    <div className="flex items-center gap-2">
-                      <cat.icon className="h-4 w-4" />
-                      {cat.label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-        <CardFooter>
+          <DialogFooter>
             <Button type="submit" className="w-full" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Додати транзакцію
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Додати транзакцію
             </Button>
-        </CardFooter>
-      </form>
-    </Card>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

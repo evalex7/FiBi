@@ -32,35 +32,23 @@ export default function RecentTransactions() {
         <CardTitle>Останні транзакції</CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Опис</TableHead>
-              <TableHead>Категорія</TableHead>
-              <TableHead>Дата</TableHead>
-              <TableHead className="text-right">Сума</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        {/* Mobile View */}
+        <div className="md:hidden">
+          <div className="space-y-4">
             {transactions.map((transaction) => {
               const Icon = categoryIcons[transaction.category];
               return (
-                <TableRow key={transaction.id}>
-                  <TableCell className="font-medium">
-                    {transaction.description}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="flex items-center gap-2 w-fit">
-                      {Icon && <Icon className="h-3 w-3" />}
-                      {transaction.category}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {format(transaction.date, 'd MMM, yyyy', { locale: uk })}
-                  </TableCell>
-                  <TableCell
+                <div key={transaction.id} className="flex items-center gap-4 p-2 rounded-lg border">
+                  {Icon && <Icon className="h-6 w-6 text-muted-foreground flex-shrink-0" />}
+                  <div className="flex-grow">
+                    <p className="font-medium">{transaction.description}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {format(transaction.date, 'd MMM, yyyy', { locale: uk })}
+                    </p>
+                  </div>
+                  <div
                     className={cn(
-                      'text-right font-medium',
+                      'text-right font-medium text-lg',
                       transaction.type === 'income'
                         ? 'text-green-600'
                         : 'text-red-600'
@@ -68,12 +56,58 @@ export default function RecentTransactions() {
                   >
                     {transaction.type === 'income' ? '+' : '-'}
                     {formatCurrency(transaction.amount)}
-                  </TableCell>
-                </TableRow>
+                  </div>
+                </div>
               );
             })}
-          </TableBody>
-        </Table>
+          </div>
+        </div>
+
+        {/* Desktop View */}
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Опис</TableHead>
+                <TableHead>Категорія</TableHead>
+                <TableHead>Дата</TableHead>
+                <TableHead className="text-right">Сума</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.map((transaction) => {
+                const Icon = categoryIcons[transaction.category];
+                return (
+                  <TableRow key={transaction.id}>
+                    <TableCell className="font-medium">
+                      {transaction.description}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="flex items-center gap-2 w-fit">
+                        {Icon && <Icon className="h-3 w-3" />}
+                        {transaction.category}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {format(transaction.date, 'd MMM, yyyy', { locale: uk })}
+                    </TableCell>
+                    <TableCell
+                      className={cn(
+                        'text-right font-medium',
+                        transaction.type === 'income'
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                      )}
+                    >
+                      {transaction.type === 'income' ? '+' : '-'}
+                      {formatCurrency(transaction.amount)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

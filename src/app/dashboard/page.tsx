@@ -13,23 +13,25 @@ import {
 export default function DashboardPage() {
   return (
     <AppLayout pageTitle="Панель">
-      <Tabs defaultValue="transactions">
+      <Tabs defaultValue="overview">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="transactions">Транзакції</TabsTrigger>
           <TabsTrigger value="overview">Огляд</TabsTrigger>
+          <TabsTrigger value="transactions">Транзакції</TabsTrigger>
         </TabsList>
-        <TabsContent value="transactions">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="space-y-6">
-              <AddTransactionForm />
-            </div>
-            <div className="space-y-6">
-              <RecentTransactions />
-            </div>
-          </div>
-        </TabsContent>
         <TabsContent value="overview">
-          <SummaryCards />
+            <div className="space-y-6">
+                <SummaryCards />
+                <div className="block md:hidden">
+                    <AddTransactionForm />
+                </div>
+                <RecentTransactions />
+            </div>
+        </TabsContent>
+        <TabsContent value="transactions">
+          <div className="space-y-6">
+              <AddTransactionForm />
+              <RecentTransactions />
+          </div>
         </TabsContent>
       </Tabs>
     </AppLayout>
