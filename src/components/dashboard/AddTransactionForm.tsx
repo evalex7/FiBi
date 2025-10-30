@@ -77,7 +77,7 @@ export default function AddTransactionForm() {
               </Label>
             </RadioGroup>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="amount">Сума</Label>
               <Input id="amount" type="number" placeholder="0.00" required />

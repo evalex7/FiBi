@@ -19,7 +19,7 @@ export default function DashboardPage() {
           <TabsTrigger value="overview">Огляд</TabsTrigger>
         </TabsList>
         <TabsContent value="transactions">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-6">
               <AddTransactionForm />
             </div>
