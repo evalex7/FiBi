@@ -1,10 +1,3 @@
 {
-  "placeholderImages": [
-    {
-      "id": "hero-image",
-      "description": "A person planning their finances at a desk with a laptop and notebook.",
-      "imageUrl": "https://images.unsplash.com/photo-1760657045486-f455ffe66b45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxmaW5hbmNlJTIwcGxhbm5pbmd8ZW58MHx8fHwxNzYxODQ3MDgxfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "finance planning"
-    }
-  ]
+  "placeholderImages": []
 }

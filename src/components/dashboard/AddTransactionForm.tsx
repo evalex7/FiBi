@@ -21,7 +21,7 @@ export default function AddTransactionForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
+        <Button className="w-full">
           <PlusCircle className="mr-2 h-4 w-4" />
           Додати транзакцію
         </Button>

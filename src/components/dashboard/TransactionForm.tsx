@@ -180,7 +180,7 @@ export default function TransactionForm({ transaction, onSave }: TransactionForm
               </Select>
             </div>
           </div>
-          <Button type="submit" className="w-full" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
+          <Button type="submit" className="w-full">
               {isEditMode ? <Pencil className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}
               {isEditMode ? 'Зберегти зміни' : 'Додати транзакцію'}
             </Button>

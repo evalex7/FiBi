@@ -22,7 +22,7 @@ import {
 import { Logo } from './Logo';
 
 const menuItems = [
-  { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
+  { href: '/', label: 'Панель', icon: LayoutDashboard },
   { href: '/budgets', label: 'Бюджети', icon: Target },
 ];
 
@@ -51,7 +51,7 @@ export default function AppLayout({
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname.startsWith(item.href)}
+                    isActive={pathname === item.href}
                     tooltip={item.label}
                   >
                     <Link href={item.href}>
@@ -64,16 +64,7 @@ export default function AppLayout({
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="На головну">
-                  <Link href="/">
-                    <LogOut />
-                    <span>На головну</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            
           </SidebarFooter>
         </Sidebar>
 
