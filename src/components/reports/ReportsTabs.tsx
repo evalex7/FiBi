@@ -126,7 +126,7 @@ export default function ReportsTabs() {
               </Select>
             </div>
           </CardHeader>
-          <CardContent className="pl-0">
+          <CardContent className="px-0">
             {transactions.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                 Недостатньо даних для відображення графіка.
