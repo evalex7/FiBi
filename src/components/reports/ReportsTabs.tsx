@@ -22,6 +22,7 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
+  Cell,
 } from 'recharts';
 import {
   ChartContainer,
@@ -32,6 +33,7 @@ import {
 } from '@/components/ui/chart';
 import { useTransactions } from '@/contexts/transactions-context';
 import { allCategories } from '@/lib/category-icons';
+import { useMemo } from 'react';
 
 const formatCurrency = (amount: number) =>
   `${(amount / 1000).toFixed(0)} тис.`;
@@ -45,14 +47,14 @@ const chartConfig = {
 export default function ReportsTabs() {
   const { transactions } = useTransactions();
 
-  const aggregateMonthlyData = () => {
+  const monthlyData = useMemo(() => {
     const data: { [key: string]: { month: string; income: number; expenses: number } } = {};
     const monthNames = ["Січ", "Лют", "Бер", "Кві", "Тра", "Чер", "Лип", "Сер", "Вер", "Жов", "Лис", "Гру"];
   
-    // Show last 6 months
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
 
     for (let i = 0; i < 6; i++) {
         const date = new Date(sixMonthsAgo.getFullYear(), sixMonthsAgo.getMonth() + i, 1);
@@ -61,8 +63,9 @@ export default function ReportsTabs() {
     }
 
     transactions.forEach(t => {
-      if (t.date >= sixMonthsAgo) {
-        const month = monthNames[t.date.getMonth()];
+      const transactionDate = new Date(t.date);
+      if (transactionDate >= sixMonthsAgo) {
+        const month = monthNames[transactionDate.getMonth()];
         if (data[month]) {
             if (t.type === 'income') {
                 data[month].income += t.amount;
@@ -74,9 +77,9 @@ export default function ReportsTabs() {
     });
   
     return Object.values(data);
-  };
+  }, [transactions]);
   
-  const aggregateCategoryData = () => {
+  const categoryData = useMemo(() => {
       const data: { [key: string]: number } = {};
       transactions
           .filter(t => t.type === 'expense')
@@ -84,18 +87,15 @@ export default function ReportsTabs() {
               data[t.category] = (data[t.category] || 0) + t.amount;
           });
       
-      return Object.entries(data).map(([name, value], index) => ({ name, value, fill: `hsl(var(--chart-${index + 1}))` }));
-  };
-
-  const monthlyData = aggregateMonthlyData();
-  const categoryData = aggregateCategoryData();
+      return Object.entries(data).map(([name, value]) => ({ name, value }));
+  }, [transactions]);
   
-  const pieChartConfig = categoryData.reduce((acc, entry, index) => {
+  const pieChartConfig = useMemo(() => categoryData.reduce((acc, entry, index) => {
     const categoryInfo = allCategories.find(c => c.label === entry.name);
     const chartColorIndex = (index % 5) + 1; // Cycle through 5 chart colors
     acc[entry.name] = { label: categoryInfo ? categoryInfo.label : entry.name, color: `hsl(var(--chart-${chartColorIndex}))`};
     return acc;
-  }, {} as ChartConfig);
+  }, {} as ChartConfig), [categoryData]);
 
   return (
     <Tabs defaultValue="overview">
@@ -119,18 +119,18 @@ export default function ReportsTabs() {
             ) : (
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} accessibilityLayer margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                  <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={80} />
-                  <Tooltip
+                <BarChart data={monthlyData} accessibilityLayer margin={{ left: -20 }}>
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                  <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={80} fontSize={12} />
+                  <ChartTooltip
                     cursor={false}
                     content={<ChartTooltipContent indicator="dot" />}
                   />
-                  <Bar dataKey="income" fill="var(--color-income)" radius={8} />
+                  <Bar dataKey="income" fill="var(--color-income)" radius={4} />
                   <Bar
                     dataKey="expenses"
                     fill="var(--color-expenses)"
-                    radius={8}
+                    radius={4}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -144,10 +144,10 @@ export default function ReportsTabs() {
           <CardHeader>
             <CardTitle>Витрати по категоріях</CardTitle>
             <CardDescription>
-              Розбивка ваших витрат по категоріях за поточний місяць.
+              Розбивка ваших витрат за поточний місяць.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex items-center justify-center">
             {transactions.filter(t => t.type === 'expense').length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                 Немає даних про витрати для відображення.
@@ -156,7 +156,7 @@ export default function ReportsTabs() {
           <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                  <Tooltip content={<ChartTooltipContent hideLabel />} />
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                     <Pie
                       data={categoryData}
                       dataKey="value"
@@ -165,7 +165,7 @@ export default function ReportsTabs() {
                       cy="50%"
                       outerRadius={100}
                       innerRadius={60}
-                      paddingAngle={5}
+                      paddingAngle={2}
                       labelLine={false}
                       label={({
                         cx,
