@@ -3,6 +3,7 @@ import AppLayout from '@/components/AppLayout';
 import AddTransactionForm from '@/components/dashboard/AddTransactionForm';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import SummaryCards from '@/components/dashboard/SummaryCards';
+import ReportsTabs from '@/components/reports/ReportsTabs';
 import {
   Tabs,
   TabsContent,
@@ -14,9 +15,10 @@ export default function DashboardPage() {
   return (
     <AppLayout pageTitle="Панель">
       <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Огляд</TabsTrigger>
           <TabsTrigger value="transactions">Транзакції</TabsTrigger>
+          <TabsTrigger value="reports">Звіти</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
             <div className="space-y-6">
@@ -32,6 +34,9 @@ export default function DashboardPage() {
               <AddTransactionForm />
               <RecentTransactions />
           </div>
+        </TabsContent>
+        <TabsContent value="reports">
+          <ReportsTabs />
         </TabsContent>
       </Tabs>
     </AppLayout>

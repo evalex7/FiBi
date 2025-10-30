@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  BarChart2,
   LayoutDashboard,
   LogOut,
   Target,
@@ -25,7 +24,6 @@ import { Logo } from './Logo';
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
   { href: '/budgets', label: 'Бюджети', icon: Target },
-  { href: '/reports', label: 'Звіти', icon: BarChart2 },
 ];
 
 export default function AppLayout({
@@ -53,7 +51,7 @@ export default function AppLayout({
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={pathname.startsWith(item.href)}
                     tooltip={item.label}
                   >
                     <Link href={item.href}>
