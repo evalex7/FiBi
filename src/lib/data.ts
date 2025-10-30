@@ -73,7 +73,7 @@ export const mockTransactions: Transaction[] = [
     date: new Date(firstDayOfMonth.getTime() + 86400000 * 12),
     description: 'Дивіденди з акцій',
     amount: 3500,
-    type 'income',
+    type: 'income',
     category: 'Інвестиції',
   },
 ];
