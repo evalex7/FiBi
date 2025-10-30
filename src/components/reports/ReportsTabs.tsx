@@ -22,7 +22,6 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
 } from 'recharts';
 import {
   ChartContainer,
@@ -35,7 +34,7 @@ import { useTransactions } from '@/contexts/transactions-context';
 import { allCategories } from '@/lib/category-icons';
 
 const formatCurrency = (amount: number) =>
-  `${(amount / 1000).toFixed(1)} тис. грн`;
+  `${(amount / 1000).toFixed(0)} тис.`;
   
 const chartConfig = {
   income: { label: "Дохід", color: "hsl(var(--chart-2))" },
@@ -50,15 +49,27 @@ export default function ReportsTabs() {
     const data: { [key: string]: { month: string; income: number; expenses: number } } = {};
     const monthNames = ["Січ", "Лют", "Бер", "Кві", "Тра", "Чер", "Лип", "Сер", "Вер", "Жов", "Лис", "Гру"];
   
-    transactions.forEach(t => {
-      const month = monthNames[t.date.getMonth()];
-      if (!data[month]) {
+    // Show last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+
+    for (let i = 0; i < 6; i++) {
+        const date = new Date(sixMonthsAgo.getFullYear(), sixMonthsAgo.getMonth() + i, 1);
+        const month = monthNames[date.getMonth()];
         data[month] = { month, income: 0, expenses: 0 };
-      }
-      if (t.type === 'income') {
-        data[month].income += t.amount;
-      } else {
-        data[month].expenses += t.amount;
+    }
+
+    transactions.forEach(t => {
+      if (t.date >= sixMonthsAgo) {
+        const month = monthNames[t.date.getMonth()];
+        if (data[month]) {
+            if (t.type === 'income') {
+                data[month].income += t.amount;
+            } else {
+                data[month].expenses += t.amount;
+            }
+        }
       }
     });
   
@@ -73,7 +84,7 @@ export default function ReportsTabs() {
               data[t.category] = (data[t.category] || 0) + t.amount;
           });
       
-      return Object.entries(data).map(([name, value]) => ({ name, value, fill: `hsl(var(--chart-${Object.keys(data).indexOf(name) + 1}))` }));
+      return Object.entries(data).map(([name, value], index) => ({ name, value, fill: `hsl(var(--chart-${index + 1}))` }));
   };
 
   const monthlyData = aggregateMonthlyData();
@@ -81,7 +92,8 @@ export default function ReportsTabs() {
   
   const pieChartConfig = categoryData.reduce((acc, entry, index) => {
     const categoryInfo = allCategories.find(c => c.label === entry.name);
-    acc[entry.name] = { label: categoryInfo ? categoryInfo.label : entry.name, color: `hsl(var(--chart-${index + 1}))`};
+    const chartColorIndex = (index % 5) + 1; // Cycle through 5 chart colors
+    acc[entry.name] = { label: categoryInfo ? categoryInfo.label : entry.name, color: `hsl(var(--chart-${chartColorIndex}))`};
     return acc;
   }, {} as ChartConfig);
 
@@ -89,17 +101,17 @@ export default function ReportsTabs() {
     <Tabs defaultValue="overview">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="overview">Дохід vs. Витрати</TabsTrigger>
-        <TabsTrigger value="categories">Розбивка по категоріях</TabsTrigger>
+        <TabsTrigger value="categories">Витрати по категоріях</TabsTrigger>
       </TabsList>
       <TabsContent value="overview">
         <Card>
           <CardHeader>
             <CardTitle>Дохід vs. Витрати</CardTitle>
             <CardDescription>
-              Підсумок ваших загальних доходів та витрат за цей місяць.
+              Огляд доходів та витрат за останні 6 місяців.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pl-2">
             {transactions.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                 Недостатньо даних для відображення графіка.
@@ -107,17 +119,18 @@ export default function ReportsTabs() {
             ) : (
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} accessibilityLayer>
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                  <YAxis tickFormatter={formatCurrency} />
+                <BarChart data={monthlyData} accessibilityLayer margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                  <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={80} />
                   <Tooltip
+                    cursor={false}
                     content={<ChartTooltipContent indicator="dot" />}
                   />
-                  <Bar dataKey="income" fill="var(--color-income)" radius={4} />
+                  <Bar dataKey="income" fill="var(--color-income)" radius={8} />
                   <Bar
                     dataKey="expenses"
                     fill="var(--color-expenses)"
-                    radius={4}
+                    radius={8}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -151,6 +164,8 @@ export default function ReportsTabs() {
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
+                      innerRadius={60}
+                      paddingAngle={5}
                       labelLine={false}
                       label={({
                         cx,
@@ -166,19 +181,26 @@ export default function ReportsTabs() {
                         const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
                         return (
+                           percent > 0.05 ? (
                           <text
                             x={x}
                             y={y}
-                            fill="white"
+                            fill="hsl(var(--card-foreground))"
                             textAnchor={x > cx ? 'start' : 'end'}
                             dominantBaseline="central"
-                            className="text-xs fill-foreground"
+                            className="text-xs fill-foreground font-medium"
                           >
                             {`${(percent * 100).toFixed(0)}%`}
                           </text>
+                           ) : null
                         );
                       }}
-                    />
+                    >
+                     {categoryData.map((entry, index) => {
+                        const chartColorIndex = (index % 5) + 1;
+                        return <Cell key={`cell-${index}`} fill={`hsl(var(--chart-${chartColorIndex}))`} />
+                     })}
+                    </Pie>
                     <ChartLegend content={<ChartLegendContent nameKey="name" />} />
                   </PieChart>
               </ResponsiveContainer>
