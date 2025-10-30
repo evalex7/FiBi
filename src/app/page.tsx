@@ -48,7 +48,7 @@ export default function LandingPage() {
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button size="lg" asChild style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
-                    <Link href="/signup">Почати безкоштовно</Link>
+                    <Link href="/signup">Почати</Link>
                   </Button>
                 </div>
               </div>
