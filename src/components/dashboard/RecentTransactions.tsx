@@ -36,11 +36,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../ui/alert-dialog';
+import { Skeleton } from '../ui/skeleton';
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
 
 export default function RecentTransactions() {
-  const { transactions, deleteTransaction } = useTransactions();
+  const { transactions, deleteTransaction, isLoading } = useTransactions();
   const [sortedTransactions, setSortedTransactions] = useState<FormattedTransaction[]>([]);
   
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -54,11 +55,13 @@ export default function RecentTransactions() {
       }).format(amount);
     };
 
-    const newSorted = [...transactions]
-      .sort((a, b) => b.date.getTime() - a.date.getTime())
-      .map(t => ({...t, formattedAmount: formatCurrency(t.amount)}));
-    
-    setSortedTransactions(newSorted);
+    if (transactions) {
+      const newSorted = [...transactions]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .map(t => ({...t, formattedAmount: formatCurrency(t.amount)}));
+      
+      setSortedTransactions(newSorted);
+    }
 
   }, [transactions]);
 
@@ -91,13 +94,30 @@ export default function RecentTransactions() {
     </DropdownMenu>
   );
 
+  const LoadingSkeleton = () => (
+    <div className="space-y-4">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="flex items-center gap-4 p-2 rounded-lg border">
+          <Skeleton className="h-6 w-6 rounded-full" />
+          <div className="flex-grow space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+          <Skeleton className="h-6 w-24" />
+        </div>
+      ))}
+    </div>
+  )
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Останні транзакції</CardTitle>
       </CardHeader>
       <CardContent>
-        {sortedTransactions.length === 0 ? (
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : sortedTransactions.length === 0 ? (
            <div className="text-center text-muted-foreground py-8">
             Ще немає транзакцій. Додайте першу!
           </div>
@@ -114,7 +134,7 @@ export default function RecentTransactions() {
                   <div className="flex-grow">
                     <p className="font-medium">{transaction.description}</p>
                     <p className="text-sm text-muted-foreground">
-                      {format(transaction.date, 'd MMM, yyyy', { locale: uk })}
+                      {format(new Date(transaction.date), 'd MMM, yyyy', { locale: uk })}
                     </p>
                   </div>
                    <div className="flex items-center gap-2">
@@ -164,7 +184,7 @@ export default function RecentTransactions() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {format(transaction.date, 'd MMM, yyyy', { locale: uk })}
+                      {format(new Date(transaction.date), 'd MMM, yyyy', { locale: uk })}
                     </TableCell>
                     <TableCell
                       className={cn(

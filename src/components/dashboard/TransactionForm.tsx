@@ -47,12 +47,12 @@ export default function TransactionForm({ transaction, onSave }: TransactionForm
   const isEditMode = !!transaction;
 
   useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode && transaction) {
         setType(transaction.type);
         setAmount(String(transaction.amount));
         setDescription(transaction.description);
         setCategory(transaction.category);
-        setDate(transaction.date);
+        setDate(new Date(transaction.date));
     }
   }, [transaction, isEditMode]);
 
@@ -71,23 +71,22 @@ export default function TransactionForm({ transaction, onSave }: TransactionForm
       return;
     }
 
-    const newTransactionData = {
-        id: isEditMode ? transaction.id : crypto.randomUUID(),
-        date,
+    const transactionData = {
         description,
         amount: parseFloat(amount),
         type,
         category,
+        date,
     };
 
-    if (isEditMode) {
-        updateTransaction(newTransactionData);
+    if (isEditMode && transaction) {
+        updateTransaction({ ...transactionData, id: transaction.id });
         toast({
           title: 'Успіх!',
           description: 'Вашу транзакцію було оновлено.',
         });
     } else {
-        addTransaction(newTransactionData);
+        addTransaction(transactionData);
         toast({
           title: 'Успіх!',
           description: 'Вашу транзакцію було додано.',
