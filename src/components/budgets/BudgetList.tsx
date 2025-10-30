@@ -2,19 +2,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { mockBudgets, mockTransactions } from '@/lib/data';
+import { mockBudgets } from '@/lib/data';
 import { categoryIcons } from '@/lib/category-icons';
-import { incomeCategories } from '@/lib/category-icons';
 import { allCategories } from '@/lib/category-icons';
+import { useTransactions } from '@/contexts/transactions-context';
 
 export default function BudgetList() {
+  const { transactions } = useTransactions();
+
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('uk-UA', {
       style: 'currency',
       currency: 'UAH',
     }).format(amount);
 
-  const spentAmounts = mockTransactions.reduce((acc, t) => {
+  const spentAmounts = transactions.reduce((acc, t) => {
     if (t.type === 'expense') {
         const budgetCategory = mockBudgets.find(b => b.category === t.category);
         if (budgetCategory) {

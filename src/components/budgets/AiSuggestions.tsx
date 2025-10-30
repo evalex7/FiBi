@@ -15,11 +15,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BrainCircuit, Loader2 } from 'lucide-react';
 import { getBudgetAdjustmentSuggestions } from '@/ai/flows/budget-adjustment-suggestions';
-import { mockTransactions } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { useTransactions } from '@/contexts/transactions-context';
 
 export default function AiSuggestions() {
+  const { transactions } = useTransactions();
   const [financialGoals, setFinancialGoals] = useState(
     'Назбирати на перший внесок за будинок та створити резервний фонд.'
   );
@@ -31,7 +32,7 @@ export default function AiSuggestions() {
     setIsLoading(true);
     setSuggestions(null);
 
-    const spendingPatterns = mockTransactions
+    const spendingPatterns = transactions
       .filter((t) => t.type === 'expense')
       .reduce((acc, t) => {
         acc[t.category] = (acc[t.category] || 0) + t.amount;
@@ -92,7 +93,7 @@ export default function AiSuggestions() {
         )}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleGetSuggestions} disabled={isLoading} className="w-full" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
+        <Button onClick={handleGetSuggestions} disabled={isLoading || transactions.filter(t => t.type === 'expense').length === 0} className="w-full" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

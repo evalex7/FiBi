@@ -70,8 +70,8 @@ export const mockTransactions: Transaction[] = [
   },
   {
     id: '9',
-    date: new Date(firstDayOfMonth.getTime() + 86400000 * 12),
-    description: 'Дивіденди з акцій',
+    date: new Date(new Date().setDate(today.getDate() - 15)),
+    description: 'Дивіденди з акцій (минулий місяць)',
     amount: 3500,
     type: 'income',
     category: 'Інвестиції',

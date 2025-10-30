@@ -31,43 +31,12 @@ import {
   ChartLegendContent,
   type ChartConfig
 } from '@/components/ui/chart';
-import { mockTransactions } from '@/lib/data';
+import { useTransactions } from '@/contexts/transactions-context';
 import { allCategories } from '@/lib/category-icons';
 
 const formatCurrency = (amount: number) =>
   `${(amount / 1000).toFixed(1)} тис. грн`;
   
-const aggregateMonthlyData = () => {
-  const data: { [key: string]: { month: string; income: number; expenses: number } } = {};
-  const monthNames = ["Січ", "Лют", "Бер", "Кві", "Тра", "Чер", "Лип", "Сер", "Вер", "Жов", "Лис", "Гру"];
-
-  mockTransactions.forEach(t => {
-    const month = monthNames[t.date.getMonth()];
-    if (!data[month]) {
-      data[month] = { month, income: 0, expenses: 0 };
-    }
-    if (t.type === 'income') {
-      data[month].income += t.amount;
-    } else {
-      data[month].expenses += t.amount;
-    }
-  });
-
-  return Object.values(data);
-};
-
-const aggregateCategoryData = () => {
-    const data: { [key: string]: number } = {};
-    mockTransactions
-        .filter(t => t.type === 'expense')
-        .forEach(t => {
-            data[t.category] = (data[t.category] || 0) + t.amount;
-        });
-    
-    return Object.entries(data).map(([name, value]) => ({ name, value, fill: `hsl(var(--chart-${Object.keys(data).indexOf(name) + 1}))` }));
-};
-
-
 const chartConfig = {
   income: { label: "Дохід", color: "hsl(var(--chart-2))" },
   expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
@@ -75,6 +44,38 @@ const chartConfig = {
 
 
 export default function ReportsTabs() {
+  const { transactions } = useTransactions();
+
+  const aggregateMonthlyData = () => {
+    const data: { [key: string]: { month: string; income: number; expenses: number } } = {};
+    const monthNames = ["Січ", "Лют", "Бер", "Кві", "Тра", "Чер", "Лип", "Сер", "Вер", "Жов", "Лис", "Гру"];
+  
+    transactions.forEach(t => {
+      const month = monthNames[t.date.getMonth()];
+      if (!data[month]) {
+        data[month] = { month, income: 0, expenses: 0 };
+      }
+      if (t.type === 'income') {
+        data[month].income += t.amount;
+      } else {
+        data[month].expenses += t.amount;
+      }
+    });
+  
+    return Object.values(data);
+  };
+  
+  const aggregateCategoryData = () => {
+      const data: { [key: string]: number } = {};
+      transactions
+          .filter(t => t.type === 'expense')
+          .forEach(t => {
+              data[t.category] = (data[t.category] || 0) + t.amount;
+          });
+      
+      return Object.entries(data).map(([name, value]) => ({ name, value, fill: `hsl(var(--chart-${Object.keys(data).indexOf(name) + 1}))` }));
+  };
+
   const monthlyData = aggregateMonthlyData();
   const categoryData = aggregateCategoryData();
   
@@ -99,6 +100,11 @@ export default function ReportsTabs() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {transactions.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">
+                Недостатньо даних для відображення графіка.
+              </div>
+            ) : (
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData} accessibilityLayer>
@@ -116,6 +122,7 @@ export default function ReportsTabs() {
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
+            )}
           </CardContent>
         </Card>
       </TabsContent>
@@ -128,6 +135,11 @@ export default function ReportsTabs() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {transactions.filter(t => t.type === 'expense').length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">
+                Немає даних про витрати для відображення.
+              </div>
+            ) : (
           <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -171,6 +183,7 @@ export default function ReportsTabs() {
                   </PieChart>
               </ResponsiveContainer>
               </ChartContainer>
+            )}
           </CardContent>
         </Card>
       </TabsContent>

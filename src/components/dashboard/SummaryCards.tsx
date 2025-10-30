@@ -2,10 +2,12 @@
 
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockTransactions } from '@/lib/data';
+import { useTransactions } from '@/contexts/transactions-context';
 
 export default function SummaryCards() {
-  const { income, expenses, balance } = mockTransactions.reduce(
+  const { transactions } = useTransactions();
+
+  const { income, expenses, balance } = transactions.reduce(
     (acc, transaction) => {
       if (transaction.type === 'income') {
         acc.income += transaction.amount;

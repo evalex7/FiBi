@@ -10,14 +10,15 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { mockTransactions } from '@/lib/data';
 import { categoryIcons } from '@/lib/category-icons';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
+import { useTransactions } from '@/contexts/transactions-context';
 
 export default function RecentTransactions() {
-  const transactions = [...mockTransactions].sort((a, b) => b.date.getTime() - a.date.getTime());
+  const { transactions } = useTransactions();
+  const sortedTransactions = [...transactions].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('uk-UA', {
@@ -32,10 +33,16 @@ export default function RecentTransactions() {
         <CardTitle>Останні транзакції</CardTitle>
       </CardHeader>
       <CardContent>
+        {sortedTransactions.length === 0 ? (
+           <div className="text-center text-muted-foreground py-8">
+            Ще немає транзакцій. Додайте першу!
+          </div>
+        ) : (
+        <>
         {/* Mobile View */}
         <div className="md:hidden">
           <div className="space-y-4">
-            {transactions.map((transaction) => {
+            {sortedTransactions.map((transaction) => {
               const Icon = categoryIcons[transaction.category];
               return (
                 <div key={transaction.id} className="flex items-center gap-4 p-2 rounded-lg border">
@@ -75,7 +82,7 @@ export default function RecentTransactions() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.map((transaction) => {
+              {sortedTransactions.map((transaction) => {
                 const Icon = categoryIcons[transaction.category];
                 return (
                   <TableRow key={transaction.id}>
@@ -108,6 +115,8 @@ export default function RecentTransactions() {
             </TableBody>
           </Table>
         </div>
+        </>
+        )}
       </CardContent>
     </Card>
   );

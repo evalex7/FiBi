@@ -33,23 +33,56 @@ import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { expenseCategories, incomeCategories } from '@/lib/category-icons';
 import { useToast } from '@/hooks/use-toast';
+import { useTransactions } from '@/contexts/transactions-context';
+import type { Transaction } from '@/lib/types';
+
 
 export default function AddTransactionForm() {
-  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const { addTransaction } = useTransactions();
+  const [type, setType] = useState<Transaction['type']>('expense');
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+
 
   const categories = type === 'income' ? incomeCategories : expenseCategories;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Тут зазвичай обробляється надсилання форми, наприклад, в API
+
+    if (!amount || !description || !category || !date) {
+      toast({
+        variant: 'destructive',
+        title: 'Помилка',
+        description: 'Будь ласка, заповніть усі поля.',
+      });
+      return;
+    }
+
+    addTransaction({
+      id: crypto.randomUUID(),
+      date,
+      description,
+      amount: parseFloat(amount),
+      type,
+      category,
+    });
+
     toast({
       title: 'Успіх!',
       description: 'Вашу транзакцію було додано.',
     });
-    setOpen(false); // Close the dialog on submit
+    
+    // Reset form
+    setAmount('');
+    setDescription('');
+    setCategory('');
+    setDate(new Date());
+    setOpen(false);
   };
 
   return (
@@ -90,7 +123,7 @@ export default function AddTransactionForm() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="amount">Сума</Label>
-                <Input id="amount" type="number" placeholder="0.00" required />
+                <Input id="amount" type="number" placeholder="0.00" required value={amount} onChange={(e) => setAmount(e.target.value)} />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="date">Дата</Label>
@@ -121,17 +154,17 @@ export default function AddTransactionForm() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="description">Опис</Label>
-              <Input id="description" placeholder="напр., Щотижневі продукти" required />
+              <Input id="description" placeholder="напр., Щотижневі продукти" required value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="category">Категорія</Label>
-              <Select required>
+              <Select required value={category} onValueChange={setCategory}>
                 <SelectTrigger>
                   <SelectValue placeholder="Оберіть категорію" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
+                    <SelectItem key={cat.label} value={cat.label}>
                       <div className="flex items-center gap-2">
                         <cat.icon className="h-4 w-4" />
                         {cat.label}
