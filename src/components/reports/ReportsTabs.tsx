@@ -89,13 +89,12 @@ export default function ReportsTabs() {
               data[t.category] = (data[t.category] || 0) + t.amount;
           });
       
-      return Object.entries(data).map(([name, value]) => ({ name, value, fill: `hsl(var(--chart-${(Object.keys(data).indexOf(name) % 5) + 1}))` }));
+      return Object.entries(data).map(([name, value], index) => ({ name, value, fill: `hsl(var(--chart-${(index % 5) + 1}))` }));
   }, [transactions]);
   
-  const pieChartConfig = useMemo(() => categoryData.reduce((acc, entry, index) => {
+  const pieChartConfig = useMemo(() => categoryData.reduce((acc, entry) => {
     const categoryInfo = allCategories.find(c => c.label === entry.name);
-    const chartColorIndex = (index % 5) + 1; // Cycle through 5 chart colors
-    acc[entry.name] = { label: categoryInfo ? categoryInfo.label : entry.name, color: `hsl(var(--chart-${chartColorIndex}))`};
+    acc[entry.name] = { label: categoryInfo ? categoryInfo.label : entry.name, color: entry.fill};
     return acc;
   }, {} as ChartConfig), [categoryData]);
 
@@ -167,57 +166,59 @@ export default function ReportsTabs() {
                 Немає даних про витрати для відображення.
               </div>
             ) : (
-          <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                  <ChartTooltipContent hideLabel />
-                    <Pie
-                      data={categoryData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      innerRadius={60}
-                      paddingAngle={2}
-                      labelLine={false}
-                      label={({
-                        cx,
-                        cy,
-                        midAngle,
-                        innerRadius,
-                        outerRadius,
-                        percent,
-                      }) => {
-                        const RADIAN = Math.PI / 180;
-                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+              <div className="w-full h-[350px] flex flex-col items-center">
+                <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-full max-h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                        <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                          <Pie
+                            data={categoryData}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={100}
+                            innerRadius={60}
+                            paddingAngle={2}
+                            labelLine={false}
+                            label={({
+                              cx,
+                              cy,
+                              midAngle,
+                              innerRadius,
+                              outerRadius,
+                              percent,
+                            }) => {
+                              const RADIAN = Math.PI / 180;
+                              const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                              const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                              const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-                        return (
-                           percent > 0.05 ? (
-                          <text
-                            x={x}
-                            y={y}
-                            fill="hsl(var(--card-foreground))"
-                            textAnchor={x > cx ? 'start' : 'end'}
-                            dominantBaseline="central"
-                            className="text-xs fill-foreground font-medium"
+                              return (
+                                percent > 0.05 ? (
+                                <text
+                                  x={x}
+                                  y={y}
+                                  fill="hsl(var(--card-foreground))"
+                                  textAnchor={x > cx ? 'start' : 'end'}
+                                  dominantBaseline="central"
+                                  className="text-xs fill-foreground font-medium"
+                                >
+                                  {`${(percent * 100).toFixed(0)}%`}
+                                </text>
+                                ) : null
+                              );
+                            }}
                           >
-                            {`${(percent * 100).toFixed(0)}%`}
-                          </text>
-                           ) : null
-                        );
-                      }}
-                    >
-                     {categoryData.map((entry) => (
-                       <Cell key={`cell-${entry.name}`} fill={entry.fill} />
-                     ))}
-                    </Pie>
-                    <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-                  </PieChart>
-              </ResponsiveContainer>
-              </ChartContainer>
+                          {categoryData.map((entry) => (
+                            <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                          ))}
+                          </Pie>
+                          <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap" />} />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </ChartContainer>
+              </div>
             )}
           </CardContent>
         </Card>
