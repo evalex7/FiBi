@@ -17,7 +17,7 @@ import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { useTransactions } from '@/contexts/transactions-context';
 import { Button } from '../ui/button';
-import { MoreHorizontal, Pencil, Trash2, User } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
