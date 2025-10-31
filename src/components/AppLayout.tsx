@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Target,
   Repeat,
+  AreaChart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -27,6 +28,7 @@ const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
   { href: '/budgets', label: 'Бюджети', icon: Target },
   { href: '/payments', label: 'Платежі', icon: Repeat },
+  { href: '/reports', label: 'Звіти', icon: AreaChart },
 ];
 
 export default function AppLayout({
@@ -52,7 +54,12 @@ export default function AppLayout({
         <div className="flex min-h-screen w-full">
             <div className="hidden md:flex flex-col w-[256px] border-r">
                 <div className="p-3 h-16 border-b flex items-center"><Skeleton className="h-8 w-3/4" /></div>
-                <div className="p-3 space-y-2"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
+                <div className="p-3 space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
             </div>
             <div className="flex flex-col flex-1">
                  <div className="flex h-16 items-center border-b px-6 "><Skeleton className="h-8 w-1/4" /></div>
