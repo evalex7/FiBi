@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { TransactionsProvider } from '@/contexts/transactions-context';
 import { PaymentsProvider } from '@/contexts/payments-context';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { BudgetsProvider } from '@/contexts/budgets-context';
 
 export const metadata: Metadata = {
   title: 'Сімейні фінанси',
@@ -35,7 +36,9 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <TransactionsProvider>
             <PaymentsProvider>
-              {children}
+              <BudgetsProvider>
+                {children}
+              </BudgetsProvider>
             </PaymentsProvider>
           </TransactionsProvider>
         </FirebaseClientProvider>
