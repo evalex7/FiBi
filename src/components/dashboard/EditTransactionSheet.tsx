@@ -19,7 +19,7 @@ type EditTransactionSheetProps = {
 export default function EditTransactionSheet({ transaction, open, onOpenChange }: EditTransactionSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-[425px]">
+      <SheetContent side="right" className="sm:max-w-[425px]">
           <SheetHeader>
             <SheetTitle>Редагувати транзакцію</SheetTitle>
             <SheetDescription>
