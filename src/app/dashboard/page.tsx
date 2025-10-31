@@ -10,22 +10,16 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import { Repeat, AreaChart } from 'lucide-react';
+import { Repeat } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   return (
     <AppLayout pageTitle="Панель">
       <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-4">
           <TabsTrigger value="overview">Огляд</TabsTrigger>
-          <TabsTrigger value="reports" asChild>
-            <Link href="/reports" className="flex items-center gap-2">
-                <AreaChart className="h-4 w-4" />
-                Звіти
-            </Link>
-          </TabsTrigger>
-           <TabsTrigger value="transactions" className="hidden md:inline-flex">Транзакції</TabsTrigger>
+          <TabsTrigger value="transactions" className="hidden md:inline-flex">Транзакції</TabsTrigger>
           <TabsTrigger value="payments" className="hidden md:inline-flex">
              <Link href="/payments" className="flex items-center gap-2">
                 <Repeat className="h-4 w-4" />
@@ -50,9 +44,6 @@ export default function DashboardPage() {
         </TabsContent>
          <TabsContent value="payments">
           {/* Content will be on the /payments page */}
-        </TabsContent>
-        <TabsContent value="reports">
-          {/* Content is on the /reports page now */}
         </TabsContent>
       </Tabs>
     </AppLayout>
