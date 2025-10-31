@@ -104,7 +104,7 @@ export default function AppLayout({
           </SidebarFooter>
         </Sidebar>
 
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col flex-1 overflow-x-hidden">
           {/* Mobile and Desktop Header */}
           <header className="flex h-16 items-center justify-between border-b px-6 sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
             <div className="flex items-center gap-2 md:gap-4">
