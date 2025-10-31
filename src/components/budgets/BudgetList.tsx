@@ -58,7 +58,7 @@ export default function BudgetList() {
   const [budgetToEdit, setBudgetToEdit] = useState<Budget | null>(null);
 
   useEffect(() => {
-    if(!budgets || !user) return;
+    if(!budgets) return;
 
     const newFormattedBudgets = budgets.map(budget => {
       const { start, end } = getPeriodDates(budget.period);
@@ -99,7 +99,7 @@ export default function BudgetList() {
     }).sort((a, b) => a.category.localeCompare(b.category));
 
     setFormattedBudgets(newFormattedBudgets);
-  }, [transactions, budgets, user]);
+  }, [transactions, budgets]);
 
   const handleDelete = () => {
     if (budgetToDelete) {
