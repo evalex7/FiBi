@@ -61,7 +61,10 @@ export default function BudgetList() {
     if(!budgets || !transactions) return;
 
     const newFormattedBudgets = budgets.map(budget => {
-      const budgetStartDate = budget.startDate instanceof Timestamp ? budget.startDate.toDate() : new Date(budget.startDate);
+       const budgetStartDate = budget.startDate instanceof Timestamp 
+          ? budget.startDate.toDate() 
+          : new Date((budget.startDate as any).seconds * 1000);
+          
       const { start, end } = getPeriodDates(budget.period, budgetStartDate);
 
       const spent = transactions.reduce((acc, t) => {
