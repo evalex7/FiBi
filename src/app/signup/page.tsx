@@ -22,6 +22,7 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import type { FamilyMember } from '@/lib/types';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const colors = [
   'hsl(207, 82%, 68%)', // blue
@@ -57,8 +58,7 @@ export default function SignupPage() {
 
   const getUniqueColor = useCallback(() => {
     if (!familyMembers) {
-      // If family members data is not yet loaded, return a random color as a fallback
-      return colors[Math.floor(Math.random() * colors.length)];
+      return colors[0];
     }
     
     if (familyMembers.length === 0) {
@@ -67,15 +67,12 @@ export default function SignupPage() {
 
     const usedColors = new Set(familyMembers.map(member => member.color));
     
-    // Find the first unused color in our predefined list
     const availableColor = colors.find(color => !usedColors.has(color));
 
     if (availableColor) {
       return availableColor;
     }
     
-    // If all predefined colors are used, cycle through them
-    // This ensures a deterministic color assignment even when all are "taken"
     return colors[familyMembers.length % colors.length];
   }, [familyMembers]);
 
@@ -84,12 +81,23 @@ export default function SignupPage() {
       const userRef = doc(firestore, 'users', user.uid);
       const userColor = getUniqueColor();
       
-      setDocumentNonBlocking(userRef, {
+      const userData = {
         id: user.uid,
         name: fullName,
         email: user.email,
         color: userColor,
-      }, { merge: true });
+      };
+
+      setDocumentNonBlocking(userRef, userData, { merge: true }).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'create',
+            requestResourceData: userData
+          })
+        );
+      });
       
       router.push('/dashboard');
     }
