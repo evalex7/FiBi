@@ -18,6 +18,7 @@ import { getBudgetAdjustmentSuggestions } from '@/ai/flows/budget-adjustment-sug
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useTransactions } from '@/contexts/transactions-context';
+import { subMonths, startOfDay } from 'date-fns';
 
 export default function AiSuggestions() {
   const { transactions } = useTransactions();
@@ -32,8 +33,13 @@ export default function AiSuggestions() {
     setIsLoading(true);
     setSuggestions(null);
 
+    const startDate = startOfDay(subMonths(new Date(), 12));
+
     const spendingPatterns = transactions
-      .filter((t) => t.type === 'expense')
+      .filter((t) => {
+        const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
+        return t.type === 'expense' && transactionDate >= startDate;
+      })
       .reduce((acc, t) => {
         acc[t.category] = (acc[t.category] || 0) + t.amount;
         return acc;

@@ -17,13 +17,12 @@ import { useBudgets } from '@/contexts/budgets-context';
 import type { Budget } from '@/lib/types';
 import { useCategories } from '@/contexts/categories-context';
 import { categoryIcons } from '@/lib/category-icons';
-
+import { startOfMonth, startOfQuarter, startOfYear, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
 
 type BudgetFormProps = {
     budget?: Budget;
     onSave?: () => void;
 };
-
 
 export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
   const { addBudget, updateBudget, budgets } = useBudgets();
@@ -32,6 +31,7 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
   
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
+  const [period, setPeriod] = useState<Budget['period']>('monthly');
 
   const isEditMode = !!budget;
 
@@ -39,6 +39,7 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
     if (isEditMode && budget) {
         setAmount(String(budget.amount));
         setCategory(budget.category);
+        setPeriod(budget.period);
     }
   }, [budget, isEditMode]);
 
@@ -46,7 +47,7 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!amount || !category) {
+    if (!amount || !category || !period) {
       toast({
         variant: 'destructive',
         title: 'Помилка',
@@ -54,24 +55,47 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
       });
       return;
     }
-
-    if (!isEditMode && budgets.find(b => b.category === category)) {
+    
+    // Check for duplicate budget for the same category and period
+    if (!isEditMode && budgets.find(b => b.category === category && b.period === period)) {
       toast({
         variant: 'destructive',
         title: 'Помилка',
-        description: `Бюджет для категорії "${category}" вже існує.`,
+        description: `Бюджет для категорії "${category}" на цей період вже існує.`,
       });
       return;
     }
 
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+
+    switch(period) {
+      case 'quarterly':
+        startDate = startOfQuarter(now);
+        endDate = endOfQuarter(now);
+        break;
+      case 'yearly':
+        startDate = startOfYear(now);
+        endDate = endOfYear(now);
+        break;
+      case 'monthly':
+      default:
+        startDate = startOfMonth(now);
+        endDate = endOfMonth(now);
+        break;
+    }
 
     const budgetData = {
         amount: parseFloat(amount),
         category,
+        period,
+        startDate,
+        endDate,
     };
 
     if (isEditMode && budget) {
-        updateBudget({ ...budgetData, id: budget.id });
+        updateBudget({ ...budget, ...budgetData });
         toast({
           title: 'Успіх!',
           description: 'Ваш бюджет було оновлено.',
@@ -89,18 +113,19 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
     if (!isEditMode) {
         setAmount('');
         setCategory('');
+        setPeriod('monthly');
     }
   };
 
   const availableCategories = expenseCategories.filter(
-    (cat) => (isEditMode || !budgets.some((b) => b.category === cat.name)) && cat.type === 'expense'
+    (cat) => (isEditMode || !budgets.some((b) => b.category === cat.name && b.period === period)) && cat.type === 'expense'
   );
 
 
   return (
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                <div className="grid gap-2">
                 <Label htmlFor="category">Категорія</Label>
                 <Select required value={category} onValueChange={setCategory} disabled={isEditMode}>
@@ -133,6 +158,19 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
                 <Input id="amount" type="number" placeholder="0.00" required value={amount} onChange={(e) => setAmount(e.target.value)} />
               </div>
             </div>
+             <div className="grid gap-2">
+                <Label htmlFor="period">Період</Label>
+                <Select required value={period} onValueChange={(value: Budget['period']) => setPeriod(value)} disabled={isEditMode}>
+                    <SelectTrigger>
+                    <SelectValue placeholder="Оберіть період" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="monthly">Щомісяця</SelectItem>
+                        <SelectItem value="quarterly">Щокварталу</SelectItem>
+                        <SelectItem value="yearly">Щорічно</SelectItem>
+                    </SelectContent>
+                </Select>
+             </div>
           </div>
           <Button type="submit" className="w-full">
               {isEditMode ? <Pencil className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}

@@ -6,7 +6,7 @@ import { categoryIcons } from '@/lib/category-icons';
 import { useTransactions } from '@/contexts/transactions-context';
 import { useState, useEffect } from 'react';
 import { useBudgets } from '@/contexts/budgets-context';
-import type { Budget } from '@/lib/types';
+import type { Budget, Category } from '@/lib/types';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -15,6 +15,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import BudgetForm from './BudgetForm';
 import { Skeleton } from '../ui/skeleton';
 import { useCategories } from '@/contexts/categories-context';
+import { format, startOfMonth, startOfQuarter, startOfYear, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
+import { uk } from 'date-fns/locale';
 
 type FormattedBudget = Budget & {
   spent: number;
@@ -23,6 +25,7 @@ type FormattedBudget = Budget & {
   formattedAmount: string;
   formattedSpent: string;
   formattedRemaining: string;
+  periodLabel: string;
 };
 
 const formatCurrency = (amount: number) =>
@@ -30,6 +33,19 @@ const formatCurrency = (amount: number) =>
     style: 'currency',
     currency: 'UAH',
   }).format(amount);
+
+const getPeriodDates = (period: Budget['period']) => {
+    const today = new Date();
+    switch (period) {
+        case 'quarterly':
+            return { start: startOfQuarter(today), end: endOfQuarter(today) };
+        case 'yearly':
+            return { start: startOfYear(today), end: endOfYear(today) };
+        case 'monthly':
+        default:
+            return { start: startOfMonth(today), end: endOfMonth(today) };
+    }
+}
 
 export default function BudgetList() {
   const { transactions } = useTransactions();
@@ -42,24 +58,32 @@ export default function BudgetList() {
   useEffect(() => {
     if(!budgets) return;
 
-    const today = new Date();
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-    const spentAmounts = transactions.reduce((acc, t) => {
-      const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
-      if (t.type === 'expense' && transactionDate >= firstDayOfMonth && transactionDate <= today) {
-        const budgetCategory = budgets.find(b => b.category === t.category);
-        if (budgetCategory) {
-          acc[t.category] = (acc[t.category] || 0) + t.amount;
-        }
-      }
-      return acc;
-    }, {} as Record<string, number>);
-
     const newFormattedBudgets = budgets.map(budget => {
-      const spent = spentAmounts[budget.category] || 0;
+      const { start, end } = getPeriodDates(budget.period);
+
+      const spent = transactions.reduce((acc, t) => {
+        const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
+        if (t.type === 'expense' && t.category === budget.category && transactionDate >= start && transactionDate <= end) {
+          acc += t.amount;
+        }
+        return acc;
+      }, 0);
+
       const progress = (spent / budget.amount) * 100;
       const remaining = budget.amount - spent;
+      let periodLabel = '';
+      switch (budget.period) {
+          case 'quarterly':
+              periodLabel = `${format(start, 'QQQ', { locale: uk })} квартал`;
+              break;
+          case 'yearly':
+              periodLabel = `${format(start, 'yyyy')} рік`;
+              break;
+          case 'monthly':
+          default:
+              periodLabel = format(start, 'LLLL yyyy', { locale: uk });
+      }
+
       return {
         ...budget,
         spent,
@@ -68,8 +92,10 @@ export default function BudgetList() {
         formattedAmount: formatCurrency(budget.amount),
         formattedSpent: formatCurrency(spent),
         formattedRemaining: formatCurrency(remaining),
+        periodLabel,
       };
-    });
+    }).sort((a, b) => a.category.localeCompare(b.category));
+
     setFormattedBudgets(newFormattedBudgets);
   }, [transactions, budgets]);
 
@@ -118,6 +144,7 @@ export default function BudgetList() {
                     <div className="flex items-center gap-2 font-medium">
                       {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
                       <span>{budget.category}</span>
+                      <span className="text-xs text-muted-foreground">({budget.periodLabel})</span>
                     </div>
                     <div className="text-sm text-muted-foreground">
                       <span

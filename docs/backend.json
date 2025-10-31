@@ -104,7 +104,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Budget",
       "type": "object",
-      "description": "Represents a budget set for a specific category.",
+      "description": "Represents a budget set for a specific category over a period.",
       "properties": {
         "id": {
           "type": "string",
@@ -116,24 +116,36 @@
         },
         "categoryId": {
           "type": "string",
-          "description": "Reference to Category. (Relationship: Category 1:N Budget)"
-        },
-        "month": {
-          "type": "string",
-          "description": "The month for which the budget is set.",
-          "format": "date-time"
+          "description": "Reference to Category. (Relationship: Category 1:1 Budget)"
         },
         "amount": {
           "type": "number",
-          "description": "The budget amount for the category in the specified month."
+          "description": "The budget amount for the category in the specified period."
+        },
+        "period": {
+          "type": "string",
+          "description": "The period for the budget.",
+          "enum": ["monthly", "quarterly", "yearly"]
+        },
+        "startDate": {
+          "type": "string",
+          "description": "The start date of the budget period.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "The end date of the budget period.",
+          "format": "date-time"
         }
       },
       "required": [
         "id",
         "familyMemberId",
         "categoryId",
-        "month",
-        "amount"
+        "amount",
+        "period",
+        "startDate",
+        "endDate"
       ]
     }
   },

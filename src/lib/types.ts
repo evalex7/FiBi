@@ -14,6 +14,9 @@ export type Budget = {
   id: string;
   category: string;
   amount: number;
+  period: 'monthly' | 'quarterly' | 'yearly';
+  startDate: Date | Timestamp;
+  endDate: Date | Timestamp;
   familyMemberId?: string;
 };
 
