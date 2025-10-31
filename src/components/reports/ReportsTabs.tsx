@@ -125,7 +125,7 @@ export default function ReportsTabs() {
               </Select>
             </div>
           </CardHeader>
-          <CardContent className="px-0">
+          <CardContent className="px-0 sm:px-2">
             {transactions.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                 Недостатньо даних для відображення графіка.
@@ -133,16 +133,16 @@ export default function ReportsTabs() {
             ) : (
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={incomeVsExpenseData} accessibilityLayer margin={{ left: -20, right: 16 }}>
+                <BarChart data={incomeVsExpenseData} accessibilityLayer margin={{ left: 12, right: 12 }}>
                   <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
-                  <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
+                  <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
                   <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                  <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
+                  <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={40} />
                   <Bar
                     dataKey="expenses"
                     fill="var(--color-expenses)"
                     radius={4}
-                    maxBarSize={60}
+                    maxBarSize={40}
                   />
                   <ChartLegend content={<ChartLegendContent />} />
                 </BarChart>
@@ -166,7 +166,7 @@ export default function ReportsTabs() {
                 Немає даних про витрати для відображення.
               </div>
             ) : (
-              <div className="w-full h-[350px] flex flex-col items-center">
+              <div className="w-full h-[400px] sm:h-[350px] flex flex-col items-center">
                 <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-full max-h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -214,7 +214,7 @@ export default function ReportsTabs() {
                             <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                           ))}
                           </Pie>
-                          <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap" />} />
+                          <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
                         </PieChart>
                     </ResponsiveContainer>
                 </ChartContainer>
