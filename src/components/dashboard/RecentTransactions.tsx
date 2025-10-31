@@ -145,13 +145,13 @@ export default function RecentTransactions() {
                   return (
                     <div key={transaction.id} className="flex items-center gap-3 p-2 rounded-lg border">
                       <TransactionUserAvatar userId={transaction.familyMemberId} />
-                      <div className="flex-grow">
-                        <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {format(date, 'd MMM yyyy', { locale: uk })}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex-grow space-y-1">
+                        <div className="flex justify-between items-baseline">
+                            <p className="font-medium truncate pr-2">{transaction.description}</p>
+                            <p className="text-xs text-muted-foreground whitespace-nowrap">
+                            {format(date, 'd MMM', { locale: uk })}
+                            </p>
+                        </div>
                         <div
                           className={cn(
                             'font-medium text-base',
@@ -161,8 +161,8 @@ export default function RecentTransactions() {
                           {transaction.type === 'income' ? '+' : '-'}
                           {transaction.formattedAmount}
                         </div>
-                        <TransactionActions transaction={transaction} />
                       </div>
+                      <TransactionActions transaction={transaction} />
                     </div>
                   );
                 })}
