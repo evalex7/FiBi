@@ -43,6 +43,7 @@ export default function AppLayout({
   
   const getIsActive = (href: string) => {
     if (href === '/dashboard') {
+      // The root page now redirects, but let's keep this for robustness
       return pathname === '/' || pathname === '/dashboard';
     }
     return pathname.startsWith(href);

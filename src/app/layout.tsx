@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { TransactionsProvider } from '@/contexts/transactions-context';
+import { PaymentsProvider } from '@/contexts/payments-context';
 
 export const metadata: Metadata = {
   title: 'Сімейні фінанси',
@@ -31,7 +32,9 @@ export default function RootLayout({
         )}
       >
         <TransactionsProvider>
-          {children}
+          <PaymentsProvider>
+            {children}
+          </PaymentsProvider>
         </TransactionsProvider>
         <Toaster />
       </body>
