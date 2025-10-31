@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useBudgets } from '@/contexts/budgets-context';
 import type { Budget } from '@/lib/types';
 import { useCategories } from '@/contexts/categories-context';
+import { categoryIcons } from '@/lib/category-icons';
 
 
 type BudgetFormProps = {
@@ -112,11 +113,17 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
                             {budget.category}
                         </SelectItem>
                     ) : (
-                        availableCategories.map((cat) => (
-                            <SelectItem key={cat.name} value={cat.name}>
-                              {cat.name}
+                        availableCategories.map((cat) => {
+                          const Icon = categoryIcons[cat.icon];
+                          return (
+                            <SelectItem key={cat.id} value={cat.name}>
+                              <div className="flex items-center gap-2">
+                                {Icon && <Icon className="h-4 w-4" />}
+                                <span>{cat.name}</span>
+                              </div>
                             </SelectItem>
-                        ))
+                          );
+                        })
                     )}
                     </SelectContent>
                 </Select>
