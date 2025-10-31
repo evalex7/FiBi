@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LogOut,
   Target,
+  Repeat,
 } from 'lucide-react';
 
 import {
@@ -24,6 +25,7 @@ import { Logo } from './Logo';
 const menuItems = [
   { href: '/', label: 'Панель', icon: LayoutDashboard },
   { href: '/budgets', label: 'Бюджети', icon: Target },
+  { href: '/payments', label: 'Платежі', icon: Repeat },
 ];
 
 export default function AppLayout({

@@ -20,3 +20,12 @@ export type Category = {
   label: string;
   icon: LucideIcon;
 };
+
+export type RecurringPayment = {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  nextDueDate: Date;
+  frequency: 'monthly' | 'quarterly' | 'yearly';
+};
