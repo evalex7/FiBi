@@ -20,19 +20,23 @@ type FormattedBudget = {
   formattedRemaining: string;
 };
 
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('uk-UA', {
+    style: 'currency',
+    currency: 'UAH',
+  }).format(amount);
+
 export default function BudgetList() {
   const { transactions } = useTransactions();
   const [formattedBudgets, setFormattedBudgets] = useState<FormattedBudget[]>([]);
 
   useEffect(() => {
-    const formatCurrency = (amount: number) =>
-      new Intl.NumberFormat('uk-UA', {
-        style: 'currency',
-        currency: 'UAH',
-      }).format(amount);
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     const spentAmounts = transactions.reduce((acc, t) => {
-      if (t.type === 'expense') {
+      const transactionDate = new Date(t.date);
+      if (t.type === 'expense' && transactionDate >= firstDayOfMonth && transactionDate <= today) {
         const budgetCategory = mockBudgets.find(b => b.category === t.category);
         if (budgetCategory) {
           acc[t.category] = (acc[t.category] || 0) + t.amount;
