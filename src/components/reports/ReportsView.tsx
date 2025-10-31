@@ -52,18 +52,17 @@ const barChartConfig = {
 } satisfies ChartConfig;
 
 const COLORS = [
-  'hsl(var(--chart-1))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
-  'hsl(220, 70%, 50%)',
-  'hsl(260, 70%, 50%)',
-  'hsl(300, 70%, 50%)',
-  'hsl(340, 70%, 50%)',
-  'hsl(0, 0%, 50%)',
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(220, 70%, 50%)",
+  "hsl(260, 70%, 50%)",
+  "hsl(300, 70%, 50%)",
+  "hsl(340, 70%, 50%)",
+  "hsl(0, 0%, 50%)",
 ];
-
 
 export default function ReportsView() {
   const { transactions } = useTransactions();
@@ -92,30 +91,30 @@ export default function ReportsView() {
     return [{ name: 'vs', income, expenses }];
   }, [transactions, period]);
   
-  const categoryData = useMemo(() => {
-    const data: { [key: string]: number } = {};
+  const { data: categoryData, config: pieChartConfig } = useMemo(() => {
+    const dataMap: { [key: string]: number } = {};
     transactions
       .filter((t) => t.type === 'expense')
       .forEach((t) => {
-        data[t.category] = (data[t.category] || 0) + t.amount;
+        dataMap[t.category] = (dataMap[t.category] || 0) + t.amount;
       });
 
-    return Object.entries(data).map(([name, value], index) => ({
+    const chartData = Object.entries(dataMap).map(([name, value]) => ({
       name,
       value,
-      fill: COLORS[index % COLORS.length],
     }));
-  }, [transactions]);
-  
-  const pieChartConfig = useMemo(() => {
-    return categoryData.reduce((acc, entry) => {
+    
+    const chartConfig = chartData.reduce((acc, entry, index) => {
         acc[entry.name] = {
             label: entry.name,
-            color: entry.fill,
+            color: COLORS[index % COLORS.length],
         };
         return acc;
     }, {} as ChartConfig);
-}, [categoryData]);
+
+    return { data: chartData, config: chartConfig };
+  }, [transactions]);
+
 
   return (
     <div className="w-full space-y-6">
@@ -167,7 +166,7 @@ export default function ReportsView() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
-            {transactions.filter(t => t.type === 'expense').length === 0 ? (
+            {categoryData.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                 Немає даних про витрати для відображення.
               </div>
@@ -216,7 +215,7 @@ export default function ReportsView() {
                       }}
                     >
                     {categoryData.map((entry) => (
-                      <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                      <Cell key={`cell-${entry.name}`} fill={`var(--color-${entry.name})`} />
                     ))}
                     </Pie>
                   </PieChart>
