@@ -22,9 +22,9 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
 
   const transactionsCollectionRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'expenses');
-  }, [firestore, user]);
+    if (!firestore) return null;
+    return collection(firestore, 'expenses');
+  }, [firestore]);
 
   const { data: transactionsData, isLoading } = useCollection<Transaction>(transactionsCollectionRef);
 
@@ -37,20 +37,20 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
   }, [transactionsData]);
 
   const addTransaction = (transactionData: Omit<Transaction, 'id'>) => {
-    if (!transactionsCollectionRef) return;
-    addDocumentNonBlocking(transactionsCollectionRef, { ...transactionData, familyMemberId: user?.uid });
+    if (!transactionsCollectionRef || !user) return;
+    addDocumentNonBlocking(transactionsCollectionRef, { ...transactionData, familyMemberId: user.uid });
   };
 
   const updateTransaction = (updatedTransaction: WithId<Transaction>) => {
-    if (!firestore || !user) return;
-    const transactionDocRef = doc(firestore, 'users', user.uid, 'expenses', updatedTransaction.id);
+    if (!firestore) return;
+    const transactionDocRef = doc(firestore, 'expenses', updatedTransaction.id);
     const { id, ...transactionData } = updatedTransaction;
     updateDocumentNonBlocking(transactionDocRef, transactionData);
   };
 
   const deleteTransaction = (id: string) => {
-    if (!firestore || !user) return;
-    const transactionDocRef = doc(firestore, 'users', user.uid, 'expenses', id);
+    if (!firestore) return;
+    const transactionDocRef = doc(firestore, 'expenses', id);
     deleteDocumentNonBlocking(transactionDocRef);
   };
 

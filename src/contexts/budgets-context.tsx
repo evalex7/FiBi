@@ -22,9 +22,9 @@ export const BudgetsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
 
   const budgetsCollectionRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'budgets');
-  }, [firestore, user]);
+    if (!firestore) return null;
+    return collection(firestore, 'budgets');
+  }, [firestore]);
 
   const { data: budgets, isLoading } = useCollection<Budget>(budgetsCollectionRef);
   
@@ -35,14 +35,14 @@ export const BudgetsProvider = ({ children }: { children: ReactNode }) => {
 
   const updateBudget = (updatedBudget: WithId<Budget>) => {
     if (!firestore || !user) return;
-    const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', updatedBudget.id);
+    const budgetDocRef = doc(firestore, 'budgets', updatedBudget.id);
     const { id, ...budgetData } = updatedBudget;
     updateDocumentNonBlocking(budgetDocRef, budgetData);
   };
 
   const deleteBudget = (id: string) => {
     if (!firestore || !user) return;
-    const budgetDocRef = doc(firestore, 'users', user.uid, 'budgets', id);
+    const budgetDocRef = doc(firestore, 'budgets', id);
     deleteDocumentNonBlocking(budgetDocRef);
   };
 
@@ -52,7 +52,7 @@ export const BudgetsProvider = ({ children }: { children: ReactNode }) => {
     updateBudget,
     deleteBudget,
     isLoading
-  }), [budgets, isLoading, user, firestore]);
+  }), [budgets, isLoading]);
 
   return (
     <BudgetsContext.Provider value={value}>

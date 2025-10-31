@@ -1,153 +1,80 @@
-/**
- * @fileoverview Firestore Security Rules for a family expense tracking application.
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model. Each family member
- * can only access data associated with their own user ID. This ensures data
- * privacy and prevents unauthorized access or modification of another family
- * member's expenses, categories, or budget data.
- *
- * Data Structure:
- * All data is nested under /users/{familyMemberId}, where familyMemberId corresponds
- * to the Firebase Auth UID of the user. Subcollections under each user's
- * document store categories, expenses, and budgets.
- *
- * Key Security Decisions:
- * - Users can only create, read, update, and delete their own data.
- * - Listing operations are restricted to the owner of the data.
- * - No shared or public data is allowed.
- * - Root-level collection listing (e.g., querying the entire `/users` collection)
- *   is disallowed to prevent leaking user information.
- *
- * Denormalization for Authorization:
- * The data structure inherently denormalizes the familyMemberId (the user's UID)
- * into each document and subcollection path. This allows direct enforcement
- * of ownership using request.auth.uid without requiring additional reads or
- * complex queries. For example, an Expense document's access is governed by
- * its location under /users/{familyMemberId}/expenses/{expenseId}, where
- * familyMemberId MUST match request.auth.uid.
- */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
      * @description Checks if the user is signed in.
-     * @return {boolean} True if the user is signed in, false otherwise.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * @description Checks if the user is the owner of the document based on the familyMemberId.
-     * @param {string} familyMemberId The family member ID to check against.
-     * @return {boolean} True if the user is the owner, false otherwise.
+     * @description Checks if the user is the owner of the document.
+     * @param resource The document resource.
      */
-    function isOwner(familyMemberId) {
-      return isSignedIn() && request.auth.uid == familyMemberId;
+    function isOwner(resource) {
+      return isSignedIn() && request.auth.uid == resource.data.familyMemberId;
     }
 
     /**
-     * @description Checks if the user is the owner of the document and the document exists.
-     *              This is used for update and delete operations.
-     * @param {string} familyMemberId The family member ID to check against.
-     * @return {boolean} True if the user is the owner and the document exists, false otherwise.
+     * @description Checks if the incoming data owner matches the authenticated user.
+     * @param request The request object.
      */
-    function isExistingOwner(familyMemberId) {
-      return isOwner(familyMemberId) && resource != null;
+    function isOwnerOfNewData(request) {
+        return isSignedIn() && request.auth.uid == request.resource.data.familyMemberId;
     }
 
     /**
-     * @description Rules for the FamilyMember profile documents.
-     *              Listing the entire /users collection is disallowed for security.
-     * @path /users/{familyMemberId}
-     * @allow (create) User with UID 'user_abc' can create their own profile with matching ID.
-     * @deny (create) User with UID 'user_abc' cannot create a profile for 'user_xyz'.
-     * @allow (get) User with UID 'user_abc' can read their own profile.
-     * @deny (get, list) User with UID 'user_abc' cannot read profile for 'user_xyz' or list all users.
-     * @allow (update, delete) User with UID 'user_abc' can update/delete their own profile.
-     * @deny (update, delete) User with UID 'user_abc' cannot update/delete profile for 'user_xyz'.
-     * @principle Enforces document ownership for all operations. Disallows collection-level list.
+     * @description Rules for user profiles. Users can only read/write their own profile.
+     *              Listing all users is disallowed.
      */
-    match /users/{familyMemberId} {
-      allow create: if isOwner(familyMemberId) && request.resource.data.id == familyMemberId;
-      allow get: if isOwner(familyMemberId);
-      allow list: if false; // Explicitly disallow listing all users.
-      allow update: if isExistingOwner(familyMemberId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(familyMemberId);
+    match /users/{userId} {
+      allow get, update, delete: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn();
+      allow list: if false; // Disallow listing all users for security.
     }
 
     /**
-     * @description Rules for the Category documents.
-     * @path /users/{familyMemberId}/categories/{categoryId}
-     * @allow (create) User with UID 'user_abc' can create a category under their profile.
-     * @deny (create) User with UID 'user_abc' cannot create a category under 'user_xyz' profile.
-     * @allow (get, list) User with UID 'user_abc' can read categories under their profile.
-     * @deny (get, list) User with UID 'user_abc' cannot read categories under 'user_xyz' profile.
-     * @allow (update, delete) User with UID 'user_abc' can update/delete categories under their profile.
-     * @deny (update, delete) User with UID 'user_abc' cannot update/delete categories under 'user_xyz' profile.
-     * @principle Enforces document ownership for all operations.
+     * @description Rules for categories. Any authenticated user can read all categories.
+     *              Only the creator can create, update, or delete a category.
+     *              isCommon categories are an exception and can be managed by anyone (future enhancement).
      */
-    match /users/{familyMemberId}/categories/{categoryId} {
-      allow create: if isOwner(familyMemberId);
-      allow get, list: if isOwner(familyMemberId);
-      allow update: if isExistingOwner(familyMemberId);
-      allow delete: if isExistingOwner(familyMemberId);
+    match /categories/{categoryId} {
+      allow get, list: if isSignedIn();
+      allow create: if isOwnerOfNewData(request);
+      allow update, delete: if isOwner(resource);
+    }
+    
+    /**
+     * @description Rules for expenses. Any authenticated user can read all expenses.
+     *              Only the creator can create, update, or delete an expense.
+     */
+    match /expenses/{expenseId} {
+      allow get, list: if isSignedIn();
+      allow create: if isOwnerOfNewData(request);
+      allow update, delete: if isOwner(resource);
     }
 
     /**
-     * @description Rules for the Expense documents.
-     * @path /users/{familyMemberId}/expenses/{expenseId}
-     * @allow (create) User with UID 'user_abc' can create an expense under their profile.
-     * @deny (create) User with UID 'user_abc' cannot create an expense under 'user_xyz' profile.
-     * @allow (get, list) User with UID 'user_abc' can read expenses under their profile.
-     * @deny (get, list) User with UID 'user_abc' cannot read expenses under 'user_xyz' profile.
-     * @allow (update, delete) User with UID 'user_abc' can update/delete expenses under their profile.
-     * @deny (update, delete) User with UID 'user_abc' cannot update/delete expenses under 'user_xyz' profile.
-     * @principle Enforces document ownership for all operations.
+     * @description Rules for budgets. Any authenticated user can read all budgets.
+     *              Only the creator can create, update, or delete a budget.
      */
-    match /users/{familyMemberId}/expenses/{expenseId} {
-      allow create: if isOwner(familyMemberId);
-      allow get, list: if isOwner(familyMemberId);
-      allow update: if isExistingOwner(familyMemberId);
-      allow delete: if isExistingOwner(familyMemberId);
+    match /budgets/{budgetId} {
+      allow get, list: if isSignedIn();
+      allow create: if isOwnerOfNewData(request);
+      allow update, delete: if isOwner(resource);
     }
-
+    
     /**
-     * @description Rules for the Budget documents.
-     * @path /users/{familyMemberId}/budgets/{budgetId}
-     * @allow (create) User with UID 'user_abc' can create a budget under their profile.
-     * @deny (create) User with UID 'user_abc' cannot create a budget under 'user_xyz' profile.
-     * @allow (get, list) User with UID 'user_abc' can read budgets under their profile.
-     * @deny (get, list) User with UID 'user_abc' cannot read budgets under 'user_xyz' profile.
-     * @allow (update, delete) User with UID 'user_abc' can update/delete budgets under their profile.
-     * @deny (update, delete) User with UID 'user_abc' cannot update/delete budgets under 'user_xyz' profile.
-     * @principle Enforces document ownership for all operations.
+     * @description Rules for recurring payments. Any authenticated user can read all payments.
+     *              Only the creator can create, update, or delete a payment.
      */
-    match /users/{familyMemberId}/budgets/{budgetId} {
-      allow create: if isOwner(familyMemberId);
-      allow get, list: if isOwner(familyMemberId);
-      allow update: if isExistingOwner(familyMemberId);
-      allow delete: if isExistingOwner(familyMemberId);
-    }
-
-    /**
-     * @description Rules for the Payment documents.
-     * @path /users/{familyMemberId}/payments/{paymentId}
-     * @allow (create) User with UID 'user_abc' can create a payment under their profile.
-     * @deny (create) User with UID 'user_abc' cannot create a payment under 'user_xyz' profile.
-     * @allow (get, list) User with UID 'user_abc' can read payments under their profile.
-     * @deny (get, list) User with UID 'user_abc' cannot read payments under 'user_xyz' profile.
-     * @allow (update, delete) User with UID 'user_abc' can update/delete payments under their profile.
-     * @deny (update, delete) User with UID 'user_abc' cannot update/delete payments under 'user_xyz' profile.
-     * @principle Enforces document ownership for all operations.
-     */
-    match /users/{familyMemberId}/payments/{paymentId} {
-      allow create: if isOwner(familyMemberId);
-      allow get, list: if isOwner(familyMemberId);
-      allow update: if isExistingOwner(familyMemberId);
-      allow delete: if isExistingOwner(familyMemberId);
+    match /payments/{paymentId} {
+       allow get, list: if isSignedIn();
+       allow create: if isOwnerOfNewData(request);
+       allow update, delete: if isOwner(resource);
     }
   }
 }

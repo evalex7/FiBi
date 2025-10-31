@@ -37,8 +37,8 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useCategories } from '@/contexts/categories-context';
@@ -55,17 +55,20 @@ export default function RecentTransactions() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
 
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
+  const usersCollectionRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
 
-  const { data: familyMember } = useDoc<FamilyMember>(userDocRef);
+  const { data: familyMembers } = useCollection<FamilyMember>(usersCollectionRef);
 
   const familyMembersMap = useMemo(() => {
-    if (!familyMember) return {};
-    return { [familyMember.id]: familyMember };
-  }, [familyMember]);
+    if (!familyMembers) return {};
+    return familyMembers.reduce((acc, member) => {
+      acc[member.id] = member;
+      return acc;
+    }, {} as Record<string, FamilyMember>);
+  }, [familyMembers]);
 
 
   useEffect(() => {

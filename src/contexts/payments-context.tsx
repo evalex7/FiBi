@@ -22,9 +22,9 @@ export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
 
   const paymentsCollectionRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'payments');
-  }, [firestore, user]);
+    if (!firestore) return null;
+    return collection(firestore, 'payments');
+  }, [firestore]);
 
   const { data: paymentsData, isLoading } = useCollection<RecurringPayment>(paymentsCollectionRef);
   
@@ -38,20 +38,20 @@ export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
 
 
   const addPayment = (paymentData: Omit<RecurringPayment, 'id'>) => {
-    if (!paymentsCollectionRef) return;
-    addDocumentNonBlocking(paymentsCollectionRef, { ...paymentData, familyMemberId: user?.uid });
+    if (!paymentsCollectionRef || !user) return;
+    addDocumentNonBlocking(paymentsCollectionRef, { ...paymentData, familyMemberId: user.uid });
   };
 
   const updatePayment = (updatedPayment: WithId<RecurringPayment>) => {
     if (!firestore || !user) return;
-    const paymentDocRef = doc(firestore, 'users', user.uid, 'payments', updatedPayment.id);
+    const paymentDocRef = doc(firestore, 'payments', updatedPayment.id);
     const { id, ...paymentData } = updatedPayment;
     updateDocumentNonBlocking(paymentDocRef, paymentData);
   };
 
   const deletePayment = (id: string) => {
     if (!firestore || !user) return;
-    const paymentDocRef = doc(firestore, 'users', user.uid, 'payments', id);
+    const paymentDocRef = doc(firestore, 'payments', id);
     deleteDocumentNonBlocking(paymentDocRef);
   };
 

@@ -43,7 +43,7 @@
         },
         "familyMemberId": {
           "type": "string",
-          "description": "Reference to FamilyMember. (Relationship: FamilyMember 1:N Expense) Indicates which family member recorded the expense."
+          "description": "The UID of the family member who recorded the expense."
         },
         "categoryId": {
           "type": "string",
@@ -87,7 +87,7 @@
         },
         "familyMemberId": {
           "type": "string",
-          "description": "Reference to FamilyMember. (Relationship: FamilyMember 1:N Category)  Indicates which family member created the category (for personal categories)."
+          "description": "The UID of the family member who created the category."
         },
         "isCommon": {
           "type": "boolean",
@@ -96,7 +96,8 @@
       },
       "required": [
         "id",
-        "name"
+        "name",
+        "familyMemberId"
       ]
     },
     "Budget": {
@@ -111,7 +112,7 @@
         },
         "familyMemberId": {
           "type": "string",
-          "description": "Reference to FamilyMember. (Relationship: FamilyMember 1:N Budget)"
+          "description": "The UID of the family member who set the budget."
         },
         "categoryId": {
           "type": "string",
@@ -145,34 +146,30 @@
   "firestore": {
     "structure": [
       {
-        "path": "/users/{familyMemberId}",
+        "path": "/users/{userId}",
         "definition": {
           "entityName": "FamilyMember",
           "schema": {
             "$ref": "#/backend/entities/FamilyMember"
           },
-          "description": "Stores family member profiles. The 'familyMemberId' is the Firebase Auth UID. It serves as the root for all personal data.",
+          "description": "Stores user profiles. The 'userId' is the Firebase Auth UID.",
           "params": [
             {
-              "name": "familyMemberId",
-              "description": "The Firebase Auth UID of the family member."
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
             }
           ]
         }
       },
       {
-        "path": "/users/{familyMemberId}/categories/{categoryId}",
+        "path": "/categories/{categoryId}",
         "definition": {
           "entityName": "Category",
           "schema": {
             "$ref": "#/backend/entities/Category"
           },
-          "description": "Stores expense categories created by each family member. Includes a 'familyMemberId' to identify the owner.",
+          "description": "Stores all expense categories. The 'familyMemberId' field indicates the owner.",
           "params": [
-            {
-              "name": "familyMemberId",
-              "description": "The Firebase Auth UID of the family member."
-            },
             {
               "name": "categoryId",
               "description": "The unique ID of the category."
@@ -181,18 +178,14 @@
         }
       },
       {
-        "path": "/users/{familyMemberId}/expenses/{expenseId}",
+        "path": "/expenses/{expenseId}",
         "definition": {
           "entityName": "Expense",
           "schema": {
             "$ref": "#/backend/entities/Expense"
           },
-          "description": "Stores expenses recorded by each family member. The 'familyMemberId' indicates the owner.",
+          "description": "Stores all expenses. The 'familyMemberId' field indicates the owner.",
           "params": [
-            {
-              "name": "familyMemberId",
-              "description": "The Firebase Auth UID of the family member."
-            },
             {
               "name": "expenseId",
               "description": "The unique ID of the expense."
@@ -201,26 +194,38 @@
         }
       },
       {
-        "path": "/users/{familyMemberId}/budgets/{budgetId}",
+        "path": "/budgets/{budgetId}",
         "definition": {
           "entityName": "Budget",
           "schema": {
             "$ref": "#/backend/entities/Budget"
           },
-          "description": "Stores budget information set by each family member. The 'familyMemberId' indicates the owner.",
+          "description": "Stores all budgets. The 'familyMemberId' field indicates the owner.",
           "params": [
-            {
-              "name": "familyMemberId",
-              "description": "The Firebase Auth UID of the family member."
-            },
             {
               "name": "budgetId",
               "description": "The unique ID of the budget."
             }
           ]
         }
+      },
+       {
+        "path": "/payments/{paymentId}",
+        "definition": {
+          "entityName": "RecurringPayment",
+          "schema": {
+            "$ref": "#/backend/entities/RecurringPayment"
+          },
+          "description": "Stores all recurring payments. The 'familyMemberId' field indicates the owner.",
+          "params": [
+            {
+              "name": "paymentId",
+              "description": "The unique ID of the recurring payment."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure data isolation and secure access for each family member. Each family member's data (categories, expenses, and budgets) is stored under their respective user ID, enabling straightforward security rules based on `request.auth.uid`. The structure leverages path-based ownership to ensure each family member can only access their own data. The use of subcollections for categories, expenses, and budgets maintains a clear hierarchy. Public or shared data is not required. This structure avoids hierarchical authorization dependencies (`get()`), simplifying security rules and allowing for atomic operations. By storing expenses under the familyMemberId we ensure that expenses can only be read by their owner. This structure facilitates secure list operations because listing is always scoped to the requesting user's ID."
+    "reasoning": "The Firestore structure is now centralized to allow data sharing among all users. Collections like 'expenses', 'categories', and 'budgets' are at the root level. Data access is controlled by security rules: all authenticated users can read data, but only the document's owner (matched via the 'familyMemberId' field) can write, update, or delete it. This ensures data visibility for the whole family while maintaining individual ownership of records."
   }
 }

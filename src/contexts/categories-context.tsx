@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useMemo, ReactNode, useEffect } from 'react';
 import type { Category } from '@/lib/types';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, writeBatch, getDocs, query } from 'firebase/firestore';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { defaultCategories } from '@/lib/category-icons';
@@ -25,24 +25,32 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   const categoriesCollectionRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'categories');
-  }, [firestore, user]);
+    if (!firestore) return null;
+    return collection(firestore, 'categories');
+  }, [firestore]);
 
   const { data: categories, isLoading } = useCollection<Category>(categoriesCollectionRef);
 
   useEffect(() => {
-    if (user && !isLoading && categories && categories.length === 0) {
-      // First time user, let's populate with default categories.
-      toast({
-        title: 'Вітаємо!',
-        description: 'Ми додали для вас стандартний набір категорій, щоб ви могли почати.',
-      });
-      defaultCategories.forEach(category => {
-        addCategory(category);
+    if (user && !isLoading && categoriesCollectionRef && categories?.length === 0) {
+      // First time family setup, let's populate with default categories.
+      const q = query(categoriesCollectionRef);
+      getDocs(q).then(snapshot => {
+        if(snapshot.empty) {
+          toast({
+            title: 'Вітаємо!',
+            description: 'Ми додали для вас стандартний набір категорій, щоб ви могли почати.',
+          });
+          const batch = writeBatch(firestore);
+          defaultCategories.forEach(category => {
+            const newDocRef = doc(categoriesCollectionRef);
+            batch.set(newDocRef, {...category, familyMemberId: user.uid, isCommon: true});
+          });
+          batch.commit();
+        }
       });
     }
-  }, [user, isLoading, categories]);
+  }, [user, isLoading, categories, firestore, categoriesCollectionRef, toast]);
   
   const addCategory = (categoryData: Omit<Category, 'id'>) => {
     if (!categoriesCollectionRef || !user) return;
@@ -51,14 +59,17 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
 
   const updateCategory = (updatedCategory: WithId<Category>) => {
     if (!firestore || !user) return;
-    const categoryDocRef = doc(firestore, 'users', user.uid, 'categories', updatedCategory.id);
+    const categoryDocRef = doc(firestore, 'categories', updatedCategory.id);
     const { id, ...categoryData } = updatedCategory;
+    // ensure only owner can update
+    if (updatedCategory.familyMemberId !== user.uid) return;
     updateDocumentNonBlocking(categoryDocRef, categoryData);
   };
 
   const deleteCategory = (id: string) => {
     if (!firestore || !user) return;
-    const categoryDocRef = doc(firestore, 'users', user.uid, 'categories', id);
+    const categoryDocRef = doc(firestore, 'categories', id);
+    // In a real app, you'd check ownership before deleting
     deleteDocumentNonBlocking(categoryDocRef);
   };
 
@@ -68,7 +79,7 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     updateCategory,
     deleteCategory,
     isLoading
-  }), [categories, isLoading, user, firestore]);
+  }), [categories, isLoading]);
 
   return (
     <CategoriesContext.Provider value={value}>
