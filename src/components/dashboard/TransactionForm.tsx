@@ -54,7 +54,8 @@ export default function TransactionForm({ transaction, onSave }: TransactionForm
         setAmount(String(transaction.amount));
         setDescription(transaction.description);
         setCategory(transaction.category);
-        setDate(new Date(transaction.date));
+        const transactionDate = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
+        setDate(transactionDate);
     }
   }, [transaction, isEditMode]);
 

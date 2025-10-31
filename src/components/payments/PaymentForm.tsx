@@ -53,7 +53,8 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
         setDescription(payment.description);
         setCategory(payment.category);
         setFrequency(payment.frequency);
-        setDate(new Date(payment.nextDueDate));
+        const paymentDate = payment.nextDueDate && (payment.nextDueDate as any).toDate ? (payment.nextDueDate as any).toDate() : new Date(payment.nextDueDate);
+        setDate(paymentDate);
     }
   }, [payment, isEditMode]);
 

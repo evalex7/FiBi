@@ -1,6 +1,8 @@
+import { Timestamp } from "firebase/firestore";
+
 export type Transaction = {
   id: string;
-  date: Date;
+  date: Date | Timestamp;
   description: string;
   amount: number;
   type: 'income' | 'expense';
@@ -29,7 +31,7 @@ export type RecurringPayment = {
   description: string;
   amount: number;
   category: string;
-  nextDueDate: Date;
+  nextDueDate: Date | Timestamp;
   frequency: 'monthly' | 'quarterly' | 'yearly';
   familyMemberId?: string;
 };
