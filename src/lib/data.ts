@@ -1,4 +1,4 @@
-import type { Transaction, Budget } from './types';
+import type { Transaction, Budget, RecurringPayment } from './types';
 
 const today = new Date();
 const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -86,4 +86,41 @@ export const mockBudgets: Budget[] = [
   { id: '5', category: 'Розваги', amount: 3000 },
   { id: '6', category: 'Харчування поза домом', amount: 4000 },
   { id: '7', category: 'Здоров\'я', amount: 2000 },
+];
+
+const getNextDate = (day: number) => {
+    const date = new Date();
+    date.setDate(day);
+    if (date < today) {
+        date.setMonth(date.getMonth() + 1);
+    }
+    return date;
+}
+
+
+export const mockPayments: RecurringPayment[] = [
+    {
+        id: '1',
+        description: 'Орендна плата',
+        amount: 15000,
+        category: 'Житло',
+        nextDueDate: getNextDate(1),
+        frequency: 'monthly',
+    },
+    {
+        id: '2',
+        description: 'Підписка на Netflix',
+        amount: 300,
+        category: 'Розваги',
+        nextDueDate: getNextDate(15),
+        frequency: 'monthly',
+    },
+     {
+        id: '3',
+        description: 'Рахунок за інтернет',
+        amount: 250,
+        category: 'Комунальні послуги',
+        nextDueDate: getNextDate(20),
+        frequency: 'monthly',
+    }
 ];
