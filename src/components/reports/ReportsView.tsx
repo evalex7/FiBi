@@ -122,21 +122,19 @@ export default function ReportsView() {
               </div>
             ) : (
             <ChartContainer config={barChartConfig} className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={incomeVsExpenseData} accessibilityLayer margin={{ left: 12, right: 12 }}>
-                  <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
-                  <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                  <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
-                  <Bar
-                    dataKey="expenses"
-                    fill="var(--color-expenses)"
-                    radius={4}
-                    maxBarSize={60}
-                  />
-                  <ChartLegend content={<ChartLegendContent />} />
-                </BarChart>
-              </ResponsiveContainer>
+              <BarChart data={incomeVsExpenseData} accessibilityLayer margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
+                <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
+                <Bar
+                  dataKey="expenses"
+                  fill="var(--color-expenses)"
+                  radius={4}
+                  maxBarSize={60}
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+              </BarChart>
             </ChartContainer>
             )}
           </CardContent>
@@ -155,61 +153,57 @@ export default function ReportsView() {
                 Немає даних про витрати для відображення.
               </div>
             ) : (
-              <div className="w-full h-[350px] sm:h-[400px] flex flex-col items-center">
-                <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-full max-h-[250px] sm:max-h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                        <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                          <Pie
-                            data={categoryData}
-                            dataKey="value"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={80}
-                            innerRadius={50}
-                            paddingAngle={2}
-                            labelLine={false}
-                            label={({
-                              cx,
-                              cy,
-                              midAngle,
-                              innerRadius,
-                              outerRadius,
-                              percent,
-                            }) => {
-                              const RADIAN = Math.PI / 180;
-                              const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                              const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                              const y = cy + radius * Math.sin(-midAngle * RADIAN);
+              <ChartContainer config={pieChartConfig} className="w-full h-[400px] flex flex-col items-center justify-center">
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                    <Pie
+                      data={categoryData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      innerRadius={50}
+                      paddingAngle={2}
+                      labelLine={false}
+                      label={({
+                        cx,
+                        cy,
+                        midAngle,
+                        innerRadius,
+                        outerRadius,
+                        percent,
+                      }) => {
+                        const RADIAN = Math.PI / 180;
+                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-                              return (
-                                percent > 0.05 ? (
-                                <text
-                                  x={x}
-                                  y={y}
-                                  fill="hsl(var(--card-foreground))"
-                                  textAnchor={x > cx ? 'start' : 'end'}
-                                  dominantBaseline="central"
-                                  className="text-xs fill-foreground font-medium"
-                                >
-                                  {`${(percent * 100).toFixed(0)}%`}
-                                </text>
-                                ) : null
-                              );
-                            }}
+                        return (
+                          percent > 0.05 ? (
+                          <text
+                            x={x}
+                            y={y}
+                            fill="hsl(var(--card-foreground))"
+                            textAnchor={x > cx ? 'start' : 'end'}
+                            dominantBaseline="central"
+                            className="text-xs fill-foreground font-medium"
                           >
-                          {categoryData.map((entry) => (
-                            <Cell key={`cell-${entry.name}`} fill={entry.fill} />
-                          ))}
-                          </Pie>
-                        </PieChart>
-                    </ResponsiveContainer>
-                </ChartContainer>
-                <ChartContainer config={pieChartConfig} className="w-full">
-                   <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
-                </ChartContainer>
-              </div>
+                            {`${(percent * 100).toFixed(0)}%`}
+                          </text>
+                          ) : null
+                        );
+                      }}
+                    >
+                    {categoryData.map((entry) => (
+                      <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                    ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
+              </ChartContainer>
             )}
           </CardContent>
         </Card>

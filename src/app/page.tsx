@@ -5,7 +5,7 @@ import AppLayout from '@/components/AppLayout';
 import AddTransactionForm from '@/components/dashboard/AddTransactionForm';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import SummaryCards from '@/components/dashboard/SummaryCards';
-import ReportsView from '@/components/reports/ReportsTabs';
+import ReportsView from '@/components/reports/ReportsView';
 import {
   Tabs,
   TabsContent,
