@@ -12,10 +12,10 @@ import {
   Bar,
   XAxis,
   YAxis,
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
+  Legend,
 } from 'recharts';
 import {
   ChartContainer,
@@ -23,7 +23,7 @@ import {
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
-  type ChartConfig,
+  type ChartConfig
 } from '@/components/ui/chart';
 import { useTransactions } from '@/contexts/transactions-context';
 import { allCategories } from '@/lib/category-icons';
@@ -42,12 +42,13 @@ const formatCurrency = (amount: number) => {
     return `${(amount / 1000).toFixed(0)}k`;
   }
   return `${amount}`;
-};
+}
 
 const barChartConfig = {
-  income: { label: 'Дохід', color: 'hsl(var(--chart-2))' },
-  expenses: { label: 'Витрати', color: 'hsl(var(--chart-1))' },
+  income: { label: "Дохід", color: "hsl(var(--chart-2))" },
+  expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
+
 
 export default function ReportsView() {
   const { transactions } = useTransactions();
@@ -73,179 +74,138 @@ export default function ReportsView() {
 
     return [{ name: 'vs', income, expenses }];
   }, [transactions, period]);
-
+  
   const categoryData = useMemo(() => {
-    const data: { [key: string]: number } = {};
-    transactions
-      .filter((t) => t.type === 'expense')
-      .forEach((t) => {
-        data[t.category] = (data[t.category] || 0) + t.amount;
-      });
-
-    return Object.entries(data).map(([name, value], index) => ({
-      name,
-      value,
-      fill: `hsl(var(--chart-${(index % 5) + 1}))`,
-    }));
+      const data: { [key: string]: number } = {};
+      transactions
+          .filter(t => t.type === 'expense')
+          .forEach(t => {
+              data[t.category] = (data[t.category] || 0) + t.amount;
+          });
+      
+      return Object.entries(data).map(([name, value], index) => ({ name, value, fill: `hsl(var(--chart-${(index % 5) + 1}))` }));
   }, [transactions]);
-
-  const pieChartConfig = useMemo(
-    () =>
-      categoryData.reduce((acc, entry) => {
-        const categoryInfo = allCategories.find((c) => c.label === entry.name);
-        acc[entry.name] = {
-          label: categoryInfo ? categoryInfo.label : entry.name,
-          color: entry.fill,
-        };
-        return acc;
-      }, {} as ChartConfig),
-    [categoryData]
-  );
+  
+  const pieChartConfig = useMemo(() => categoryData.reduce((acc, entry) => {
+    const categoryInfo = allCategories.find(c => c.label === entry.name);
+    acc[entry.name] = { label: categoryInfo ? categoryInfo.label : entry.name, color: entry.fill};
+    return acc;
+  }, {} as ChartConfig), [categoryData]);
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Дохід vs. Витрати</CardTitle>
-          <CardDescription>
-            Огляд доходів та витрат за обраний період.
-          </CardDescription>
-          <div className="pt-2">
-            <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Оберіть період" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Останній місяць</SelectItem>
-                <SelectItem value="3">Останні 3 місяці</SelectItem>
-                <SelectItem value="6">Останні 6 місяців</SelectItem>
-                <SelectItem value="12">Останній рік</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent className="px-0 sm:px-2">
-          {transactions.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              Недостатньо даних для відображення графіка.
+        <Card>
+          <CardHeader>
+            <CardTitle>Дохід vs. Витрати</CardTitle>
+            <CardDescription>
+              Огляд доходів та витрат за обраний період.
+            </CardDescription>
+             <div className="pt-2">
+              <Select value={period} onValueChange={setPeriod}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Оберіть період" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Останній місяць</SelectItem>
+                  <SelectItem value="3">Останні 3 місяці</SelectItem>
+                  <SelectItem value="6">Останні 6 місяців</SelectItem>
+                  <SelectItem value="12">Останній рік</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          ) : (
-            <ChartContainer
-              config={barChartConfig}
-              className="h-[300px] w-full"
-            >
-              <BarChart
-                data={incomeVsExpenseData}
-                accessibilityLayer
-                margin={{ left: 12, right: 12 }}
-              >
-                <XAxis
-                  dataKey="name"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  fontSize={12}
-                  tick={() => null}
-                />
-                <YAxis
-                  tickFormatter={formatCurrency}
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  width={30}
-                  fontSize={12}
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent indicator="dot" />}
-                />
-                <Bar
-                  dataKey="income"
-                  fill="var(--color-income)"
-                  radius={4}
-                  maxBarSize={60}
-                />
-                <Bar
-                  dataKey="expenses"
-                  fill="var(--color-expenses)"
-                  radius={4}
-                  maxBarSize={60}
-                />
-                <ChartLegend content={<ChartLegendContent />} />
-              </BarChart>
+          </CardHeader>
+          <CardContent className="px-0 sm:px-2">
+            {transactions.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">
+                Недостатньо даних для відображення графіка.
+              </div>
+            ) : (
+            <ChartContainer config={barChartConfig} className="h-[300px] w-full">
+                <BarChart data={incomeVsExpenseData} accessibilityLayer margin={{ left: 12, right: 12 }}>
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
+                  <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                  <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
+                  <Bar
+                    dataKey="expenses"
+                    fill="var(--color-expenses)"
+                    radius={4}
+                    maxBarSize={60}
+                  />
+                  <ChartLegend content={<ChartLegendContent />} />
+                </BarChart>
             </ChartContainer>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      
+        <Card>
+          <CardHeader>
+            <CardTitle>Витрати по категоріях</CardTitle>
+            <CardDescription>
+              Розбивка ваших витрат за весь час.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-center">
+            {transactions.filter(t => t.type === 'expense').length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">
+                Немає даних про витрати для відображення.
+              </div>
+            ) : (
+              <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[350px] w-full">
+                <PieChart>
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <Pie
+                    data={categoryData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    innerRadius={50}
+                    paddingAngle={2}
+                    labelLine={false}
+                    label={({
+                      cx,
+                      cy,
+                      midAngle,
+                      innerRadius,
+                      outerRadius,
+                      percent,
+                    }) => {
+                      const RADIAN = Math.PI / 180;
+                      const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                      const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                      const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Витрати по категоріях</CardTitle>
-          <CardDescription>Розбивка ваших витрат за весь час.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center">
-          {transactions.filter((t) => t.type === 'expense').length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              Немає даних про витрати для відображення.
-            </div>
-          ) : (
-            <ChartContainer
-              config={pieChartConfig}
-              className="mx-auto aspect-square h-[350px] w-full"
-            >
-              <PieChart>
-                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                <Pie
-                  data={categoryData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  innerRadius={50}
-                  paddingAngle={2}
-                  labelLine={false}
-                  label={({
-                    cx,
-                    cy,
-                    midAngle,
-                    innerRadius,
-                    outerRadius,
-                    percent,
-                  }) => {
-                    const RADIAN = Math.PI / 180;
-                    const radius =
-                      innerRadius + (outerRadius - innerRadius) * 0.5;
-                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-                    return percent > 0.05 ? (
-                      <text
-                        x={x}
-                        y={y}
-                        fill="hsl(var(--card-foreground))"
-                        textAnchor={x > cx ? 'start' : 'end'}
-                        dominantBaseline="central"
-                        className="text-xs fill-foreground font-medium"
-                      >
-                        {`${(percent * 100).toFixed(0)}%`}
-                      </text>
-                    ) : null;
-                  }}
-                >
+                      return (
+                        percent > 0.05 ? (
+                        <text
+                          x={x}
+                          y={y}
+                          fill="hsl(var(--card-foreground))"
+                          textAnchor={x > cx ? 'start' : 'end'}
+                          dominantBaseline="central"
+                          className="text-xs fill-foreground font-medium"
+                        >
+                          {`${(percent * 100).toFixed(0)}%`}
+                        </text>
+                        ) : null
+                      );
+                    }}
+                  >
                   {categoryData.map((entry) => (
                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                   ))}
-                </Pie>
-                <ChartLegend
-                  content={<ChartLegendContent nameKey="name" />}
-                  className="flex-wrap"
-                />
-              </PieChart>
-            </ChartContainer>
-          )}
-        </CardContent>
-      </Card>
+                  </Pie>
+                  <ChartLegend
+                      content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />}
+                  />
+                </PieChart>
+              </ChartContainer>
+            )}
+          </CardContent>
+        </Card>
     </div>
   );
 }
