@@ -17,6 +17,7 @@ import { Skeleton } from '../ui/skeleton';
 import { useCategories } from '@/contexts/categories-context';
 import { format, startOfMonth, startOfQuarter, startOfYear, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
 import { uk } from 'date-fns/locale';
+import { useUser } from '@/firebase';
 
 type FormattedBudget = Budget & {
   spent: number;
@@ -51,12 +52,13 @@ export default function BudgetList() {
   const { transactions } = useTransactions();
   const { budgets, isLoading, deleteBudget } = useBudgets();
   const { categories } = useCategories();
+  const { user } = useUser();
   const [formattedBudgets, setFormattedBudgets] = useState<FormattedBudget[]>([]);
   const [budgetToDelete, setBudgetToDelete] = useState<Budget | null>(null);
   const [budgetToEdit, setBudgetToEdit] = useState<Budget | null>(null);
 
   useEffect(() => {
-    if(!budgets) return;
+    if(!budgets || !user) return;
 
     const newFormattedBudgets = budgets.map(budget => {
       const { start, end } = getPeriodDates(budget.period);
@@ -97,7 +99,7 @@ export default function BudgetList() {
     }).sort((a, b) => a.category.localeCompare(b.category));
 
     setFormattedBudgets(newFormattedBudgets);
-  }, [transactions, budgets]);
+  }, [transactions, budgets, user]);
 
   const handleDelete = () => {
     if (budgetToDelete) {
@@ -105,6 +107,10 @@ export default function BudgetList() {
       setBudgetToDelete(null);
     }
   }
+
+  const canEditOrDelete = (budget: Budget) => {
+    return budget.familyMemberId === user?.uid;
+  };
   
   const LoadingSkeleton = () => (
     <div className="space-y-4">
@@ -164,24 +170,26 @@ export default function BudgetList() {
                         ? `${budget.formattedRemaining} залишилось`
                         : `${formatCurrency(Math.abs(budget.remaining))} перевищено`}
                     </p>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Відкрити меню</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setBudgetToEdit(budget)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            <span>Редагувати</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setBudgetToDelete(budget)} className="text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Видалити</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    {canEditOrDelete(budget) && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Відкрити меню</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setBudgetToEdit(budget)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                <span>Редагувати</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setBudgetToDelete(budget)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Видалити</span>
+                            </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                   </div>
                 </div>
               );
