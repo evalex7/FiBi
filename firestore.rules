@@ -42,7 +42,7 @@ service cloud.firestore {
      *              isCommon categories are an exception and can be managed by anyone (future enhancement).
      */
     match /categories/{categoryId} {
-      allow get, list: if isSignedIn();
+      allow read: if isSignedIn();
       allow create: if isOwnerOfNewData(request);
       allow update, delete: if isOwner(resource);
     }
@@ -52,7 +52,7 @@ service cloud.firestore {
      *              Only the creator can create, update, or delete an expense.
      */
     match /expenses/{expenseId} {
-      allow get, list: if isSignedIn();
+      allow read: if isSignedIn();
       allow create: if isOwnerOfNewData(request);
       allow update, delete: if isOwner(resource);
     }
@@ -62,7 +62,7 @@ service cloud.firestore {
      *              Only the creator can create, update, or delete a budget.
      */
     match /budgets/{budgetId} {
-      allow get, list: if isSignedIn();
+      allow read: if isSignedIn();
       allow create: if isOwnerOfNewData(request);
       allow update, delete: if isOwner(resource);
     }
@@ -72,7 +72,7 @@ service cloud.firestore {
      *              Only the creator can create, update, or delete a payment.
      */
     match /payments/{paymentId} {
-       allow get, list: if isSignedIn();
+       allow read: if isSignedIn();
        allow create: if isOwnerOfNewData(request);
        allow update, delete: if isOwner(resource);
     }
