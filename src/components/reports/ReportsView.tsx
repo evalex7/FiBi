@@ -52,16 +52,16 @@ const barChartConfig = {
 } satisfies ChartConfig;
 
 const COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-  "hsl(220, 70%, 50%)",
-  "hsl(260, 70%, 50%)",
-  "hsl(300, 70%, 50%)",
-  "hsl(340, 70%, 50%)",
-  "hsl(0, 0%, 50%)",
+  "hsl(207, 82%, 68%)",
+  "hsl(36, 100%, 65%)",
+  "hsl(142, 71%, 45%)",
+  "hsl(348, 83%, 60%)",
+  "hsl(280, 82%, 70%)",
+  "hsl(50, 100%, 60%)",
+  "hsl(180, 70%, 45%)",
+  "hsl(0, 84%, 60%)",
+  "hsl(220, 80%, 70%)",
+  "hsl(90, 70%, 50%)",
 ];
 
 export default function ReportsView() {
