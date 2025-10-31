@@ -13,6 +13,7 @@ import {
   TrendingUp,
   type LucideIcon,
   CircleDollarSign,
+  Smartphone,
 } from 'lucide-react';
 import type { Category } from './types';
 
@@ -27,6 +28,7 @@ export const categoryIcons: { [key: string]: LucideIcon } = {
   'Робота': Briefcase,
   'Освіта': GraduationCap,
   'Подарунки': Gift,
+  'Моб. зв\'язок': Smartphone,
   'Зарплата': Landmark,
   'Інвестиції': TrendingUp,
   'Інше': CircleDollarSign,
@@ -37,6 +39,7 @@ export const expenseCategories: Category[] = [
   { value: 'Транспорт', label: 'Транспорт', icon: Car },
   { value: 'Житло', label: 'Житло', icon: Home },
   { value: 'Комунальні послуги', label: 'Комунальні послуги', icon: Zap },
+  { value: 'Моб. зв\'язок', label: 'Моб. зв\'язок', icon: Smartphone },
   { value: 'Розваги', label: 'Розваги', icon: Clapperboard },
   { value: 'Харчування поза домом', label: 'Харчування поза домом', icon: Utensils },
   { value: 'Здоров\'я', label: 'Здоров\'я', icon: Heart },
