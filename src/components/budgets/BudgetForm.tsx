@@ -18,6 +18,7 @@ import type { Budget } from '@/lib/types';
 import { useCategories } from '@/contexts/categories-context';
 import { categoryIcons } from '@/lib/category-icons';
 import { startOfMonth, startOfQuarter, startOfYear, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
+import { Timestamp } from 'firebase/firestore';
 
 type BudgetFormProps = {
     budget?: Budget;
@@ -90,8 +91,8 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
         amount: parseFloat(amount),
         category,
         period,
-        startDate,
-        endDate,
+        startDate: Timestamp.fromDate(startDate),
+        endDate: Timestamp.fromDate(endDate),
     };
 
     if (isEditMode && budget) {
@@ -118,7 +119,7 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
   };
 
   const availableCategories = expenseCategories.filter(
-    (cat) => (isEditMode || !budgets.some((b) => b.category === cat.name && b.period === period)) && cat.type === 'expense'
+    (cat) => (isEditMode || !budgets.some((b) => b.category === cat.name)) && cat.type === 'expense'
   );
 
 
@@ -135,7 +136,9 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
                     <SelectContent>
                     {isEditMode && budget ? (
                          <SelectItem key={budget.category} value={budget.category}>
-                            {budget.category}
+                            <div className="flex items-center gap-2">
+                                <span>{budget.category}</span>
+                            </div>
                         </SelectItem>
                     ) : (
                         availableCategories.map((cat) => {
