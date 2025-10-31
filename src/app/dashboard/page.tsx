@@ -15,7 +15,7 @@ export default function DashboardPage() {
   return (
     <AppLayout pageTitle="Панель">
       <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 mb-4">
+        <TabsList className="grid w-full h-auto md:grid-cols-2 mb-4">
           <TabsTrigger value="overview">Огляд</TabsTrigger>
           <TabsTrigger value="transactions">Транзакції</TabsTrigger>
         </TabsList>
