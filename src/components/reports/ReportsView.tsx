@@ -51,6 +51,19 @@ const barChartConfig = {
   expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
 
+const COLORS = [
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
+  'hsl(220, 70%, 50%)',
+  'hsl(260, 70%, 50%)',
+  'hsl(300, 70%, 50%)',
+  'hsl(340, 70%, 50%)',
+  'hsl(0, 0%, 50%)',
+];
+
 
 export default function ReportsView() {
   const { transactions } = useTransactions();
@@ -80,21 +93,29 @@ export default function ReportsView() {
   }, [transactions, period]);
   
   const categoryData = useMemo(() => {
-      const data: { [key: string]: number } = {};
-      transactions
-          .filter(t => t.type === 'expense')
-          .forEach(t => {
-              data[t.category] = (data[t.category] || 0) + t.amount;
-          });
-      
-      return Object.entries(data).map(([name, value], index) => ({ name, value, fill: `hsl(var(--chart-${(index % 5) + 1}))` }));
+    const data: { [key: string]: number } = {};
+    transactions
+      .filter((t) => t.type === 'expense')
+      .forEach((t) => {
+        data[t.category] = (data[t.category] || 0) + t.amount;
+      });
+
+    return Object.entries(data).map(([name, value], index) => ({
+      name,
+      value,
+      fill: COLORS[index % COLORS.length],
+    }));
   }, [transactions]);
   
-  const pieChartConfig = useMemo(() => categoryData.reduce((acc, entry) => {
-    const categoryInfo = categories.find(c => c.name === entry.name);
-    acc[entry.name] = { label: categoryInfo ? categoryInfo.name : entry.name, color: entry.fill};
-    return acc;
-  }, {} as ChartConfig), [categoryData, categories]);
+  const pieChartConfig = useMemo(() => {
+    return categoryData.reduce((acc, entry) => {
+        acc[entry.name] = {
+            label: entry.name,
+            color: entry.fill,
+        };
+        return acc;
+    }, {} as ChartConfig);
+}, [categoryData]);
 
   return (
     <div className="w-full space-y-6">
