@@ -2,19 +2,19 @@ import * as React from 'react';
 
 const MOBILE_BREAKPOINT = 768;
 
-const getIsMobile = () => {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-  return window.innerWidth < MOBILE_BREAKPOINT;
-};
-
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState(getIsMobile);
+  const [isMobile, setIsMobile] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
+    const checkIsMobile = () => {
+      return window.innerWidth < MOBILE_BREAKPOINT;
+    };
+    
+    // Set initial value after mount
+    setIsMobile(checkIsMobile());
+
     const onResize = () => {
-      setIsMobile(getIsMobile());
+      setIsMobile(checkIsMobile());
     };
 
     window.addEventListener('resize', onResize);

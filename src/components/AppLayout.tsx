@@ -20,6 +20,8 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Skeleton } from './ui/skeleton';
 
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
@@ -35,13 +37,31 @@ export default function AppLayout({
   pageTitle: string;
 }) {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
+  
   const getIsActive = (href: string) => {
     if (href === '/dashboard') {
       return pathname === '/' || pathname === '/dashboard';
     }
     return pathname.startsWith(href);
   };
-
+  
+  // Render a skeleton layout until we know the screen size
+  if (isMobile === null) {
+      return (
+        <div className="flex min-h-screen w-full">
+            <div className="hidden md:flex flex-col w-[256px] border-r">
+                <div className="p-3 h-16 border-b flex items-center"><Skeleton className="h-8 w-3/4" /></div>
+                <div className="p-3 space-y-2"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
+            </div>
+            <div className="flex flex-col flex-1">
+                 <div className="flex h-16 items-center border-b px-6 "><Skeleton className="h-8 w-1/4" /></div>
+                 <main className="flex-1 p-4 md:p-6"><Skeleton className="w-full h-full" /></main>
+                 <div className="md:hidden h-16 border-t"><Skeleton className="w-full h-full" /></div>
+            </div>
+        </div>
+      )
+  }
 
   return (
     <SidebarProvider>
