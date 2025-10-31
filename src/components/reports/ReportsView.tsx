@@ -115,23 +115,23 @@ export default function ReportsView() {
               </Select>
             </div>
           </CardHeader>
-          <CardContent className="px-0 sm:px-2">
+          <CardContent>
             {transactions.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                 Недостатньо даних для відображення графіка.
               </div>
             ) : (
             <ChartContainer config={barChartConfig} className="h-[300px] w-full">
-              <BarChart data={incomeVsExpenseData} accessibilityLayer margin={{ left: 12, right: 12 }}>
+              <BarChart data={incomeVsExpenseData} accessibilityLayer>
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
                 <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
+                <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={90} />
                 <Bar
                   dataKey="expenses"
                   fill="var(--color-expenses)"
                   radius={4}
-                  maxBarSize={60}
+                  maxBarSize={90}
                 />
                 <ChartLegend content={<ChartLegendContent />} />
               </BarChart>
