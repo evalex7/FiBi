@@ -127,5 +127,23 @@ service cloud.firestore {
       allow update: if isExistingOwner(familyMemberId);
       allow delete: if isExistingOwner(familyMemberId);
     }
+
+    /**
+     * @description Rules for the Payment documents.
+     * @path /users/{familyMemberId}/payments/{paymentId}
+     * @allow (create) User with UID 'user_abc' can create a payment under their profile.
+     * @deny (create) User with UID 'user_abc' cannot create a payment under 'user_xyz' profile.
+     * @allow (get, list) User with UID 'user_abc' can read payments under their profile.
+     * @deny (get, list) User with UID 'user_abc' cannot read payments under 'user_xyz' profile.
+     * @allow (update, delete) User with UID 'user_abc' can update/delete payments under their profile.
+     * @deny (update, delete) User with UID 'user_abc' cannot update/delete payments under 'user_xyz' profile.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{familyMemberId}/payments/{paymentId} {
+      allow create: if isOwner(familyMemberId);
+      allow get, list: if isOwner(familyMemberId);
+      allow update: if isExistingOwner(familyMemberId);
+      allow delete: if isExistingOwner(familyMemberId);
+    }
   }
 }
