@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 
-import { withGenkit } from '@genkit-ai/next';
-
 const nextConfig = {
   /* config options here */
   typescript: {
@@ -34,4 +32,4 @@ const nextConfig = {
   },
 };
 
-export default withGenkit(nextConfig);
+export default nextConfig;
