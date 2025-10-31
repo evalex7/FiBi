@@ -27,12 +27,12 @@ service cloud.firestore {
     }
 
     /**
-     * @description Rules for user profiles. Users can only read/write their own profile.
-     *              Listing all users is disallowed.
+     * @description Rules for user profiles. Any signed-in user can read any profile,
+     *              but can only write to their own. Listing all users is disallowed.
      */
     match /users/{userId} {
-      allow get, update, delete: if isSignedIn() && request.auth.uid == userId;
-      allow create: if isSignedIn();
+      allow get: if isSignedIn();
+      allow create, update, delete: if isSignedIn() && request.auth.uid == userId;
       allow list: if false; // Disallow listing all users for security.
     }
 
