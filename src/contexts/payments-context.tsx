@@ -1,15 +1,16 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import type { RecurringPayment } from '@/lib/types';
-import { useUser } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { WithId } from '@/firebase/firestore/use-collection';
-import { mockPayments } from '@/lib/data';
 
 interface PaymentsContextType {
-  payments: RecurringPayment[];
+  payments: WithId<RecurringPayment>[];
   addPayment: (payment: Omit<RecurringPayment, 'id' | 'familyMemberId'>) => void;
-  updatePayment: (payment: RecurringPayment) => void;
+  updatePayment: (payment: WithId<RecurringPayment>) => void;
   deletePayment: (id: string) => void;
   isLoading: boolean;
 }
@@ -17,32 +18,37 @@ interface PaymentsContextType {
 const PaymentsContext = createContext<PaymentsContextType | undefined>(undefined);
 
 export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
+  const firestore = useFirestore();
   const { user } = useUser();
-  const [payments, setPayments] = useState<RecurringPayment[]>(mockPayments);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const paymentsCollectionRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'payments');
+  }, [firestore]);
+
+  const { data: payments, isLoading } = useCollection<RecurringPayment>(paymentsCollectionRef);
   
   const addPayment = (paymentData: Omit<RecurringPayment, 'id' | 'familyMemberId'>) => {
-    if (!user) return;
-     const newPayment: RecurringPayment = {
-      ...paymentData,
-      id: new Date().getTime().toString(),
-      familyMemberId: user.uid,
-    };
-    setPayments(prev => [...prev, newPayment]);
+    if (!paymentsCollectionRef || !user) return;
+    addDocumentNonBlocking(paymentsCollectionRef, { ...paymentData, familyMemberId: user.uid });
   };
 
-  const updatePayment = (updatedPayment: RecurringPayment) => {
-    if (!user || updatedPayment.familyMemberId !== user.uid) return;
-    setPayments(prev => prev.map(p => p.id === updatedPayment.id ? updatedPayment : p));
+  const updatePayment = (updatedPayment: WithId<RecurringPayment>) => {
+    if (!firestore || !user) return;
+    if (updatedPayment.familyMemberId !== user.uid) return;
+    const paymentDocRef = doc(firestore, 'payments', updatedPayment.id);
+    const { id, ...paymentData } = updatedPayment;
+    updateDocumentNonBlocking(paymentDocRef, paymentData);
   };
 
   const deletePayment = (id: string) => {
-    if (!user) return;
-    setPayments(prev => prev.filter(p => p.id !== id));
+    if (!firestore || !user) return;
+    const paymentDocRef = doc(firestore, 'payments', id);
+    deleteDocumentNonBlocking(paymentDocRef);
   };
   
   const value = useMemo(() => ({
-    payments,
+    payments: payments || [],
     addPayment,
     updatePayment,
     deletePayment,
