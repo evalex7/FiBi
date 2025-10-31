@@ -84,7 +84,7 @@ export default function RecentTransactions() {
   };
 
   const TransactionActions = ({ transaction }: { transaction: Transaction }) => {
-    if (!canEditOrDelete(transaction)) return null;
+    if (!canEditOrDelete(transaction)) return <div className="h-8 w-8 p-0" />;
 
     return (
       <DropdownMenu>
@@ -139,22 +139,22 @@ export default function RecentTransactions() {
           <>
             {/* Mobile View */}
             <div className="md:hidden">
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {sortedTransactions.map((transaction) => {
                   const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
                   return (
-                    <div key={transaction.id} className="flex items-start gap-4 p-3 rounded-lg border">
+                    <div key={transaction.id} className="flex items-center gap-3 p-2 rounded-lg border">
                       <TransactionUserAvatar userId={transaction.familyMemberId} />
                       <div className="flex-grow">
                         <p className="font-medium">{transaction.description}</p>
                         <p className="text-sm text-muted-foreground">
-                          {format(date, 'd MMM, yyyy', { locale: uk })}
+                          {format(date, 'd MMM yyyy', { locale: uk })}
                         </p>
                       </div>
-                      <div className="flex flex-col items-end">
+                      <div className="flex items-center gap-2">
                         <div
                           className={cn(
-                            'font-medium text-lg',
+                            'font-medium text-base',
                             transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                           )}
                         >
