@@ -58,7 +58,7 @@ export default function BudgetList() {
   const [budgetToEdit, setBudgetToEdit] = useState<Budget | null>(null);
 
   useEffect(() => {
-    if(!budgets) return;
+    if(!budgets || !transactions) return;
 
     const newFormattedBudgets = budgets.map(budget => {
       const { start, end } = getPeriodDates(budget.period);
