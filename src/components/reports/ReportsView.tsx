@@ -52,16 +52,16 @@ const barChartConfig = {
 } satisfies ChartConfig;
 
 const COLORS = [
-  "hsl(207, 82%, 68%)",
-  "hsl(36, 100%, 65%)",
-  "hsl(142, 71%, 45%)",
-  "hsl(348, 83%, 60%)",
-  "hsl(280, 82%, 70%)",
-  "hsl(50, 100%, 60%)",
-  "hsl(180, 70%, 45%)",
-  "hsl(0, 84%, 60%)",
-  "hsl(220, 80%, 70%)",
-  "hsl(90, 70%, 50%)",
+  "hsl(207, 82%, 68%)", // blue
+  "hsl(36, 100%, 65%)", // orange
+  "hsl(142, 71%, 45%)", // green
+  "hsl(348, 83%, 60%)", // pink/red
+  "hsl(280, 82%, 70%)", // purple
+  "hsl(50, 100%, 60%)", // yellow
+  "hsl(180, 70%, 45%)", // teal
+  "hsl(0, 84%, 60%)",   // red
+  "hsl(220, 80%, 70%)", // indigo
+  "hsl(320, 60%, 60%)", // pink
 ];
 
 export default function ReportsView() {
