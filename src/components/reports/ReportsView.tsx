@@ -122,7 +122,7 @@ export default function ReportsView() {
               </div>
             ) : (
             <ChartContainer config={barChartConfig} className="h-[300px] w-full">
-              <BarChart data={incomeVsExpenseData} accessibilityLayer>
+              <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 12 }}>
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
                 <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
@@ -200,9 +200,9 @@ export default function ReportsView() {
                       <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                     ))}
                     </Pie>
+                     <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
                   </PieChart>
                 </ResponsiveContainer>
-                <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
               </ChartContainer>
             )}
           </CardContent>
