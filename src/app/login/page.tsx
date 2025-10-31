@@ -66,7 +66,7 @@ export default function LoginPage() {
     initiateEmailSignIn(auth, email, password);
   };
 
-  if (isUserLoading || user) {
+  if (isUserLoading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-secondary">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
