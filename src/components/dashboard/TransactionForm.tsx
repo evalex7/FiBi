@@ -27,6 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/contexts/transactions-context';
 import type { Transaction } from '@/lib/types';
 import { useCategories } from '@/contexts/categories-context';
+import { Timestamp } from 'firebase/firestore';
 
 
 type TransactionFormProps = {
@@ -54,8 +55,12 @@ export default function TransactionForm({ transaction, onSave }: TransactionForm
         setAmount(String(transaction.amount));
         setDescription(transaction.description);
         setCategory(transaction.category);
-        const transactionDate = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
-        setDate(transactionDate);
+        if (transaction.date) {
+            const transactionDate = transaction.date instanceof Timestamp 
+                ? transaction.date.toDate() 
+                : new Date(transaction.date);
+            setDate(transactionDate);
+        }
     }
   }, [transaction, isEditMode]);
 
@@ -83,7 +88,10 @@ export default function TransactionForm({ transaction, onSave }: TransactionForm
     };
 
     if (isEditMode && transaction) {
-        updateTransaction({ ...transactionData, id: transaction.id });
+        updateTransaction({ 
+            ...transaction, // Keep original fields like id and familyMemberId
+            ...transactionData 
+        });
         toast({
           title: 'Успіх!',
           description: 'Вашу транзакцію було оновлено.',
