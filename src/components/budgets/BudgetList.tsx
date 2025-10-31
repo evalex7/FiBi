@@ -61,9 +61,20 @@ export default function BudgetList() {
     if(!budgets || !transactions) return;
 
     const newFormattedBudgets = budgets.map(budget => {
-       const budgetStartDate = budget.startDate instanceof Timestamp 
-          ? budget.startDate.toDate() 
-          : new Date((budget.startDate as any).seconds * 1000);
+       const rawStartDate = budget.startDate;
+       let budgetStartDate: Date;
+
+       if (rawStartDate instanceof Timestamp) {
+         budgetStartDate = rawStartDate.toDate();
+       } else if (rawStartDate && typeof rawStartDate === 'object' && 'seconds' in rawStartDate) {
+         budgetStartDate = new Date((rawStartDate as any).seconds * 1000);
+       } else if (rawStartDate instanceof Date) {
+         budgetStartDate = rawStartDate;
+       } else {
+         // Fallback or error handling if date is invalid/missing
+         console.warn(`Invalid or missing startDate for budget ${budget.id}`);
+         budgetStartDate = new Date(); // Use current date as a fallback
+       }
           
       const { start, end } = getPeriodDates(budget.period, budgetStartDate);
 
