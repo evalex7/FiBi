@@ -81,10 +81,7 @@ export default function UpcomingPayments() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Майбутні платежі</CardTitle>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         {isLoading ? (
           <LoadingSkeleton />
         ) : sortedPayments.length === 0 ? (
