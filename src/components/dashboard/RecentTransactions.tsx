@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import EditTransactionSheet from './EditTransactionSheet';
-import type { Transaction, FamilyMember } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,11 +37,9 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc } from 'firebase/firestore';
-import { Avatar, AvatarFallback } from '../ui/avatar';
-import { WithId } from '@/firebase/firestore/use-collection';
+import { useUser } from '@/firebase';
 import { useCategories } from '@/contexts/categories-context';
+import TransactionUserAvatar from './TransactionUserAvatar';
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
 
@@ -49,28 +47,10 @@ export default function RecentTransactions() {
   const { transactions, deleteTransaction, isLoading } = useTransactions();
   const { categories } = useCategories();
   const { user } = useUser();
-  const firestore = useFirestore();
 
   const [sortedTransactions, setSortedTransactions] = useState<FormattedTransaction[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
-  
-  const usersCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'users');
-  }, [firestore]);
-  
-  const { data: familyMembers } = useCollection<FamilyMember>(usersCollectionRef);
-
-  const familyMembersMap = useMemo(() => {
-    if (!familyMembers) return new Map();
-    const members = new Map<string, FamilyMember>();
-    familyMembers.forEach(member => {
-        members.set(member.id, member);
-    });
-    return members;
-  }, [familyMembers]);
-
 
   useEffect(() => {
     const formatCurrency = (amount: number) => {
@@ -99,8 +79,6 @@ export default function RecentTransactions() {
     }
   };
 
-  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('');
-  
   const canEditOrDelete = (transaction: Transaction) => {
     return transaction.familyMemberId === user?.uid;
   };
@@ -163,23 +141,10 @@ export default function RecentTransactions() {
             <div className="md:hidden">
               <div className="space-y-4">
                 {sortedTransactions.map((transaction) => {
-                  const categoryInfo = categories.find(c => c.name === transaction.category);
-                  const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
-                  const member = transaction.familyMemberId ? familyMembersMap.get(transaction.familyMemberId) : null;
                   const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
                   return (
                     <div key={transaction.id} className="flex items-start gap-4 p-3 rounded-lg border">
-                      {member ? (
-                        <Avatar className="h-8 w-8 border-2" style={{ borderColor: member.color }}>
-                           <AvatarFallback style={{ backgroundColor: member.color }} className="text-white text-xs font-bold">
-                             {getInitials(member.name)}
-                           </AvatarFallback>
-                        </Avatar>
-                      ) : (
-                        <div className="h-8 w-8 flex items-center justify-center">
-                          <User className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                      )}
+                      <TransactionUserAvatar userId={transaction.familyMemberId} />
                       <div className="flex-grow">
                         <p className="font-medium">{transaction.description}</p>
                         <p className="text-sm text-muted-foreground">
@@ -221,21 +186,12 @@ export default function RecentTransactions() {
                   {sortedTransactions.map((transaction) => {
                      const categoryInfo = categories.find(c => c.name === transaction.category);
                      const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
-                    const member = transaction.familyMemberId ? familyMembersMap.get(transaction.familyMemberId) : null;
                     const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
 
                     return (
                       <TableRow key={transaction.id}>
                         <TableCell>
-                          {member ? (
-                             <Avatar className="h-8 w-8">
-                                <AvatarFallback style={{ backgroundColor: member.color }} className="text-white text-xs font-bold">
-                                  {getInitials(member.name)}
-                                </AvatarFallback>
-                             </Avatar>
-                          ) : (
-                            <User className="h-5 w-5 text-muted-foreground" />
-                          )}
+                          <TransactionUserAvatar userId={transaction.familyMemberId} />
                         </TableCell>
                         <TableCell className="font-medium">{transaction.description}</TableCell>
                         <TableCell>
