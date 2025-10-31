@@ -7,7 +7,6 @@ import {
   Target,
   Repeat,
 } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import {
   SidebarProvider,
@@ -36,11 +35,18 @@ export default function AppLayout({
   pageTitle: string;
 }) {
   const pathname = usePathname();
-  const isMobile = useIsMobile();
+  const getIsActive = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/' || pathname === '/dashboard';
+    }
+    return pathname.startsWith(href);
+  };
 
-  if (isMobile) {
-    return (
-      <div className="flex flex-col min-h-screen">
+
+  return (
+    <SidebarProvider>
+      {/* Mobile Layout */}
+      <div className="md:hidden flex flex-col min-h-screen">
         <header className="flex h-16 items-center justify-between border-b px-6 sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
             <div className="flex items-center gap-2">
               <Logo className="w-7 h-7 text-primary" />
@@ -53,7 +59,7 @@ export default function AppLayout({
         <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-10">
           <div className="flex justify-around items-center h-full">
             {menuItems.map((item) => {
-              const isActive = (item.href === '/dashboard' && pathname === '/') || pathname.startsWith(item.href);
+              const isActive = getIsActive(item.href);
               return (
                 <Link
                   key={item.href}
@@ -71,12 +77,9 @@ export default function AppLayout({
           </div>
         </nav>
       </div>
-    );
-  }
 
-  return (
-    <SidebarProvider>
-      <div className="flex min-h-screen">
+      {/* Desktop Layout */}
+      <div className="hidden md:flex min-h-screen w-full">
         <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2">
@@ -90,7 +93,7 @@ export default function AppLayout({
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={(item.href === '/dashboard' && pathname === '/') || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
+                    isActive={getIsActive(item.href)}
                     tooltip={item.label}
                   >
                     <Link href={item.href}>
