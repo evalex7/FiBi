@@ -145,13 +145,13 @@ export default function RecentTransactions() {
                   return (
                     <div key={transaction.id} className="flex items-center gap-3 p-2 rounded-lg border">
                       <TransactionUserAvatar userId={transaction.familyMemberId} />
-                      <div className="flex-grow space-y-1">
-                          <p className="font-medium truncate pr-2">{transaction.description}</p>
+                      <div className="flex-grow space-y-1 min-w-0">
+                          <p className="font-medium truncate">{transaction.description}</p>
                           <p className="text-xs text-muted-foreground">
                           {format(date, 'dd.MM.yy', { locale: uk })}
                           </p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         <div
                             className={cn(
                                 'font-medium text-base whitespace-nowrap',
