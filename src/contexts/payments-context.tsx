@@ -48,7 +48,10 @@ export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
 
   const updatePayment = (updatedPayment: WithId<RecurringPayment>) => {
     if (!firestore || !user) return;
-    if (updatedPayment.familyMemberId !== user.uid) return;
+    if (updatedPayment.familyMemberId !== user.uid) {
+      console.warn("Attempted to update a payment by a non-owner.");
+      return;
+    }
     const paymentDocRef = doc(firestore, 'payments', updatedPayment.id);
     const { id, ...paymentData } = updatedPayment;
     setDocumentNonBlocking(paymentDocRef, paymentData, { merge: true }).catch(error => {

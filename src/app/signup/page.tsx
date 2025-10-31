@@ -61,18 +61,8 @@ export default function SignupPage() {
       return colors[0];
     }
     
-    if (familyMembers.length === 0) {
-      return colors[0];
-    }
-
-    const usedColors = new Set(familyMembers.map(member => member.color));
-    
-    const availableColor = colors.find(color => !usedColors.has(color));
-
-    if (availableColor) {
-      return availableColor;
-    }
-    
+    // This provides a consistent color for a new member based on how many members already exist.
+    // It avoids randomness which could lead to duplicates if multiple users sign up around the same time.
     return colors[familyMembers.length % colors.length];
   }, [familyMembers]);
 
@@ -159,7 +149,7 @@ export default function SignupPage() {
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="full-name">Повне ім'я</Label>
+              <Label htmlFor="full-name">Повне ім\'я</Label>
               <Input
                 id="full-name"
                 placeholder="John Doe"

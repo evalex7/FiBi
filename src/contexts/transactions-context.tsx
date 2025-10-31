@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useMemo, ReactNode, useState, useEffect } from 'react';
 import type { Transaction } from '@/lib/types';
 import { useFirestore, useUser } from '@/firebase';
-import { collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -39,7 +39,6 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
         setTransactions(newTransactions);
         setIsLoading(false);
     }, (error) => {
-        console.error("Error fetching transactions:", error);
         errorEmitter.emit(
           'permission-error',
           new FirestorePermissionError({
@@ -74,7 +73,10 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
 
   const updateTransaction = (updatedTransaction: WithId<Transaction>) => {
     if (!firestore || !user) return;
-    if (updatedTransaction.familyMemberId !== user.uid) return;
+    if (updatedTransaction.familyMemberId !== user.uid) {
+        console.warn("Attempted to update a transaction by a non-owner.");
+        return;
+    }
     const transactionDocRef = doc(firestore, 'expenses', updatedTransaction.id);
     const { id, ...transactionData } = updatedTransaction;
     setDocumentNonBlocking(transactionDocRef, transactionData, { merge: true }).catch(error => {

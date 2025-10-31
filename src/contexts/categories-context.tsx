@@ -36,7 +36,7 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (user && !isLoading && categoriesCollectionRef && firestore && categories?.length === 0) {
-      // First time family setup, let's populate with default categories.
+      
       const q = query(categoriesCollectionRef);
       getDocs(q).then(snapshot => {
         if(snapshot.empty) {
@@ -51,7 +51,6 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
           });
           batch.commit().catch(error => {
             console.error("Batch write for default categories failed:", error);
-            // Optionally emit a generic error
           });
         }
       });
@@ -78,8 +77,11 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     if (!firestore || !user) return;
     const categoryDocRef = doc(firestore, 'categories', updatedCategory.id);
     const { id, ...categoryData } = updatedCategory;
-    // ensure only owner can update
-    if (updatedCategory.familyMemberId !== user.uid) return;
+    
+    if (updatedCategory.familyMemberId !== user.uid) {
+        console.warn("Attempted to update a category by a non-owner.");
+        return;
+    }
     setDocumentNonBlocking(categoryDocRef, categoryData, { merge: true }).catch(error => {
         errorEmitter.emit(
           'permission-error',
@@ -95,7 +97,7 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
   const deleteCategory = (id: string) => {
     if (!firestore || !user) return;
     const categoryDocRef = doc(firestore, 'categories', id);
-    // In a real app, you'd check ownership before deleting
+    
     deleteDocumentNonBlocking(categoryDocRef).catch(error => {
         errorEmitter.emit(
           'permission-error',

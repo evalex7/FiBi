@@ -33,7 +33,7 @@ export const BudgetsProvider = ({ children }: { children: ReactNode }) => {
   const addBudget = (budgetData: Omit<Budget, 'id' | 'familyMemberId'>) => {
     if (!budgetsCollectionRef || !user) return;
     const dataWithUser = { ...budgetData, familyMemberId: user.uid };
-    const newDocRef = doc(budgetsCollectionRef); // Create a new doc with a generated ID
+    const newDocRef = doc(budgetsCollectionRef);
     setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
       errorEmitter.emit(
         'permission-error',
@@ -48,8 +48,11 @@ export const BudgetsProvider = ({ children }: { children: ReactNode }) => {
 
   const updateBudget = (updatedBudget: WithId<Budget>) => {
     if (!firestore || !user) return;
-    // Ensure only the owner can update
-    if (updatedBudget.familyMemberId !== user.uid) return;
+    
+    if (updatedBudget.familyMemberId !== user.uid) {
+      console.warn("Attempted to update a budget by a non-owner.");
+      return;
+    }
     const budgetDocRef = doc(firestore, 'budgets', updatedBudget.id);
     const { id, ...budgetData } = updatedBudget;
     setDocumentNonBlocking(budgetDocRef, budgetData, { merge: true }).catch(error => {
@@ -67,7 +70,7 @@ export const BudgetsProvider = ({ children }: { children: ReactNode }) => {
   const deleteBudget = (id: string) => {
     if (!firestore || !user) return;
     const budgetDocRef = doc(firestore, 'budgets', id);
-    // Security rules will enforce ownership on the backend.
+    
     deleteDocumentNonBlocking(budgetDocRef).catch(error => {
         errorEmitter.emit(
           'permission-error',
