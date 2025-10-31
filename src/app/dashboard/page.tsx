@@ -4,13 +4,20 @@ import AppLayout from '@/components/AppLayout';
 import AddTransactionForm from '@/components/dashboard/AddTransactionForm';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import SummaryCards from '@/components/dashboard/SummaryCards';
+import MonthSelector from '@/components/dashboard/MonthSelector';
+import { useState } from 'react';
 
 export default function DashboardPage() {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
   return (
     <AppLayout pageTitle="Панель">
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold tracking-tight">Огляд</h2>
-        <SummaryCards />
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h2 className="text-2xl font-bold tracking-tight">Огляд</h2>
+            <MonthSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
+        </div>
+        <SummaryCards selectedDate={selectedDate} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 order-2 lg:order-1">
              <RecentTransactions />
