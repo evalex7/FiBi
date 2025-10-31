@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
-  LogOut,
   Target,
   Repeat,
 } from 'lucide-react';
@@ -22,6 +21,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
+import { cn } from '@/lib/utils';
 
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
