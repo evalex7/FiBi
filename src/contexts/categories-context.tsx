@@ -28,9 +28,9 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   const categoriesCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, 'categories');
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: categories, isLoading } = useCollection<Category>(categoriesCollectionRef);
 
@@ -58,9 +58,10 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
   }, [user, isLoading, categories, firestore, categoriesCollectionRef, toast]);
   
   const addCategory = (categoryData: Omit<Category, 'id'>) => {
-    if (!categoriesCollectionRef || !user) return;
+    if (!firestore || !user) return;
+    const categoriesCollection = collection(firestore, 'categories');
     const dataWithUser = { ...categoryData, familyMemberId: user.uid, isCommon: false };
-    const newDocRef = doc(categoriesCollectionRef);
+    const newDocRef = doc(categoriesCollection);
     setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
       errorEmitter.emit(
         'permission-error',
@@ -115,7 +116,7 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     updateCategory,
     deleteCategory,
     isLoading
-  }), [categories, isLoading]);
+  }), [categories, isLoading, user]);
 
   return (
     <CategoriesContext.Provider value={value}>

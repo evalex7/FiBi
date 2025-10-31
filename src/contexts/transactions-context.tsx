@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useMemo, ReactNode, useState, useEffect } from 'react';
 import type { Transaction } from '@/lib/types';
-import { useFirestore, useUser } from '@/firebase';
-import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -22,43 +22,19 @@ const TransactionsContext = createContext<TransactionsContextType | undefined>(u
 export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
   const { user } = useUser();
-  const [transactions, setTransactions] = useState<WithId<Transaction>[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!firestore) {
-      setIsLoading(false);
-      return;
-    }
-    
-    setIsLoading(true);
-    const transactionsCollectionRef = collection(firestore, 'expenses');
-    
-    const unsubscribe = onSnapshot(transactionsCollectionRef, (snapshot) => {
-        const newTransactions = snapshot.docs.map(doc => ({ ...doc.data() as Transaction, id: doc.id }));
-        setTransactions(newTransactions);
-        setIsLoading(false);
-    }, (error) => {
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: transactionsCollectionRef.path,
-            operation: 'list',
-          })
-        );
-        setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-
-  }, [firestore]);
-
+  const transactionsCollectionRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'expenses');
+  }, [firestore, user]);
+  
+  const { data: transactions, isLoading } = useCollection<Transaction>(transactionsCollectionRef);
 
   const addTransaction = (transactionData: Omit<Transaction, 'id' | 'familyMemberId'>) => {
     if (!firestore || !user) return;
-    const transactionsCollectionRef = collection(firestore, 'expenses');
+    const transactionsCollection = collection(firestore, 'expenses');
     const dataWithUser = { ...transactionData, familyMemberId: user.uid };
-    const newDocRef = doc(transactionsCollectionRef);
+    const newDocRef = doc(transactionsCollection);
     setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
         errorEmitter.emit(
           'permission-error',
@@ -92,8 +68,14 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteTransaction = (id: string) => {
-    if (!firestore) return;
+    if (!firestore || !user) return;
     const transactionDocRef = doc(firestore, 'expenses', id);
+    // We need to fetch the document first to check ownership before deleting
+    const transactionToDelete = transactions?.find(t => t.id === id);
+    if (transactionToDelete?.familyMemberId !== user.uid) {
+      console.warn("Attempted to delete a transaction by a non-owner.");
+      return;
+    }
     deleteDocumentNonBlocking(transactionDocRef).catch(error => {
         errorEmitter.emit(
           'permission-error',
@@ -106,12 +88,12 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const value = useMemo(() => ({
-    transactions,
+    transactions: transactions || [],
     addTransaction,
     updateTransaction,
     deleteTransaction,
     isLoading
-  }), [transactions, isLoading]);
+  }), [transactions, isLoading, user]);
 
 
   return (

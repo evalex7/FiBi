@@ -24,16 +24,17 @@ export const BudgetsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
 
   const budgetsCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, 'budgets');
-  }, [firestore]);
+  }, [firestore, user]);
   
   const { data: budgets, isLoading } = useCollection<Budget>(budgetsCollectionRef);
 
   const addBudget = (budgetData: Omit<Budget, 'id' | 'familyMemberId'>) => {
-    if (!budgetsCollectionRef || !user) return;
+    if (!firestore || !user) return;
+    const budgetsCollection = collection(firestore, 'budgets');
     const dataWithUser = { ...budgetData, familyMemberId: user.uid };
-    const newDocRef = doc(budgetsCollectionRef);
+    const newDocRef = doc(budgetsCollection);
     setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
       errorEmitter.emit(
         'permission-error',
@@ -88,7 +89,7 @@ export const BudgetsProvider = ({ children }: { children: ReactNode }) => {
     updateBudget,
     deleteBudget,
     isLoading
-  }), [budgets, isLoading]);
+  }), [budgets, isLoading, user]);
 
   return (
     <BudgetsContext.Provider value={value}>

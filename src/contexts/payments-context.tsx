@@ -24,16 +24,17 @@ export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
 
   const paymentsCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, 'payments');
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: payments, isLoading } = useCollection<RecurringPayment>(paymentsCollectionRef);
   
   const addPayment = (paymentData: Omit<RecurringPayment, 'id' | 'familyMemberId'>) => {
-    if (!paymentsCollectionRef || !user) return;
+    if (!firestore || !user) return;
+    const paymentsCollection = collection(firestore, 'payments');
     const dataWithUser = { ...paymentData, familyMemberId: user.uid };
-    const newDocRef = doc(paymentsCollectionRef);
+    const newDocRef = doc(paymentsCollection);
     setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
       errorEmitter.emit(
         'permission-error',
@@ -86,7 +87,7 @@ export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
     updatePayment,
     deletePayment,
     isLoading
-  }), [payments, isLoading]);
+  }), [payments, isLoading, user]);
 
   return (
     <PaymentsContext.Provider value={value}>
