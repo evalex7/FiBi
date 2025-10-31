@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import {
@@ -7,12 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
 import {
   BarChart,
   Bar,
@@ -50,13 +46,13 @@ const formatCurrency = (amount: number) => {
   return `${amount}`;
 }
 
-const chartConfig = {
+const barChartConfig = {
   income: { label: "Дохід", color: "hsl(var(--chart-2))" },
   expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
 
 
-export default function ReportsTabs() {
+export default function ReportsView() {
   const { transactions } = useTransactions();
   const [period, setPeriod] = useState('3'); // Default to 3 months
 
@@ -99,12 +95,7 @@ export default function ReportsTabs() {
   }, {} as ChartConfig), [categoryData]);
 
   return (
-    <Tabs defaultValue="overview">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="overview">Дохід vs. Витрати</TabsTrigger>
-        <TabsTrigger value="categories">Витрати по категоріях</TabsTrigger>
-      </TabsList>
-      <TabsContent value="overview">
+    <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Дохід vs. Витрати</CardTitle>
@@ -113,7 +104,7 @@ export default function ReportsTabs() {
             </CardDescription>
              <div className="pt-2">
               <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Оберіть період" />
                 </SelectTrigger>
                 <SelectContent>
@@ -131,18 +122,18 @@ export default function ReportsTabs() {
                 Недостатньо даних для відображення графіка.
               </div>
             ) : (
-            <ChartContainer config={chartConfig} className="h-[300px] w-full">
+            <ChartContainer config={barChartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={incomeVsExpenseData} accessibilityLayer margin={{ left: 12, right: 12 }}>
                   <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
                   <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
                   <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                  <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={40} />
+                  <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
                   <Bar
                     dataKey="expenses"
                     fill="var(--color-expenses)"
                     radius={4}
-                    maxBarSize={40}
+                    maxBarSize={60}
                   />
                   <ChartLegend content={<ChartLegendContent />} />
                 </BarChart>
@@ -151,8 +142,7 @@ export default function ReportsTabs() {
             )}
           </CardContent>
         </Card>
-      </TabsContent>
-      <TabsContent value="categories">
+      
         <Card>
           <CardHeader>
             <CardTitle>Витрати по категоріях</CardTitle>
@@ -166,8 +156,8 @@ export default function ReportsTabs() {
                 Немає даних про витрати для відображення.
               </div>
             ) : (
-              <div className="w-full h-[400px] sm:h-[350px] flex flex-col items-center">
-                <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-full max-h-[300px] w-full">
+              <div className="w-full h-[350px] sm:h-[400px] flex flex-col items-center">
+                <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-full max-h-[250px] sm:max-h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                         <ChartTooltip content={<ChartTooltipContent hideLabel />} />
@@ -177,8 +167,8 @@ export default function ReportsTabs() {
                             nameKey="name"
                             cx="50%"
                             cy="50%"
-                            outerRadius={100}
-                            innerRadius={60}
+                            outerRadius={80}
+                            innerRadius={50}
                             paddingAngle={2}
                             labelLine={false}
                             label={({
@@ -214,15 +204,16 @@ export default function ReportsTabs() {
                             <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                           ))}
                           </Pie>
-                          <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
                         </PieChart>
                     </ResponsiveContainer>
                 </ChartContainer>
+                <div className="w-full mt-4">
+                   <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
-      </TabsContent>
-    </Tabs>
+    </div>
   );
 }

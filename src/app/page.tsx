@@ -1,10 +1,11 @@
 
 
+
 import AppLayout from '@/components/AppLayout';
 import AddTransactionForm from '@/components/dashboard/AddTransactionForm';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import SummaryCards from '@/components/dashboard/SummaryCards';
-import ReportsTabs from '@/components/reports/ReportsTabs';
+import ReportsView from '@/components/reports/ReportsTabs';
 import {
   Tabs,
   TabsContent,
@@ -48,7 +49,7 @@ export default function DashboardPage() {
           {/* Content will be on the /payments page */}
         </TabsContent>
         <TabsContent value="reports">
-          <ReportsTabs />
+          <ReportsView />
         </TabsContent>
       </Tabs>
     </AppLayout>
