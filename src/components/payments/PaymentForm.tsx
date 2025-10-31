@@ -21,10 +21,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
-import { expenseCategories } from '@/lib/category-icons';
+import { categoryIcons } from '@/lib/category-icons';
 import { useToast } from '@/hooks/use-toast';
 import { usePayments } from '@/contexts/payments-context';
 import type { RecurringPayment } from '@/lib/types';
+import { useCategories } from '@/contexts/categories-context';
 
 
 type PaymentFormProps = {
@@ -35,6 +36,7 @@ type PaymentFormProps = {
 
 export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
   const { addPayment, updatePayment } = usePayments();
+  const { categories } = useCategories();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
   
@@ -55,6 +57,7 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
     }
   }, [payment, isEditMode]);
 
+  const expenseCategories = categories.filter(c => c.type === 'expense');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,14 +122,17 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
                     <SelectValue placeholder="Оберіть категорію" />
                     </SelectTrigger>
                     <SelectContent>
-                    {expenseCategories.map((cat) => (
-                        <SelectItem key={cat.label} value={cat.label}>
-                        <div className="flex items-center gap-2">
-                            <cat.icon className="h-4 w-4" />
-                            {cat.label}
-                        </div>
-                        </SelectItem>
-                    ))}
+                    {expenseCategories.map((cat) => {
+                        const Icon = categoryIcons[cat.icon];
+                        return (
+                            <SelectItem key={cat.id} value={cat.name}>
+                            <div className="flex items-center gap-2">
+                                {Icon && <Icon className="h-4 w-4" />}
+                                {cat.name}
+                            </div>
+                            </SelectItem>
+                        );
+                    })}
                     </SelectContent>
                 </Select>
              </div>

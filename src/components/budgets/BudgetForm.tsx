@@ -12,10 +12,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PlusCircle, Pencil } from 'lucide-react';
-import { expenseCategories } from '@/lib/category-icons';
 import { useToast } from '@/hooks/use-toast';
 import { useBudgets } from '@/contexts/budgets-context';
 import type { Budget } from '@/lib/types';
+import { useCategories } from '@/contexts/categories-context';
 
 
 type BudgetFormProps = {
@@ -26,6 +26,7 @@ type BudgetFormProps = {
 
 export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
   const { addBudget, updateBudget, budgets } = useBudgets();
+  const { categories: expenseCategories } = useCategories();
   const { toast } = useToast();
   
   const [amount, setAmount] = useState('');
@@ -91,7 +92,7 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
   };
 
   const availableCategories = expenseCategories.filter(
-    (cat) => isEditMode || !budgets.some((b) => b.category === cat.label)
+    (cat) => (isEditMode || !budgets.some((b) => b.category === cat.name)) && cat.type === 'expense'
   );
 
 
@@ -112,11 +113,8 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
                         </SelectItem>
                     ) : (
                         availableCategories.map((cat) => (
-                            <SelectItem key={cat.label} value={cat.label}>
-                            <div className="flex items-center gap-2">
-                                <cat.icon className="h-4 w-4" />
-                                {cat.label}
-                            </div>
+                            <SelectItem key={cat.name} value={cat.name}>
+                              {cat.name}
                             </SelectItem>
                         ))
                     )}

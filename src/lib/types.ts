@@ -1,5 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
-
 export type Transaction = {
   id: string;
   date: Date;
@@ -18,9 +16,12 @@ export type Budget = {
 };
 
 export type Category = {
-  value: string;
-  label: string;
-  icon: LucideIcon;
+  id: string;
+  name: string;
+  icon: string;
+  type: 'income' | 'expense';
+  familyMemberId?: string;
+  isCommon?: boolean;
 };
 
 export type RecurringPayment = {

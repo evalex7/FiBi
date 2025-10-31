@@ -10,7 +10,8 @@ import {
   LogOut,
   Loader2,
   User as UserIcon,
-  Users
+  Users,
+  Shapes
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -47,6 +48,7 @@ const menuItems = [
   { href: '/budgets', label: 'Бюджети', icon: Target },
   { href: '/payments', label: 'Платежі', icon: Repeat },
   { href: '/reports', label: 'Звіти', icon: AreaChart },
+  { href: '/categories', label: 'Категорії', icon: Shapes },
 ];
 
 export default function AppLayout({

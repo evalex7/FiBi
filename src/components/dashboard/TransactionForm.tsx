@@ -22,10 +22,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
-import { expenseCategories, incomeCategories } from '@/lib/category-icons';
+import { categoryIcons } from '@/lib/category-icons';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/contexts/transactions-context';
 import type { Transaction } from '@/lib/types';
+import { useCategories } from '@/contexts/categories-context';
 
 
 type TransactionFormProps = {
@@ -36,6 +37,7 @@ type TransactionFormProps = {
 
 export default function TransactionForm({ transaction, onSave }: TransactionFormProps) {
   const { addTransaction, updateTransaction } = useTransactions();
+  const { categories: availableCategories } = useCategories();
   const [type, setType] = useState<Transaction['type']>('expense');
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
@@ -57,7 +59,7 @@ export default function TransactionForm({ transaction, onSave }: TransactionForm
   }, [transaction, isEditMode]);
 
 
-  const categories = type === 'income' ? incomeCategories : expenseCategories;
+  const categories = availableCategories.filter(c => c.type === type);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,14 +169,17 @@ export default function TransactionForm({ transaction, onSave }: TransactionForm
                   <SelectValue placeholder="Оберіть категорію" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.label} value={cat.label}>
-                      <div className="flex items-center gap-2">
-                        <cat.icon className="h-4 w-4" />
-                        {cat.label}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {categories.map((cat) => {
+                    const Icon = categoryIcons[cat.icon];
+                    return (
+                        <SelectItem key={cat.id} value={cat.name}>
+                        <div className="flex items-center gap-2">
+                            {Icon && <Icon className="h-4 w-4" />}
+                            {cat.name}
+                        </div>
+                        </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

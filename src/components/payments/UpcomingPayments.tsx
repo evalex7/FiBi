@@ -19,11 +19,13 @@ import { Skeleton } from '../ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import PaymentForm from './PaymentForm';
+import { useCategories } from '@/contexts/categories-context';
 
 type FormattedPayment = RecurringPayment & { formattedAmount: string, formattedDate: string };
 
 export default function UpcomingPayments() {
   const { payments, isLoading, deletePayment } = usePayments();
+  const { categories } = useCategories();
   const [sortedPayments, setSortedPayments] = useState<FormattedPayment[]>([]);
   const [paymentToDelete, setPaymentToDelete] = useState<RecurringPayment | null>(null);
   const [paymentToEdit, setPaymentToEdit] = useState<RecurringPayment | null>(null);
@@ -85,7 +87,9 @@ export default function UpcomingPayments() {
         ) : (
           <div className="space-y-4">
             {sortedPayments.map(payment => {
-              const Icon = categoryIcons[payment.category];
+              const categoryInfo = categories.find(c => c.name === payment.category);
+              const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
+
               return (
                 <div key={payment.id} className="flex items-center gap-4 p-2 rounded-lg border">
                   {Icon && <Icon className="h-6 w-6 text-muted-foreground flex-shrink-0" />}

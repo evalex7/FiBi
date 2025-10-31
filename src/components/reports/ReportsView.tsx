@@ -27,7 +27,7 @@ import {
   type ChartConfig
 } from '@/components/ui/chart';
 import { useTransactions } from '@/contexts/transactions-context';
-import { allCategories } from '@/lib/category-icons';
+import { useCategories } from '@/contexts/categories-context';
 import { useMemo, useState } from 'react';
 import {
   Select,
@@ -53,6 +53,7 @@ const barChartConfig = {
 
 export default function ReportsView() {
   const { transactions } = useTransactions();
+  const { categories } = useCategories();
   const [period, setPeriod] = useState('3'); // Default to 3 months
 
   const incomeVsExpenseData = useMemo(() => {
@@ -88,10 +89,10 @@ export default function ReportsView() {
   }, [transactions]);
   
   const pieChartConfig = useMemo(() => categoryData.reduce((acc, entry) => {
-    const categoryInfo = allCategories.find(c => c.label === entry.name);
-    acc[entry.name] = { label: categoryInfo ? categoryInfo.label : entry.name, color: entry.fill};
+    const categoryInfo = categories.find(c => c.name === entry.name);
+    acc[entry.name] = { label: categoryInfo ? categoryInfo.name : entry.name, color: entry.fill};
     return acc;
-  }, {} as ChartConfig), [categoryData]);
+  }, {} as ChartConfig), [categoryData, categories]);
 
   return (
     <div className="w-full space-y-6">

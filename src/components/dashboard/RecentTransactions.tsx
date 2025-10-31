@@ -41,11 +41,13 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { WithId } from '@/firebase/firestore/use-collection';
+import { useCategories } from '@/contexts/categories-context';
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
 
 export default function RecentTransactions() {
   const { transactions, deleteTransaction, isLoading } = useTransactions();
+  const { categories } = useCategories();
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -153,7 +155,8 @@ export default function RecentTransactions() {
             <div className="md:hidden">
               <div className="space-y-4">
                 {sortedTransactions.map((transaction) => {
-                  const Icon = categoryIcons[transaction.category];
+                  const categoryInfo = categories.find(c => c.name === transaction.category);
+                  const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
                   const member = transaction.familyMemberId ? familyMembersMap[transaction.familyMemberId] : null;
                   return (
                     <div key={transaction.id} className="flex items-start gap-4 p-3 rounded-lg border">
@@ -207,7 +210,8 @@ export default function RecentTransactions() {
                 </TableHeader>
                 <TableBody>
                   {sortedTransactions.map((transaction) => {
-                    const Icon = categoryIcons[transaction.category];
+                     const categoryInfo = categories.find(c => c.name === transaction.category);
+                     const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
                     const member = transaction.familyMemberId ? familyMembersMap[transaction.familyMemberId] : null;
 
                     return (

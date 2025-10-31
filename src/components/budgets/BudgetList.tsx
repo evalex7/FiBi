@@ -1,9 +1,8 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { categoryIcons } from '@/lib/category-icons';
-import { allCategories } from '@/lib/category-icons';
 import { useTransactions } from '@/contexts/transactions-context';
 import { useState, useEffect } from 'react';
 import { useBudgets } from '@/contexts/budgets-context';
@@ -15,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import BudgetForm from './BudgetForm';
 import { Skeleton } from '../ui/skeleton';
+import { useCategories } from '@/contexts/categories-context';
 
 type FormattedBudget = Budget & {
   spent: number;
@@ -34,6 +34,7 @@ const formatCurrency = (amount: number) =>
 export default function BudgetList() {
   const { transactions } = useTransactions();
   const { budgets, isLoading, deleteBudget } = useBudgets();
+  const { categories } = useCategories();
   const [formattedBudgets, setFormattedBudgets] = useState<FormattedBudget[]>([]);
   const [budgetToDelete, setBudgetToDelete] = useState<Budget | null>(null);
   const [budgetToEdit, setBudgetToEdit] = useState<Budget | null>(null);
@@ -108,8 +109,8 @@ export default function BudgetList() {
         ) : (
           <div className="space-y-6">
             {formattedBudgets.map((budget) => {
-              const categoryInfo = allCategories.find(c => c.label === budget.category);
-              const Icon = categoryInfo ? categoryIcons[categoryInfo.label] : null;
+              const categoryInfo = categories.find(c => c.name === budget.category);
+              const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
 
               return (
                 <div key={budget.id}>
