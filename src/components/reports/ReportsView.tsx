@@ -52,24 +52,23 @@ const barChartConfig = {
 } satisfies ChartConfig;
 
 const COLORS = [
-  "hsl(207, 82%, 68%)", // blue
-  "hsl(36, 100%, 65%)", // orange
-  "hsl(142, 71%, 45%)", // green
-  "hsl(348, 83%, 60%)", // pink/red
-  "hsl(280, 82%, 70%)", // purple
-  "hsl(50, 100%, 60%)", // yellow
-  "hsl(180, 70%, 45%)", // teal
-  "hsl(0, 84%, 60%)",   // red
-  "hsl(220, 80%, 70%)", // indigo
-  "hsl(320, 60%, 60%)", // pink
+    '#ef4444', // red
+    '#f59e0b', // yellow
+    '#22c55e', // green
+    '#3b82f6', // blue
+    '#8b5cf6', // violet
+    '#ec4899', // pink
 ];
 
 export default function ReportsView() {
-  const { transactions } = useTransactions();
-  const { categories } = useCategories();
+  const { transactions, isLoading: isTransactionsLoading } = useTransactions();
+  const { categories, isLoading: isCategoriesLoading } = useCategories();
   const [period, setPeriod] = useState('1'); // Default to 1 month
 
+  const isLoading = isTransactionsLoading || isCategoriesLoading;
+
   const incomeVsExpenseData = useMemo(() => {
+    if (isLoading) return [];
     const monthsToSubtract = parseInt(period);
     const startDate = startOfDay(subMonths(new Date(), monthsToSubtract));
 
@@ -89,9 +88,10 @@ export default function ReportsView() {
     );
 
     return [{ name: 'vs', income, expenses }];
-  }, [transactions, period]);
+  }, [transactions, period, isLoading]);
   
   const { data: categoryData, config: pieChartConfig } = useMemo(() => {
+    if (isLoading) return { data: [], config: {} };
     const dataMap: { [key: string]: number } = {};
     transactions
       .filter((t) => t.type === 'expense')
@@ -102,13 +102,13 @@ export default function ReportsView() {
     const chartData = Object.entries(dataMap).map(([name, value]) => ({
       name,
       value,
-    }));
+    })).sort((a, b) => b.value - a.value);
     
     let colorIndex = 0;
     const chartConfig = chartData.reduce((acc, entry) => {
         let color;
         if (entry.name === 'Харчування поза домом') {
-            color = 'hsl(var(--destructive))';
+            color = '#ef4444'; // red-500
         } else {
             color = COLORS[colorIndex % COLORS.length];
             colorIndex++;
@@ -121,7 +121,7 @@ export default function ReportsView() {
     }, {} as ChartConfig);
 
     return { data: chartData, config: chartConfig };
-  }, [transactions]);
+  }, [transactions, isLoading]);
 
 
   return (
@@ -147,7 +147,7 @@ export default function ReportsView() {
             </div>
           </CardHeader>
           <CardContent className="px-2 sm:px-4">
-            {transactions.length === 0 ? (
+            {isLoading || transactions.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                 Недостатньо даних для відображення графіка.
               </div>
@@ -174,7 +174,7 @@ export default function ReportsView() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
-            {categoryData.length === 0 ? (
+            {isLoading || categoryData.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                 Немає даних про витрати для відображення.
               </div>
