@@ -14,16 +14,28 @@ import { Label } from '@/components/ui/label';
 import AuthLayout from '@/components/AuthLayout';
 import { useState, FormEvent, useEffect } from 'react';
 import { useAuth, useUser, errorEmitter } from '@/firebase';
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
+import { initiateEmailSignIn, initiatePasswordReset } from '@/firebase/non-blocking-login';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isPasswordResetOpen, setIsPasswordResetOpen] = useState(false);
   
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
@@ -65,6 +77,21 @@ export default function LoginPage() {
     setIsSigningIn(true);
     initiateEmailSignIn(auth, email, password);
   };
+  
+  const handlePasswordReset = (e: FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) return;
+
+    initiatePasswordReset(auth, resetEmail).then(() => {
+      setIsPasswordResetOpen(false);
+      setResetEmail('');
+      toast({
+        title: 'Перевірте вашу пошту',
+        description:
+          'Якщо обліковий запис із цією електронною адресою існує, на нього буде надіслано посилання для відновлення пароля.',
+      });
+    });
+  };
 
   if (isUserLoading) {
     return (
@@ -98,7 +125,45 @@ export default function LoginPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Пароль</Label>
+              <div className="flex items-center">
+                <Label htmlFor="password">Пароль</Label>
+                <Dialog open={isPasswordResetOpen} onOpenChange={setIsPasswordResetOpen}>
+                  <DialogTrigger asChild>
+                     <Button type="button" variant="link" className="ml-auto inline-block text-sm underline">
+                        Забули пароль?
+                     </Button>
+                  </DialogTrigger>
+                   <DialogContent>
+                    <form onSubmit={handlePasswordReset}>
+                        <DialogHeader>
+                            <DialogTitle>Скинути пароль</DialogTitle>
+                            <DialogDescription>
+                                Введіть свою електронну пошту, щоб отримати посилання для відновлення пароля.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="reset-email">Електронна пошта</Label>
+                                <Input
+                                    id="reset-email"
+                                    type="email"
+                                    placeholder="m@example.com"
+                                    required
+                                    value={resetEmail}
+                                    onChange={(e) => setResetEmail(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button type="button" variant="secondary">Скасувати</Button>
+                            </DialogClose>
+                            <Button type="submit">Надіслати посилання</Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                </Dialog>
+              </div>
               <Input 
                 id="password" 
                 type="password" 
