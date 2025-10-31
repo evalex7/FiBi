@@ -2,15 +2,13 @@
 
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
 import type { Transaction } from '@/lib/types';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
-import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { WithId } from '@/firebase/firestore/use-collection';
+import { useUser } from '@/firebase';
+import { mockTransactions } from '@/lib/data';
 
 interface TransactionsContextType {
-  transactions: WithId<Transaction>[];
-  addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
-  updateTransaction: (transaction: WithId<Transaction>) => void;
+  transactions: Transaction[];
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'familyMemberId'>) => void;
+  updateTransaction: (transaction: Transaction) => void;
   deleteTransaction: (id: string) => void;
   isLoading: boolean;
 }
@@ -18,45 +16,42 @@ interface TransactionsContextType {
 const TransactionsContext = createContext<TransactionsContextType | undefined>(undefined);
 
 export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
-  const firestore = useFirestore();
   const { user } = useUser();
+  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const transactionsCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'expenses');
-  }, [firestore]);
-
-  const { data: transactionsData, isLoading } = useCollection<Transaction>(transactionsCollectionRef);
-
-  const transactions = useMemo(() => {
-    if (!transactionsData) return [];
-    return transactionsData.map(t => ({
-      ...t,
-      date: (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date)
-    }));
-  }, [transactionsData]);
-
-  const addTransaction = (transactionData: Omit<Transaction, 'id'>) => {
-    if (!transactionsCollectionRef || !user) return;
-    addDocumentNonBlocking(transactionsCollectionRef, { ...transactionData, familyMemberId: user.uid });
+  const addTransaction = (transactionData: Omit<Transaction, 'id' | 'familyMemberId'>) => {
+    if (!user) return;
+    const newTransaction: Transaction = {
+      ...transactionData,
+      id: new Date().getTime().toString(),
+      familyMemberId: user.uid,
+    };
+    setTransactions(prev => [newTransaction, ...prev]);
   };
 
-  const updateTransaction = (updatedTransaction: WithId<Transaction>) => {
-    if (!firestore) return;
-    const transactionDocRef = doc(firestore, 'expenses', updatedTransaction.id);
-    const { id, ...transactionData } = updatedTransaction;
-    updateDocumentNonBlocking(transactionDocRef, transactionData);
+  const updateTransaction = (updatedTransaction: Transaction) => {
+    if (!user || updatedTransaction.familyMemberId !== user.uid) return;
+    setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
   };
 
   const deleteTransaction = (id: string) => {
-    if (!firestore) return;
-    const transactionDocRef = doc(firestore, 'expenses', id);
-    deleteDocumentNonBlocking(transactionDocRef);
+     if (!user) return;
+    // In a real app, you'd check ownership before deleting
+    setTransactions(prev => prev.filter(t => t.id !== id));
   };
+
+  const value = useMemo(() => ({
+    transactions,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    isLoading
+  }), [transactions, isLoading]);
 
 
   return (
-    <TransactionsContext.Provider value={{ transactions, addTransaction, updateTransaction, deleteTransaction, isLoading }}>
+    <TransactionsContext.Provider value={value}>
       {children}
     </TransactionsContext.Provider>
   );

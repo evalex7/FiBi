@@ -1,16 +1,15 @@
 'use client';
 
-import React, { createContext, useContext, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, ReactNode, useState } from 'react';
 import type { Budget } from '@/lib/types';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
-import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useUser } from '@/firebase';
 import { WithId } from '@/firebase/firestore/use-collection';
+import { mockBudgets } from '@/lib/data';
 
 interface BudgetsContextType {
-  budgets: WithId<Budget>[];
-  addBudget: (budget: Omit<Budget, 'id'>) => void;
-  updateBudget: (budget: WithId<Budget>) => void;
+  budgets: Budget[];
+  addBudget: (budget: Omit<Budget, 'id' | 'familyMemberId'>) => void;
+  updateBudget: (budget: Budget) => void;
   deleteBudget: (id: string) => void;
   isLoading: boolean;
 }
@@ -18,36 +17,32 @@ interface BudgetsContextType {
 const BudgetsContext = createContext<BudgetsContextType | undefined>(undefined);
 
 export const BudgetsProvider = ({ children }: { children: ReactNode }) => {
-  const firestore = useFirestore();
   const { user } = useUser();
-
-  const budgetsCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'budgets');
-  }, [firestore]);
-
-  const { data: budgets, isLoading } = useCollection<Budget>(budgetsCollectionRef);
+  const [budgets, setBudgets] = useState<Budget[]>(mockBudgets);
+  const [isLoading, setIsLoading] = useState(false);
   
-  const addBudget = (budgetData: Omit<Budget, 'id'>) => {
-    if (!budgetsCollectionRef || !user) return;
-    addDocumentNonBlocking(budgetsCollectionRef, { ...budgetData, familyMemberId: user.uid });
+  const addBudget = (budgetData: Omit<Budget, 'id' | 'familyMemberId'>) => {
+    if (!user) return;
+    const newBudget: Budget = {
+        ...budgetData,
+        id: new Date().getTime().toString(),
+        familyMemberId: user.uid,
+    };
+    setBudgets(prev => [...prev, newBudget]);
   };
 
-  const updateBudget = (updatedBudget: WithId<Budget>) => {
-    if (!firestore || !user) return;
-    const budgetDocRef = doc(firestore, 'budgets', updatedBudget.id);
-    const { id, ...budgetData } = updatedBudget;
-    updateDocumentNonBlocking(budgetDocRef, budgetData);
+  const updateBudget = (updatedBudget: Budget) => {
+    if (!user || updatedBudget.familyMemberId !== user.uid) return;
+    setBudgets(prev => prev.map(b => b.id === updatedBudget.id ? updatedBudget : b));
   };
 
   const deleteBudget = (id: string) => {
-    if (!firestore || !user) return;
-    const budgetDocRef = doc(firestore, 'budgets', id);
-    deleteDocumentNonBlocking(budgetDocRef);
+    if (!user) return;
+    setBudgets(prev => prev.filter(b => b.id !== id));
   };
 
   const value = useMemo(() => ({
-    budgets: budgets || [],
+    budgets,
     addBudget,
     updateBudget,
     deleteBudget,
