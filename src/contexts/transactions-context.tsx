@@ -3,8 +3,10 @@
 import React, { createContext, useContext, useMemo, ReactNode, useState, useEffect } from 'react';
 import type { Transaction } from '@/lib/types';
 import { useFirestore, useUser } from '@/firebase';
-import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { WithId } from '@/firebase/firestore/use-collection';
+import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+
 
 interface TransactionsContextType {
   transactions: WithId<Transaction>[];
@@ -48,7 +50,7 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
   const addTransaction = (transactionData: Omit<Transaction, 'id' | 'familyMemberId'>) => {
     if (!firestore || !user) return;
     const transactionsCollectionRef = collection(firestore, 'expenses');
-    addDoc(transactionsCollectionRef, { ...transactionData, familyMemberId: user.uid });
+    addDocumentNonBlocking(transactionsCollectionRef, { ...transactionData, familyMemberId: user.uid });
   };
 
   const updateTransaction = (updatedTransaction: WithId<Transaction>) => {
@@ -57,13 +59,13 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
     const transactionDocRef = doc(firestore, 'expenses', updatedTransaction.id);
     // The 'id' property is not part of the document data, so we exclude it.
     const { id, ...transactionData } = updatedTransaction;
-    updateDoc(transactionDocRef, transactionData);
+    updateDocumentNonBlocking(transactionDocRef, transactionData);
   };
 
   const deleteTransaction = (id: string) => {
     if (!firestore) return;
     const transactionDocRef = doc(firestore, 'expenses', id);
-    deleteDoc(transactionDocRef);
+    deleteDocumentNonBlocking(transactionDocRef);
   };
 
   const value = useMemo(() => ({
