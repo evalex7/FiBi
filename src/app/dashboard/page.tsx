@@ -17,21 +17,21 @@ export default function DashboardPage() {
   return (
     <AppLayout pageTitle="Панель">
       <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
           <TabsTrigger value="overview">Огляд</TabsTrigger>
-          <TabsTrigger value="transactions">Транзакції</TabsTrigger>
-          <TabsTrigger value="payments">
+          <TabsTrigger value="reports">Звіти</TabsTrigger>
+           <TabsTrigger value="transactions" className="hidden md:inline-flex">Транзакції</TabsTrigger>
+          <TabsTrigger value="payments" className="hidden md:inline-flex">
              <Link href="/payments" className="flex items-center gap-2">
                 <Repeat className="h-4 w-4" />
                 Платежі
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="reports">Звіти</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
             <div className="space-y-6">
                 <SummaryCards />
-                <div className="block md:hidden">
+                <div className="block lg:hidden">
                     <AddTransactionForm />
                 </div>
                 <RecentTransactions />
