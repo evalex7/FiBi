@@ -37,8 +37,8 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { WithId } from '@/firebase/firestore/use-collection';
 
@@ -53,22 +53,17 @@ export default function RecentTransactions() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
 
-  const familyMembersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    // Assuming you have a 'familyId' on the user profile to scope this.
-    // For now, let's fetch all users, which is not ideal for large scale but works for a small family.
-    return collection(firestore, 'users');
-  }, [firestore]);
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
 
-  const { data: familyMembersData } = useCollection<FamilyMember>(familyMembersQuery);
-  
+  const { data: familyMember } = useDoc<FamilyMember>(userDocRef);
+
   const familyMembersMap = useMemo(() => {
-    if (!familyMembersData) return {};
-    return familyMembersData.reduce((acc, member) => {
-      acc[member.id] = member;
-      return acc;
-    }, {} as Record<string, WithId<FamilyMember>>);
-  }, [familyMembersData]);
+    if (!familyMember) return {};
+    return { [familyMember.id]: familyMember };
+  }, [familyMember]);
 
 
   useEffect(() => {

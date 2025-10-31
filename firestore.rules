@@ -16,6 +16,8 @@
  * - Users can only create, read, update, and delete their own data.
  * - Listing operations are restricted to the owner of the data.
  * - No shared or public data is allowed.
+ * - Root-level collection listing (e.g., querying the entire `/users` collection)
+ *   is disallowed to prevent leaking user information.
  *
  * Denormalization for Authorization:
  * The data structure inherently denormalizes the familyMemberId (the user's UID)
@@ -58,18 +60,20 @@ service cloud.firestore {
 
     /**
      * @description Rules for the FamilyMember profile documents.
+     *              Listing the entire /users collection is disallowed for security.
      * @path /users/{familyMemberId}
      * @allow (create) User with UID 'user_abc' can create their own profile with matching ID.
      * @deny (create) User with UID 'user_abc' cannot create a profile for 'user_xyz'.
-     * @allow (get, list) User with UID 'user_abc' can read their own profile.
-     * @deny (get, list) User with UID 'user_abc' cannot read profile for 'user_xyz'.
+     * @allow (get) User with UID 'user_abc' can read their own profile.
+     * @deny (get, list) User with UID 'user_abc' cannot read profile for 'user_xyz' or list all users.
      * @allow (update, delete) User with UID 'user_abc' can update/delete their own profile.
      * @deny (update, delete) User with UID 'user_abc' cannot update/delete profile for 'user_xyz'.
-     * @principle Enforces document ownership for all operations.
+     * @principle Enforces document ownership for all operations. Disallows collection-level list.
      */
     match /users/{familyMemberId} {
       allow create: if isOwner(familyMemberId) && request.resource.data.id == familyMemberId;
-      allow get, list: if isOwner(familyMemberId);
+      allow get: if isOwner(familyMemberId);
+      allow list: if false; // Explicitly disallow listing all users.
       allow update: if isExistingOwner(familyMemberId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(familyMemberId);
     }
