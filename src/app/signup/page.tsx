@@ -13,13 +13,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/components/AuthLayout';
 import { useState, FormEvent, useEffect } from 'react';
-import { useAuth, useUser, useFirestore } from '@/firebase';
+import { useAuth, useUser, useFirestore, errorEmitter } from '@/firebase';
 import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
+import { FirebaseError } from 'firebase/app';
 
 const colors = [
   'hsl(12, 76%, 61%)',
@@ -37,7 +38,7 @@ export default function SignupPage() {
 
   const auth = useAuth();
   const firestore = useFirestore();
-  const { user, isUserLoading, userError } = useUser();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -57,16 +58,32 @@ export default function SignupPage() {
     }
   }, [user, isUserLoading, router, firestore, fullName]);
 
+  const showSignupError = (message: string) => {
+    setIsSigningUp(false);
+    toast({
+      variant: 'destructive',
+      title: 'Помилка реєстрації',
+      description: message,
+    });
+  }
+
   useEffect(() => {
-    if (userError) {
-      setIsSigningUp(false);
-      toast({
-        variant: 'destructive',
-        title: 'Помилка реєстрації',
-        description: 'Ця електронна пошта вже використовується або пароль занадто слабкий.',
-      });
+    const handleError = (error: FirebaseError) => {
+      if (error.code === 'auth/email-already-in-use') {
+        showSignupError('Ця електронна пошта вже використовується.');
+      } else if (error.code === 'auth/weak-password') {
+        showSignupError('Пароль занадто слабкий. Він має містити щонайменше 6 символів.');
+      } else {
+        showSignupError('Сталася невідома помилка. Спробуйте ще раз.');
+      }
+    };
+    
+    errorEmitter.on('auth-error', handleError);
+
+    return () => {
+      errorEmitter.off('auth-error', handleError);
     }
-  }, [userError, toast]);
+  }, [toast]);
   
 
   const handleSignup = (e: FormEvent) => {

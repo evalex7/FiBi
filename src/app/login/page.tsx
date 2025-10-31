@@ -13,11 +13,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/components/AuthLayout';
 import { useState, FormEvent, useEffect } from 'react';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, errorEmitter } from '@/firebase';
 import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { FirebaseError } from 'firebase/app';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -25,7 +26,7 @@ export default function LoginPage() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   
   const auth = useAuth();
-  const { user, isUserLoading, userError } = useUser();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -35,16 +36,28 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router]);
 
+  const showLoginError = () => {
+    setIsSigningIn(false);
+    toast({
+      variant: 'destructive',
+      title: 'Помилка входу',
+      description: 'Неправильна електронна пошта або пароль. Спробуйте ще раз.',
+    });
+  };
+
   useEffect(() => {
-    if (userError) {
-      setIsSigningIn(false);
-      toast({
-        variant: 'destructive',
-        title: 'Помилка входу',
-        description: 'Неправильна електронна пошта або пароль. Спробуйте ще раз.',
-      });
+    const handleError = (error: FirebaseError) => {
+      if (error.code === 'auth/invalid-credential') {
+        showLoginError();
+      }
+    };
+    
+    errorEmitter.on('auth-error', handleError);
+
+    return () => {
+      errorEmitter.off('auth-error', handleError);
     }
-  }, [userError, toast]);
+  }, [toast]);
 
   const handleLogin = (e: FormEvent) => {
     e.preventDefault();
