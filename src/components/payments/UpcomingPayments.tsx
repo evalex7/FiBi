@@ -40,12 +40,19 @@ export default function UpcomingPayments() {
 
     if (payments) {
       const newSorted = [...payments]
-        .sort((a, b) => new Date(a.nextDueDate).getTime() - new Date(b.nextDueDate).getTime())
-        .map(p => ({
-          ...p,
-          formattedAmount: formatCurrency(p.amount),
-          formattedDate: format(new Date(p.nextDueDate), 'd MMMM yyyy', { locale: uk }),
-        }));
+        .sort((a, b) => {
+            const dateA = a.nextDueDate && (a.nextDueDate as any).toDate ? (a.nextDueDate as any).toDate() : new Date(a.nextDueDate);
+            const dateB = b.nextDueDate && (b.nextDueDate as any).toDate ? (b.nextDueDate as any).toDate() : new Date(b.nextDueDate);
+            return dateA.getTime() - dateB.getTime();
+        })
+        .map(p => {
+            const date = p.nextDueDate && (p.nextDueDate as any).toDate ? (p.nextDueDate as any).toDate() : new Date(p.nextDueDate);
+            return {
+                ...p,
+                formattedAmount: formatCurrency(p.amount),
+                formattedDate: format(date, 'd MMMM yyyy', { locale: uk }),
+            }
+        });
       setSortedPayments(newSorted);
     }
   }, [payments]);

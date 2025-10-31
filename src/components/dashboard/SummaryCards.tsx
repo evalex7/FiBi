@@ -24,7 +24,7 @@ export default function SummaryCards() {
 
     const { income, expenses } = transactions.reduce(
       (acc, transaction) => {
-        const transactionDate = new Date(transaction.date);
+        const transactionDate = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
         if (transactionDate >= firstDayOfMonth && transactionDate <= today) {
             if (transaction.type === 'income') {
                 acc.income += transaction.amount;

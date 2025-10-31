@@ -46,7 +46,7 @@ export default function BudgetList() {
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     const spentAmounts = transactions.reduce((acc, t) => {
-      const transactionDate = new Date(t.date);
+      const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
       if (t.type === 'expense' && transactionDate >= firstDayOfMonth && transactionDate <= today) {
         const budgetCategory = budgets.find(b => b.category === t.category);
         if (budgetCategory) {

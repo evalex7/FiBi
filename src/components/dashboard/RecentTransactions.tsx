@@ -79,7 +79,11 @@ export default function RecentTransactions() {
 
     if (transactions) {
       const newSorted = [...transactions]
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .sort((a, b) => {
+            const dateA = a.date && (a.date as any).toDate ? (a.date as any).toDate() : new Date(a.date);
+            const dateB = b.date && (b.date as any).toDate ? (b.date as any).toDate() : new Date(b.date);
+            return dateB.getTime() - dateA.getTime();
+        })
         .map(t => ({ ...t, formattedAmount: formatCurrency(t.amount) }));
       setSortedTransactions(newSorted);
     }
@@ -159,6 +163,7 @@ export default function RecentTransactions() {
                   const categoryInfo = categories.find(c => c.name === transaction.category);
                   const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
                   const member = transaction.familyMemberId ? familyMembersMap.get(transaction.familyMemberId) : null;
+                  const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
                   return (
                     <div key={transaction.id} className="flex items-start gap-4 p-3 rounded-lg border">
                       {member ? (
@@ -175,7 +180,7 @@ export default function RecentTransactions() {
                       <div className="flex-grow">
                         <p className="font-medium">{transaction.description}</p>
                         <p className="text-sm text-muted-foreground">
-                          {format(new Date(transaction.date), 'd MMM, yyyy', { locale: uk })}
+                          {format(date, 'd MMM, yyyy', { locale: uk })}
                         </p>
                       </div>
                       <div className="flex flex-col items-end">
@@ -214,6 +219,7 @@ export default function RecentTransactions() {
                      const categoryInfo = categories.find(c => c.name === transaction.category);
                      const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
                     const member = transaction.familyMemberId ? familyMembersMap.get(transaction.familyMemberId) : null;
+                    const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
 
                     return (
                       <TableRow key={transaction.id}>
@@ -236,7 +242,7 @@ export default function RecentTransactions() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {format(new Date(transaction.date), 'd MMM, yyyy', { locale: uk })}
+                          {format(date, 'd MMM, yyyy', { locale: uk })}
                         </TableCell>
                         <TableCell
                           className={cn(
