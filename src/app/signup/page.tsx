@@ -31,6 +31,9 @@ const colors = [
   'hsl(27, 87%, 67%)',  // orange
   'hsl(260, 65%, 65%)', // purple
   'hsl(320, 60%, 60%)', // pink
+  'hsl(190, 70%, 50%)', // teal
+  'hsl(30, 90%, 55%)',  // deep orange
+  'hsl(230, 75%, 60%)', // indigo
 ];
 
 export default function SignupPage() {
@@ -53,19 +56,27 @@ export default function SignupPage() {
   const { data: familyMembers } = useCollection<FamilyMember>(usersCollectionRef);
 
   const getUniqueColor = useCallback(() => {
-    if (!familyMembers || familyMembers.length === 0) {
+    if (!familyMembers) {
+      // If family members data is not yet loaded, return a random color as a fallback
       return colors[Math.floor(Math.random() * colors.length)];
+    }
+    
+    if (familyMembers.length === 0) {
+      return colors[0];
     }
 
     const usedColors = new Set(familyMembers.map(member => member.color));
-    const availableColors = colors.filter(color => !usedColors.has(color));
+    
+    // Find the first unused color in our predefined list
+    const availableColor = colors.find(color => !usedColors.has(color));
 
-    if (availableColors.length > 0) {
-      return availableColors[Math.floor(Math.random() * availableColors.length)];
+    if (availableColor) {
+      return availableColor;
     }
     
-    // If all colors are used, return a random one
-    return colors[Math.floor(Math.random() * colors.length)];
+    // If all predefined colors are used, cycle through them
+    // This ensures a deterministic color assignment even when all are "taken"
+    return colors[familyMembers.length % colors.length];
   }, [familyMembers]);
 
   useEffect(() => {
