@@ -38,7 +38,7 @@ import {
 } from '../ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useCategories } from '@/contexts/categories-context';
