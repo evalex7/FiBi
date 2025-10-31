@@ -4,8 +4,10 @@ import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import type { Budget } from '@/lib/types';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
-import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { WithId } from '@/firebase/firestore/use-collection';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface BudgetsContextType {
   budgets: WithId<Budget>[];
@@ -30,7 +32,18 @@ export const BudgetsProvider = ({ children }: { children: ReactNode }) => {
 
   const addBudget = (budgetData: Omit<Budget, 'id' | 'familyMemberId'>) => {
     if (!budgetsCollectionRef || !user) return;
-    addDocumentNonBlocking(budgetsCollectionRef, { ...budgetData, familyMemberId: user.uid });
+    const dataWithUser = { ...budgetData, familyMemberId: user.uid };
+    const newDocRef = doc(budgetsCollectionRef); // Create a new doc with a generated ID
+    setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: newDocRef.path,
+          operation: 'create',
+          requestResourceData: dataWithUser,
+        })
+      );
+    });
   };
 
   const updateBudget = (updatedBudget: WithId<Budget>) => {
@@ -39,14 +52,31 @@ export const BudgetsProvider = ({ children }: { children: ReactNode }) => {
     if (updatedBudget.familyMemberId !== user.uid) return;
     const budgetDocRef = doc(firestore, 'budgets', updatedBudget.id);
     const { id, ...budgetData } = updatedBudget;
-    updateDocumentNonBlocking(budgetDocRef, budgetData);
+    setDocumentNonBlocking(budgetDocRef, budgetData, { merge: true }).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: budgetDocRef.path,
+            operation: 'update',
+            requestResourceData: budgetData,
+          })
+        );
+      });
   };
 
   const deleteBudget = (id: string) => {
     if (!firestore || !user) return;
     const budgetDocRef = doc(firestore, 'budgets', id);
     // Security rules will enforce ownership on the backend.
-    deleteDocumentNonBlocking(budgetDocRef);
+    deleteDocumentNonBlocking(budgetDocRef).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: budgetDocRef.path,
+            operation: 'delete',
+          })
+        );
+      });
   };
 
   const value = useMemo(() => ({

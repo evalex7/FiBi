@@ -4,8 +4,10 @@ import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import type { RecurringPayment } from '@/lib/types';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
-import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { WithId } from '@/firebase/firestore/use-collection';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface PaymentsContextType {
   payments: WithId<RecurringPayment>[];
@@ -30,7 +32,18 @@ export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
   
   const addPayment = (paymentData: Omit<RecurringPayment, 'id' | 'familyMemberId'>) => {
     if (!paymentsCollectionRef || !user) return;
-    addDocumentNonBlocking(paymentsCollectionRef, { ...paymentData, familyMemberId: user.uid });
+    const dataWithUser = { ...paymentData, familyMemberId: user.uid };
+    const newDocRef = doc(paymentsCollectionRef);
+    setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: newDocRef.path,
+          operation: 'create',
+          requestResourceData: dataWithUser,
+        })
+      );
+    });
   };
 
   const updatePayment = (updatedPayment: WithId<RecurringPayment>) => {
@@ -38,13 +51,30 @@ export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
     if (updatedPayment.familyMemberId !== user.uid) return;
     const paymentDocRef = doc(firestore, 'payments', updatedPayment.id);
     const { id, ...paymentData } = updatedPayment;
-    updateDocumentNonBlocking(paymentDocRef, paymentData);
+    setDocumentNonBlocking(paymentDocRef, paymentData, { merge: true }).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: paymentDocRef.path,
+            operation: 'update',
+            requestResourceData: paymentData,
+          })
+        );
+      });
   };
 
   const deletePayment = (id: string) => {
     if (!firestore || !user) return;
     const paymentDocRef = doc(firestore, 'payments', id);
-    deleteDocumentNonBlocking(paymentDocRef);
+    deleteDocumentNonBlocking(paymentDocRef).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: paymentDocRef.path,
+            operation: 'delete',
+          })
+        );
+      });
   };
   
   const value = useMemo(() => ({

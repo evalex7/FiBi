@@ -4,10 +4,13 @@ import React, { createContext, useContext, useMemo, ReactNode, useEffect } from 
 import type { Category } from '@/lib/types';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch, getDocs, query } from 'firebase/firestore';
-import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { defaultCategories } from '@/lib/category-icons';
 import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 interface CategoriesContextType {
   categories: WithId<Category>[];
@@ -46,7 +49,10 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
             const newDocRef = doc(categoriesCollectionRef);
             batch.set(newDocRef, {...category, familyMemberId: user.uid, isCommon: true});
           });
-          batch.commit();
+          batch.commit().catch(error => {
+            console.error("Batch write for default categories failed:", error);
+            // Optionally emit a generic error
+          });
         }
       });
     }
@@ -54,7 +60,18 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
   
   const addCategory = (categoryData: Omit<Category, 'id'>) => {
     if (!categoriesCollectionRef || !user) return;
-    addDocumentNonBlocking(categoriesCollectionRef, { ...categoryData, familyMemberId: user.uid, isCommon: false });
+    const dataWithUser = { ...categoryData, familyMemberId: user.uid, isCommon: false };
+    const newDocRef = doc(categoriesCollectionRef);
+    setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: newDocRef.path,
+          operation: 'create',
+          requestResourceData: dataWithUser,
+        })
+      );
+    });
   };
 
   const updateCategory = (updatedCategory: WithId<Category>) => {
@@ -63,14 +80,31 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     const { id, ...categoryData } = updatedCategory;
     // ensure only owner can update
     if (updatedCategory.familyMemberId !== user.uid) return;
-    updateDocumentNonBlocking(categoryDocRef, categoryData);
+    setDocumentNonBlocking(categoryDocRef, categoryData, { merge: true }).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: categoryDocRef.path,
+            operation: 'update',
+            requestResourceData: categoryData,
+          })
+        );
+      });
   };
 
   const deleteCategory = (id: string) => {
     if (!firestore || !user) return;
     const categoryDocRef = doc(firestore, 'categories', id);
     // In a real app, you'd check ownership before deleting
-    deleteDocumentNonBlocking(categoryDocRef);
+    deleteDocumentNonBlocking(categoryDocRef).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: categoryDocRef.path,
+            operation: 'delete',
+          })
+        );
+      });
   };
 
   const value = useMemo(() => ({

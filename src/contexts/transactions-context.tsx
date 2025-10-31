@@ -5,8 +5,9 @@ import type { Transaction } from '@/lib/types';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, doc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { WithId } from '@/firebase/firestore/use-collection';
-import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface TransactionsContextType {
   transactions: WithId<Transaction>[];
@@ -39,6 +40,13 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
     }, (error) => {
         console.error("Error fetching transactions:", error);
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: transactionsCollectionRef.path,
+            operation: 'list',
+          })
+        );
         setIsLoading(false);
     });
 
@@ -50,22 +58,49 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
   const addTransaction = (transactionData: Omit<Transaction, 'id' | 'familyMemberId'>) => {
     if (!firestore || !user) return;
     const transactionsCollectionRef = collection(firestore, 'expenses');
-    addDocumentNonBlocking(transactionsCollectionRef, { ...transactionData, familyMemberId: user.uid });
+    const dataWithUser = { ...transactionData, familyMemberId: user.uid };
+    const newDocRef = doc(transactionsCollectionRef);
+    setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: newDocRef.path,
+            operation: 'create',
+            requestResourceData: dataWithUser,
+          })
+        );
+      });
   };
 
   const updateTransaction = (updatedTransaction: WithId<Transaction>) => {
     if (!firestore || !user) return;
     if (updatedTransaction.familyMemberId !== user.uid) return;
     const transactionDocRef = doc(firestore, 'expenses', updatedTransaction.id);
-    // The 'id' property is not part of the document data, so we exclude it.
     const { id, ...transactionData } = updatedTransaction;
-    updateDocumentNonBlocking(transactionDocRef, transactionData);
+    setDocumentNonBlocking(transactionDocRef, transactionData, { merge: true }).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: transactionDocRef.path,
+            operation: 'update',
+            requestResourceData: transactionData,
+          })
+        );
+      });
   };
 
   const deleteTransaction = (id: string) => {
     if (!firestore) return;
     const transactionDocRef = doc(firestore, 'expenses', id);
-    deleteDocumentNonBlocking(transactionDocRef);
+    deleteDocumentNonBlocking(transactionDocRef).catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: transactionDocRef.path,
+            operation: 'delete',
+          })
+        );
+      });
   };
 
   const value = useMemo(() => ({
