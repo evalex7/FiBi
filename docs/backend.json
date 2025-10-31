@@ -1,0 +1,226 @@
+{
+  "entities": {
+    "FamilyMember": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FamilyMember",
+      "type": "object",
+      "description": "Represents a member of the family using the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the family member."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the family member."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the family member.",
+          "format": "email"
+        },
+        "color": {
+          "type": "string",
+          "description": "Color associated with the family member for UI representation."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "color"
+      ]
+    },
+    "Expense": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Expense",
+      "type": "object",
+      "description": "Represents an expense recorded by a family member.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the expense."
+        },
+        "familyMemberId": {
+          "type": "string",
+          "description": "Reference to FamilyMember. (Relationship: FamilyMember 1:N Expense) Indicates which family member recorded the expense."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to Category. (Relationship: Category 1:N Expense) The category of the expense."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date the expense was incurred.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the expense."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the expense."
+        }
+      },
+      "required": [
+        "id",
+        "familyMemberId",
+        "categoryId",
+        "date",
+        "amount"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a category for expenses (e.g., Groceries, Transportation).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the category."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the category."
+        },
+        "familyMemberId": {
+          "type": "string",
+          "description": "Reference to FamilyMember. (Relationship: FamilyMember 1:N Category)  Indicates which family member created the category (for personal categories)."
+        },
+        "isCommon": {
+          "type": "boolean",
+          "description": "Indicates if the category is common to all family members or specific to one."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Budget": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Budget",
+      "type": "object",
+      "description": "Represents a budget set for a specific category.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the budget."
+        },
+        "familyMemberId": {
+          "type": "string",
+          "description": "Reference to FamilyMember. (Relationship: FamilyMember 1:N Budget)"
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to Category. (Relationship: Category 1:N Budget)"
+        },
+        "month": {
+          "type": "string",
+          "description": "The month for which the budget is set.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "The budget amount for the category in the specified month."
+        }
+      },
+      "required": [
+        "id",
+        "familyMemberId",
+        "categoryId",
+        "month",
+        "amount"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{familyMemberId}",
+        "definition": {
+          "entityName": "FamilyMember",
+          "schema": {
+            "$ref": "#/backend/entities/FamilyMember"
+          },
+          "description": "Stores family member profiles. The 'familyMemberId' is the Firebase Auth UID. It serves as the root for all personal data.",
+          "params": [
+            {
+              "name": "familyMemberId",
+              "description": "The Firebase Auth UID of the family member."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{familyMemberId}/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores expense categories created by each family member. Includes a 'familyMemberId' to identify the owner.",
+          "params": [
+            {
+              "name": "familyMemberId",
+              "description": "The Firebase Auth UID of the family member."
+            },
+            {
+              "name": "categoryId",
+              "description": "The unique ID of the category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{familyMemberId}/expenses/{expenseId}",
+        "definition": {
+          "entityName": "Expense",
+          "schema": {
+            "$ref": "#/backend/entities/Expense"
+          },
+          "description": "Stores expenses recorded by each family member. The 'familyMemberId' indicates the owner.",
+          "params": [
+            {
+              "name": "familyMemberId",
+              "description": "The Firebase Auth UID of the family member."
+            },
+            {
+              "name": "expenseId",
+              "description": "The unique ID of the expense."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{familyMemberId}/budgets/{budgetId}",
+        "definition": {
+          "entityName": "Budget",
+          "schema": {
+            "$ref": "#/backend/entities/Budget"
+          },
+          "description": "Stores budget information set by each family member. The 'familyMemberId' indicates the owner.",
+          "params": [
+            {
+              "name": "familyMemberId",
+              "description": "The Firebase Auth UID of the family member."
+            },
+            {
+              "name": "budgetId",
+              "description": "The unique ID of the budget."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure data isolation and secure access for each family member. Each family member's data (categories, expenses, and budgets) is stored under their respective user ID, enabling straightforward security rules based on `request.auth.uid`. The structure leverages path-based ownership to ensure each family member can only access their own data. The use of subcollections for categories, expenses, and budgets maintains a clear hierarchy. Public or shared data is not required. This structure avoids hierarchical authorization dependencies (`get()`), simplifying security rules and allowing for atomic operations. By storing expenses under the familyMemberId we ensure that expenses can only be read by their owner. This structure facilitates secure list operations because listing is always scoped to the requesting user's ID."
+  }
+}
