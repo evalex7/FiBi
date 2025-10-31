@@ -12,22 +12,25 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/components/AuthLayout';
-import { useState, FormEvent, useEffect } from 'react';
-import { useAuth, useUser, useFirestore, errorEmitter } from '@/firebase';
+import { useState, FormEvent, useEffect, useCallback } from 'react';
+import { useAuth, useUser, useFirestore, errorEmitter, useCollection, useMemoFirebase } from '@/firebase';
 import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { doc } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
+import type { FamilyMember } from '@/lib/types';
 
 const colors = [
-  'hsl(12, 76%, 61%)',
-  'hsl(173, 58%, 39%)',
-  'hsl(43, 74%, 66%)',
-  'hsl(27, 87%, 67%)',
-  'hsl(207, 82%, 68%)',
+  'hsl(207, 82%, 68%)', // blue
+  'hsl(12, 76%, 61%)',  // red
+  'hsl(173, 58%, 39%)', // green
+  'hsl(43, 74%, 66%)',  // yellow
+  'hsl(27, 87%, 67%)',  // orange
+  'hsl(260, 65%, 65%)', // purple
+  'hsl(320, 60%, 60%)', // pink
 ];
 
 export default function SignupPage() {
@@ -41,22 +44,45 @@ export default function SignupPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+  
+  const usersCollectionRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
+
+  const { data: familyMembers } = useCollection<FamilyMember>(usersCollectionRef);
+
+  const getUniqueColor = useCallback(() => {
+    if (!familyMembers || familyMembers.length === 0) {
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    const usedColors = new Set(familyMembers.map(member => member.color));
+    const availableColors = colors.filter(color => !usedColors.has(color));
+
+    if (availableColors.length > 0) {
+      return availableColors[Math.floor(Math.random() * availableColors.length)];
+    }
+    
+    // If all colors are used, return a random one
+    return colors[Math.floor(Math.random() * colors.length)];
+  }, [familyMembers]);
 
   useEffect(() => {
-    if (user && !isUserLoading) {
+    if (user && !isUserLoading && firestore && fullName) {
       const userRef = doc(firestore, 'users', user.uid);
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      const userColor = getUniqueColor();
       
       setDocumentNonBlocking(userRef, {
         id: user.uid,
         name: fullName,
         email: user.email,
-        color: randomColor,
+        color: userColor,
       }, { merge: true });
       
       router.push('/dashboard');
     }
-  }, [user, isUserLoading, router, firestore, fullName]);
+  }, [user, isUserLoading, router, firestore, fullName, getUniqueColor]);
 
   const showSignupError = (message: string) => {
     setIsSigningUp(false);
