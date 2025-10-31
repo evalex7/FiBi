@@ -1,79 +1,58 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
 import type { RecurringPayment } from '@/lib/types';
-import { mockPayments } from '@/lib/data';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { WithId } from '@/firebase/firestore/use-collection';
 
 interface PaymentsContextType {
-  payments: RecurringPayment[];
-  addPayment: (payment: Omit<RecurringPayment, 'id' | 'nextDueDate'> & { nextDueDate: Date }) => void;
-  updatePayment: (payment: RecurringPayment) => void;
+  payments: WithId<RecurringPayment>[];
+  addPayment: (payment: Omit<RecurringPayment, 'id'>) => void;
+  updatePayment: (payment: WithId<RecurringPayment>) => void;
   deletePayment: (id: string) => void;
   isLoading: boolean;
 }
 
 const PaymentsContext = createContext<PaymentsContextType | undefined>(undefined);
 
-const safeJSONParse = (str: string | null) => {
-    if (!str) return null;
-    try {
-        const data = JSON.parse(str);
-        // Revive dates
-        return data.map((p: any) => ({ ...p, nextDueDate: new Date(p.nextDueDate) }));
-    } catch (e) {
-        return null;
-    }
-};
-
-
 export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
-  const [payments, setPayments] = useState<RecurringPayment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const firestore = useFirestore();
+  const { user } = useUser();
 
-  useEffect(() => {
-    try {
-      const storedPayments = localStorage.getItem('recurringPayments');
-      if (storedPayments) {
-        setPayments(safeJSONParse(storedPayments) || mockPayments);
-      } else {
-        setPayments(mockPayments);
-      }
-    } catch (error) {
-      console.error("Failed to load payments from localStorage", error);
-      setPayments(mockPayments);
-    } finally {
-        setIsLoading(false);
-    }
-  }, []);
+  const paymentsCollectionRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'payments');
+  }, [firestore, user]);
 
-  useEffect(() => {
-    if (!isLoading) {
-        try {
-            localStorage.setItem('recurringPayments', JSON.stringify(payments));
-        } catch (error) {
-            console.error("Failed to save payments to localStorage", error);
-        }
-    }
-  }, [payments, isLoading]);
+  const { data: paymentsData, isLoading } = useCollection<RecurringPayment>(paymentsCollectionRef);
+  
+  const payments = useMemo(() => {
+    if (!paymentsData) return [];
+    return paymentsData.map(p => ({
+      ...p,
+      nextDueDate: (p.nextDueDate as any).toDate ? (p.nextDueDate as any).toDate() : new Date(p.nextDueDate)
+    }));
+  }, [paymentsData]);
 
 
-  const addPayment = (paymentData: Omit<RecurringPayment, 'id' | 'nextDueDate'> & { nextDueDate: Date }) => {
-    const newPayment: RecurringPayment = {
-        ...paymentData,
-        id: crypto.randomUUID(),
-        nextDueDate: paymentData.nextDueDate,
-    };
-    setPayments(prevPayments => [...prevPayments, newPayment]);
+  const addPayment = (paymentData: Omit<RecurringPayment, 'id'>) => {
+    if (!paymentsCollectionRef) return;
+    addDocumentNonBlocking(paymentsCollectionRef, { ...paymentData, familyMemberId: user?.uid });
   };
 
-  const updatePayment = (updatedPayment: RecurringPayment) => {
-    setPayments(prevPayments => 
-      prevPayments.map(p => p.id === updatedPayment.id ? {...updatedPayment, nextDueDate: new Date(updatedPayment.nextDueDate)} : p)
-    );
+  const updatePayment = (updatedPayment: WithId<RecurringPayment>) => {
+    if (!firestore || !user) return;
+    const paymentDocRef = doc(firestore, 'users', user.uid, 'payments', updatedPayment.id);
+    const { id, ...paymentData } = updatedPayment;
+    updateDocumentNonBlocking(paymentDocRef, paymentData);
   };
 
   const deletePayment = (id: string) => {
-    setPayments(prevPayments => prevPayments.filter(p => p.id !== id));
+    if (!firestore || !user) return;
+    const paymentDocRef = doc(firestore, 'users', user.uid, 'payments', id);
+    deleteDocumentNonBlocking(paymentDocRef);
   };
 
   return (

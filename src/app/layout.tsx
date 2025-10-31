@@ -4,6 +4,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { TransactionsProvider } from '@/contexts/transactions-context';
 import { PaymentsProvider } from '@/contexts/payments-context';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'Сімейні фінанси',
@@ -31,11 +32,13 @@ export default function RootLayout({
           'font-body'
         )}
       >
-        <TransactionsProvider>
-          <PaymentsProvider>
-            {children}
-          </PaymentsProvider>
-        </TransactionsProvider>
+        <FirebaseClientProvider>
+          <TransactionsProvider>
+            <PaymentsProvider>
+              {children}
+            </PaymentsProvider>
+          </TransactionsProvider>
+        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>

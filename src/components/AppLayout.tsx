@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Target,
   Repeat,
   AreaChart,
+  LogOut,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -23,6 +25,9 @@ import {
 import { Logo } from './Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from './ui/skeleton';
+import { useAuth, useUser } from '@/firebase';
+import { useEffect } from 'react';
+import { Button } from './ui/button';
 
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
@@ -40,15 +45,35 @@ export default function AppLayout({
 }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  const handleLogout = () => {
+    auth.signOut();
+  };
   
   const getIsActive = (href: string) => {
     if (href === '/dashboard') {
-      // The root page now redirects, but let's keep this for robustness
-      return pathname === '/' || pathname === '/dashboard';
+      return pathname === '/dashboard';
     }
     return pathname.startsWith(href);
   };
   
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   // Render a skeleton layout until we know the screen size
   if (isMobile === null) {
       return (
@@ -101,7 +126,14 @@ export default function AppLayout({
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
-            
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton onClick={handleLogout} tooltip="Вийти">
+                        <LogOut />
+                        <span>Вийти</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
 
@@ -116,6 +148,9 @@ export default function AppLayout({
                </div>
               <h1 className="hidden md:block text-2xl font-semibold font-headline">{pageTitle}</h1>
             </div>
+             <Button onClick={handleLogout} variant="ghost" size="icon" className="md:hidden">
+                <LogOut className="h-5 w-5" />
+             </Button>
           </header>
           
           {/* Main Content */}

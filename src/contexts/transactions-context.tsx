@@ -1,80 +1,59 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
 import type { Transaction } from '@/lib/types';
-import { mockTransactions } from '@/lib/data';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { WithId } from '@/firebase/firestore/use-collection';
 
 interface TransactionsContextType {
-  transactions: Transaction[];
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'date'> & { date: Date }) => void;
-  updateTransaction: (transaction: Transaction) => void;
+  transactions: WithId<Transaction>[];
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
+  updateTransaction: (transaction: WithId<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   isLoading: boolean;
 }
 
 const TransactionsContext = createContext<TransactionsContextType | undefined>(undefined);
 
-const safeJSONParse = (str: string | null) => {
-    if (!str) return null;
-    try {
-        const data = JSON.parse(str);
-        // Revive dates
-        return data.map((t: any) => ({ ...t, date: new Date(t.date) }));
-    } catch (e) {
-        return null;
-    }
-};
-
-
 export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const firestore = useFirestore();
+  const { user } = useUser();
 
-  useEffect(() => {
-    try {
-      const storedTransactions = localStorage.getItem('transactions');
-      if (storedTransactions) {
-        setTransactions(safeJSONParse(storedTransactions) || mockTransactions);
-      } else {
-        setTransactions(mockTransactions);
-      }
-    } catch (error) {
-      console.error("Failed to load transactions from localStorage", error);
-      setTransactions(mockTransactions);
-    } finally {
-        setIsLoading(false);
-    }
-  }, []);
+  const transactionsCollectionRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'expenses');
+  }, [firestore, user]);
 
-  useEffect(() => {
-    if (!isLoading) {
-        try {
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-        } catch (error) {
-            console.error("Failed to save transactions to localStorage", error);
-        }
-    }
-  }, [transactions, isLoading]);
+  const { data: transactionsData, isLoading } = useCollection<Transaction>(transactionsCollectionRef);
 
+  const transactions = useMemo(() => {
+    if (!transactionsData) return [];
+    return transactionsData.map(t => ({
+      ...t,
+      date: (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date)
+    }));
+  }, [transactionsData]);
 
-  const addTransaction = (transactionData: Omit<Transaction, 'id' | 'date'> & { date: Date }) => {
-    const newTransaction: Transaction = {
-        ...transactionData,
-        id: crypto.randomUUID(),
-        date: transactionData.date || new Date(),
-    };
-    setTransactions(prevTransactions => [...prevTransactions, newTransaction]);
+  const addTransaction = (transactionData: Omit<Transaction, 'id'>) => {
+    if (!transactionsCollectionRef) return;
+    addDocumentNonBlocking(transactionsCollectionRef, { ...transactionData, familyMemberId: user?.uid });
   };
 
-  const updateTransaction = (updatedTransaction: Transaction) => {
-    setTransactions(prevTransactions => 
-      prevTransactions.map(t => t.id === updatedTransaction.id ? {...updatedTransaction, date: new Date(updatedTransaction.date)} : t)
-    );
+  const updateTransaction = (updatedTransaction: WithId<Transaction>) => {
+    if (!firestore || !user) return;
+    const transactionDocRef = doc(firestore, 'users', user.uid, 'expenses', updatedTransaction.id);
+    const { id, ...transactionData } = updatedTransaction;
+    updateDocumentNonBlocking(transactionDocRef, transactionData);
   };
 
   const deleteTransaction = (id: string) => {
-    setTransactions(prevTransactions => prevTransactions.filter(t => t.id !== id));
+    if (!firestore || !user) return;
+    const transactionDocRef = doc(firestore, 'users', user.uid, 'expenses', id);
+    deleteDocumentNonBlocking(transactionDocRef);
   };
+
 
   return (
     <TransactionsContext.Provider value={{ transactions, addTransaction, updateTransaction, deleteTransaction, isLoading }}>

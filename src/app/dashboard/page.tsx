@@ -1,4 +1,4 @@
-
+'use client';
 
 import AppLayout from '@/components/AppLayout';
 import AddTransactionForm from '@/components/dashboard/AddTransactionForm';
@@ -10,22 +10,14 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import { Repeat } from 'lucide-react';
-import Link from 'next/link';
 
 export default function DashboardPage() {
   return (
     <AppLayout pageTitle="Панель">
       <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-4">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 mb-4">
           <TabsTrigger value="overview">Огляд</TabsTrigger>
-          <TabsTrigger value="transactions" className="hidden md:inline-flex">Транзакції</TabsTrigger>
-          <TabsTrigger value="payments" className="hidden md:inline-flex">
-             <Link href="/payments" className="flex items-center gap-2">
-                <Repeat className="h-4 w-4" />
-                Платежі
-            </Link>
-          </TabsTrigger>
+          <TabsTrigger value="transactions">Транзакції</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
             <div className="space-y-6">
@@ -41,9 +33,6 @@ export default function DashboardPage() {
               <AddTransactionForm />
               <RecentTransactions />
           </div>
-        </TabsContent>
-         <TabsContent value="payments">
-          {/* Content will be on the /payments page */}
         </TabsContent>
       </Tabs>
     </AppLayout>
