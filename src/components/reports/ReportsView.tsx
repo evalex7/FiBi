@@ -104,10 +104,18 @@ export default function ReportsView() {
       value,
     }));
     
-    const chartConfig = chartData.reduce((acc, entry, index) => {
+    let colorIndex = 0;
+    const chartConfig = chartData.reduce((acc, entry) => {
+        let color;
+        if (entry.name === 'Харчування поза домом') {
+            color = 'hsl(var(--destructive))';
+        } else {
+            color = COLORS[colorIndex % COLORS.length];
+            colorIndex++;
+        }
         acc[entry.name] = {
             label: entry.name,
-            color: COLORS[index % COLORS.length],
+            color: color,
         };
         return acc;
     }, {} as ChartConfig);
