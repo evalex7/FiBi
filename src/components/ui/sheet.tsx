@@ -8,11 +8,9 @@ import { cn } from "@/lib/utils"
 const SheetContext = React.createContext<{
   open: boolean
   onOpenChange: (open: boolean) => void
-  side: "top" | "bottom" | "left" | "right"
 }>({
   open: false,
   onOpenChange: () => {},
-  side: "right",
 })
 
 const useSheetContext = () => React.useContext(SheetContext)
@@ -27,7 +25,7 @@ const Sheet = ({
   children: React.ReactNode
 }) => {
   return (
-    <SheetContext.Provider value={{ open, onOpenChange, side: "right" }}>
+    <SheetContext.Provider value={{ open, onOpenChange }}>
       {children}
     </SheetContext.Provider>
   )
@@ -84,42 +82,25 @@ const SheetContent = React.forwardRef<
     }
   }, [open])
 
-  const sideClasses = {
-    top: "inset-x-0 top-0 border-b",
-    bottom: "inset-x-0 bottom-0 border-t",
-    left: "inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm",
-    right: "inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm",
-  }
-
-  const transitionClasses = {
-    open: {
-        top: 'animate-in slide-in-from-top',
-        bottom: 'animate-in slide-in-from-bottom',
-        left: 'animate-in slide-in-from-left',
-        right: 'animate-in slide-in-from-right',
-    },
-    closed: {
-        top: 'animate-out slide-out-to-top',
-        bottom: 'animate-out slide-out-to-bottom',
-        left: 'animate-out slide-out-to-left',
-        right: 'animate-out slide-out-to-right',
-    }
-  }
-
   if (!open) return null
 
   return (
     <>
       <div
-        className="fixed inset-0 z-50 bg-black/80"
+        className={cn("fixed inset-0 z-50 bg-black/80", open ? "animate-in fade-in-0" : "animate-out fade-out-0" )}
         onClick={() => onOpenChange(false)}
       />
       <div
         ref={ref}
         className={cn(
           "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out duration-300",
-          sideClasses[side],
-          open ? transitionClasses.open[side] : transitionClasses.closed[side],
+           // Mobile: from bottom
+          "inset-x-0 bottom-0 border-t rounded-t-lg",
+          // Desktop: from right
+          "md:inset-y-0 md:right-0 md:h-full md:w-3/4 md:border-l md:rounded-t-none md:rounded-l-lg sm:max-w-sm",
+          open 
+            ? "animate-in slide-in-from-bottom md:slide-in-from-right" 
+            : "animate-out slide-out-to-bottom md:slide-out-to-right",
           className
         )}
         {...props}
