@@ -8,7 +8,7 @@ import {
   Repeat,
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-
+import { cn } from '@/lib/utils';
 import {
   SidebarProvider,
   Sidebar,
@@ -21,7 +21,6 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Logo } from './Logo';
-import { cn } from '@/lib/utils';
 
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
@@ -54,7 +53,7 @@ export default function AppLayout({
         <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-10">
           <div className="flex justify-around items-center h-full">
             {menuItems.map((item) => {
-              const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/');
+              const isActive = (item.href === '/dashboard' && pathname === '/') || pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}
@@ -91,7 +90,7 @@ export default function AppLayout({
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href || (item.href === '/dashboard' && pathname === '/')}
+                    isActive={(item.href === '/dashboard' && pathname === '/') || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
                     tooltip={item.label}
                   >
                     <Link href={item.href}>
