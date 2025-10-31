@@ -18,6 +18,7 @@ import { useCategories } from '@/contexts/categories-context';
 import { format, startOfMonth, startOfQuarter, startOfYear, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { useUser } from '@/firebase';
+import { Timestamp } from 'firebase/firestore';
 
 type FormattedBudget = Budget & {
   spent: number;
@@ -35,16 +36,15 @@ const formatCurrency = (amount: number) =>
     currency: 'UAH',
   }).format(amount);
 
-const getPeriodDates = (period: Budget['period']) => {
-    const today = new Date();
+const getPeriodDates = (period: Budget['period'], baseDate: Date) => {
     switch (period) {
         case 'quarterly':
-            return { start: startOfQuarter(today), end: endOfQuarter(today) };
+            return { start: startOfQuarter(baseDate), end: endOfQuarter(baseDate) };
         case 'yearly':
-            return { start: startOfYear(today), end: endOfYear(today) };
+            return { start: startOfYear(baseDate), end: endOfYear(baseDate) };
         case 'monthly':
         default:
-            return { start: startOfMonth(today), end: endOfMonth(today) };
+            return { start: startOfMonth(baseDate), end: endOfMonth(baseDate) };
     }
 }
 
@@ -61,7 +61,8 @@ export default function BudgetList() {
     if(!budgets || !transactions) return;
 
     const newFormattedBudgets = budgets.map(budget => {
-      const { start, end } = getPeriodDates(budget.period);
+      const budgetStartDate = budget.startDate instanceof Timestamp ? budget.startDate.toDate() : new Date(budget.startDate);
+      const { start, end } = getPeriodDates(budget.period, budgetStartDate);
 
       const spent = transactions.reduce((acc, t) => {
         const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
