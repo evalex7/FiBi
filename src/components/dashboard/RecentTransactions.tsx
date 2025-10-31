@@ -54,19 +54,22 @@ export default function RecentTransactions() {
   const [sortedTransactions, setSortedTransactions] = useState<FormattedTransaction[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  
+  const usersCollectionRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
+  
+  const { data: familyMembers } = useCollection<FamilyMember>(usersCollectionRef);
 
   const familyMembersMap = useMemo(() => {
-    if (!transactions) return new Map();
-    // In a real app with many users, you'd fetch this data more efficiently.
-    // For a small family app, we can derive it from the transactions if needed,
-    // or fetch individual users as they appear.
-    // This is a placeholder as we don't have a users collection fetch anymore.
+    if (!familyMembers) return new Map();
     const members = new Map<string, FamilyMember>();
-     if (user?.displayName && user.email) {
-        members.set(user.uid, { id: user.uid, name: user.displayName, email: user.email, color: 'hsl(var(--primary))' });
-    }
+    familyMembers.forEach(member => {
+        members.set(member.id, member);
+    });
     return members;
-  }, [transactions, user]);
+  }, [familyMembers]);
 
 
   useEffect(() => {
