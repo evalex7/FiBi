@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -12,10 +13,10 @@ import {
   Bar,
   XAxis,
   YAxis,
+  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from 'recharts';
 import {
   ChartContainer,
@@ -121,19 +122,19 @@ export default function ReportsView() {
               </div>
             ) : (
             <ChartContainer config={barChartConfig} className="h-[300px] w-full">
-                <BarChart data={incomeVsExpenseData} accessibilityLayer margin={{ left: 12, right: 12 }}>
-                  <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
-                  <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                  <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
-                  <Bar
-                    dataKey="expenses"
-                    fill="var(--color-expenses)"
-                    radius={4}
-                    maxBarSize={60}
-                  />
-                  <ChartLegend content={<ChartLegendContent />} />
-                </BarChart>
+              <BarChart data={incomeVsExpenseData} accessibilityLayer margin={{ left: 12, right: 12 }}>
+                <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
+                <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
+                <Bar
+                  dataKey="expenses"
+                  fill="var(--color-expenses)"
+                  radius={4}
+                  maxBarSize={60}
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+              </BarChart>
             </ChartContainer>
             )}
           </CardContent>
@@ -147,12 +148,12 @@ export default function ReportsView() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
-            {transactions.filter(t => t.type === 'expense').length === 0 ? (
+             {transactions.filter(t => t.type === 'expense').length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                 Немає даних про витрати для відображення.
               </div>
             ) : (
-              <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[350px] w-full">
+              <ChartContainer config={pieChartConfig} className="mx-auto aspect-square h-[400px] w-full">
                 <PieChart>
                   <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                   <Pie
@@ -161,8 +162,8 @@ export default function ReportsView() {
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
-                    innerRadius={50}
+                    outerRadius={100}
+                    innerRadius={60}
                     paddingAngle={2}
                     labelLine={false}
                     label={({
@@ -198,9 +199,7 @@ export default function ReportsView() {
                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                   ))}
                   </Pie>
-                  <ChartLegend
-                      content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />}
-                  />
+                  <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
                 </PieChart>
               </ChartContainer>
             )}
