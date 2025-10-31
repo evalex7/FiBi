@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { subMonths, startOfDay } from 'date-fns';
+import type { Timestamp } from 'firebase/firestore';
 
 const formatCurrency = (amount: number) => {
   if (amount >= 1000) {
@@ -62,7 +63,8 @@ export default function ReportsView() {
 
     const { income, expenses } = transactions.reduce(
       (acc, t) => {
-        if (new Date(t.date) >= startDate) {
+        const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
+        if (transactionDate >= startDate) {
           if (t.type === 'income') {
             acc.income += t.amount;
           } else {
