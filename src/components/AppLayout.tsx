@@ -142,11 +142,7 @@ export default function AppLayout({
           <header className="flex h-16 items-center justify-between border-b px-6 sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
             <div className="flex items-center gap-2 md:gap-4">
               <SidebarTrigger className="md:hidden" />
-               <div className="flex items-center gap-2 md:hidden">
-                 <Logo className="w-7 h-7 text-primary" />
-                 <span className="text-xl font-semibold">Сімейні фінанси</span>
-               </div>
-              <h1 className="hidden md:block text-2xl font-semibold font-headline">{pageTitle}</h1>
+              <h1 className="text-xl md:text-2xl font-semibold font-headline">{pageTitle}</h1>
             </div>
              <Button onClick={handleLogout} variant="ghost" size="icon" className="md:hidden">
                 <LogOut className="h-5 w-5" />
