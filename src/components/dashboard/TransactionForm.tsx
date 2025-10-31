@@ -89,7 +89,7 @@ export default function TransactionForm({ transaction, onSave }: TransactionForm
 
     if (isEditMode && transaction) {
         updateTransaction({ 
-            ...transaction, // Keep original fields like id and familyMemberId
+            ...transaction,
             ...transactionData 
         });
         toast({

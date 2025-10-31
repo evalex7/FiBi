@@ -1,15 +1,15 @@
 'use client';
 
-import React, { createContext, useContext, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, ReactNode, useState, useEffect } from 'react';
 import type { Transaction } from '@/lib/types';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
+import { collection, doc, serverTimestamp, onSnapshot, Query, query, where, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { WithId } from '@/firebase/firestore/use-collection';
 
 interface TransactionsContextType {
   transactions: WithId<Transaction>[];
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'familyMemberId' | 'createdAt' | 'updatedAt'>) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'familyMemberId'>) => void;
   updateTransaction: (transaction: WithId<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   isLoading: boolean;
@@ -20,22 +20,40 @@ const TransactionsContext = createContext<TransactionsContextType | undefined>(u
 export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
   const { user } = useUser();
+  const [transactions, setTransactions] = useState<WithId<Transaction>[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const transactionsCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'expenses');
+  useEffect(() => {
+    if (!firestore) {
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    const transactionsCollectionRef = collection(firestore, 'expenses');
+    
+    const unsubscribe = onSnapshot(transactionsCollectionRef, (snapshot) => {
+        const newTransactions = snapshot.docs.map(doc => ({ ...doc.data() as Transaction, id: doc.id }));
+        setTransactions(newTransactions);
+        setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching transactions:", error);
+        setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+
   }, [firestore]);
 
-  const { data: transactions, isLoading } = useCollection<Transaction>(transactionsCollectionRef);
 
   const addTransaction = (transactionData: Omit<Transaction, 'id' | 'familyMemberId'>) => {
-    if (!transactionsCollectionRef || !user) return;
+    if (!firestore || !user) return;
+    const transactionsCollectionRef = collection(firestore, 'expenses');
     addDocumentNonBlocking(transactionsCollectionRef, { ...transactionData, familyMemberId: user.uid });
   };
 
   const updateTransaction = (updatedTransaction: WithId<Transaction>) => {
     if (!firestore || !user) return;
-    // Ensure only the owner can update
     if (updatedTransaction.familyMemberId !== user.uid) return;
     const transactionDocRef = doc(firestore, 'expenses', updatedTransaction.id);
     const { id, ...transactionData } = updatedTransaction;
@@ -43,15 +61,13 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteTransaction = (id: string) => {
-    if (!firestore || !user) return;
+    if (!firestore) return;
     const transactionDocRef = doc(firestore, 'expenses', id);
-    // In a real app, you might check ownership on the client side before even attempting,
-    // but the security rules are the ultimate enforcer.
     deleteDocumentNonBlocking(transactionDocRef);
   };
 
   const value = useMemo(() => ({
-    transactions: transactions || [],
+    transactions,
     addTransaction,
     updateTransaction,
     deleteTransaction,
