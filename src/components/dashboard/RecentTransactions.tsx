@@ -38,7 +38,7 @@ import {
 } from '../ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, doc } from 'firebase/firestore';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useCategories } from '@/contexts/categories-context';
@@ -55,20 +55,18 @@ export default function RecentTransactions() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
 
-  const usersCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'users');
-  }, [firestore]);
-
-  const { data: familyMembers } = useCollection<FamilyMember>(usersCollectionRef);
-
   const familyMembersMap = useMemo(() => {
-    if (!familyMembers) return {};
-    return familyMembers.reduce((acc, member) => {
-      acc[member.id] = member;
-      return acc;
-    }, {} as Record<string, FamilyMember>);
-  }, [familyMembers]);
+    if (!transactions) return new Map();
+    // In a real app with many users, you'd fetch this data more efficiently.
+    // For a small family app, we can derive it from the transactions if needed,
+    // or fetch individual users as they appear.
+    // This is a placeholder as we don't have a users collection fetch anymore.
+    const members = new Map<string, FamilyMember>();
+     if (user?.displayName && user.email) {
+        members.set(user.uid, { id: user.uid, name: user.displayName, email: user.email, color: 'hsl(var(--primary))' });
+    }
+    return members;
+  }, [transactions, user]);
 
 
   useEffect(() => {
@@ -160,7 +158,7 @@ export default function RecentTransactions() {
                 {sortedTransactions.map((transaction) => {
                   const categoryInfo = categories.find(c => c.name === transaction.category);
                   const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
-                  const member = transaction.familyMemberId ? familyMembersMap[transaction.familyMemberId] : null;
+                  const member = transaction.familyMemberId ? familyMembersMap.get(transaction.familyMemberId) : null;
                   return (
                     <div key={transaction.id} className="flex items-start gap-4 p-3 rounded-lg border">
                       {member ? (
@@ -215,7 +213,7 @@ export default function RecentTransactions() {
                   {sortedTransactions.map((transaction) => {
                      const categoryInfo = categories.find(c => c.name === transaction.category);
                      const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
-                    const member = transaction.familyMemberId ? familyMembersMap[transaction.familyMemberId] : null;
+                    const member = transaction.familyMemberId ? familyMembersMap.get(transaction.familyMemberId) : null;
 
                     return (
                       <TableRow key={transaction.id}>

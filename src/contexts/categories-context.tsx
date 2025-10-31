@@ -32,7 +32,7 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
   const { data: categories, isLoading } = useCollection<Category>(categoriesCollectionRef);
 
   useEffect(() => {
-    if (user && !isLoading && categoriesCollectionRef && categories?.length === 0) {
+    if (user && !isLoading && categoriesCollectionRef && firestore && categories?.length === 0) {
       // First time family setup, let's populate with default categories.
       const q = query(categoriesCollectionRef);
       getDocs(q).then(snapshot => {
