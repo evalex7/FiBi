@@ -94,7 +94,7 @@ export default function ReportsView() {
   }, {} as ChartConfig), [categoryData]);
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Дохід vs. Витрати</CardTitle>
@@ -122,17 +122,12 @@ export default function ReportsView() {
               </div>
             ) : (
             <ChartContainer config={barChartConfig} className="h-[300px] w-full">
-              <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }}>
+              <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }} maxBarSize={120}>
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
                 <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
-                <Bar
-                  dataKey="expenses"
-                  fill="var(--color-expenses)"
-                  radius={4}
-                  maxBarSize={60}
-                />
+                <Bar dataKey="income" fill="var(--color-income)" radius={4} />
+                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
                 <ChartLegend content={<ChartLegendContent />} />
               </BarChart>
             </ChartContainer>
