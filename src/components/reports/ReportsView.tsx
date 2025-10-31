@@ -55,7 +55,7 @@ const barChartConfig = {
 export default function ReportsView() {
   const { transactions } = useTransactions();
   const { categories } = useCategories();
-  const [period, setPeriod] = useState('3'); // Default to 3 months
+  const [period, setPeriod] = useState('1'); // Default to 1 month
 
   const incomeVsExpenseData = useMemo(() => {
     const monthsToSubtract = parseInt(period);
