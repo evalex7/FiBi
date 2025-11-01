@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfMonth, format, getYear, lastDayOfMonth, endOfMonth, differenceInMonths, addMonths } from 'date-fns';
+import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -64,7 +64,7 @@ const COLORS = [
 export default function ReportsView() {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const { categories, isLoading: isCategoriesLoading } = useCategories();
-  const [period, setPeriod] = useState('0'); // Default to current month
+  const [period, setPeriod] = useState('0');
   const [periodOptions, setPeriodOptions] = useState<{value: string, label: string}[]>([]);
   const [earliestTransactionDate, setEarliestTransactionDate] = useState<Date | null>(null);
 
@@ -94,16 +94,16 @@ export default function ReportsView() {
         options.push({ value: '2', label: 'Останні 3 місяці' });
       }
       if (totalMonths >= 6) {
-        options.push({ value: '5', label: 'Останні 6 місяці' });
+        options.push({ value: '5', label: 'Останні 6 місяців' });
       }
       if (totalMonths >= 12) {
         options.push({ value: '11', label: 'Останній рік' });
       }
-      if (totalMonths > 1) {
-        options.push({ value: 'all', label: 'За весь час' });
-      }
     }
+    
+    options.push({ value: 'all', label: 'За весь час' });
     setPeriodOptions(options);
+
   }, [earliestTransactionDate]);
 
   const incomeVsExpenseData = useMemo(() => {
