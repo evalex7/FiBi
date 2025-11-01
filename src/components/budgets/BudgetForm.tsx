@@ -117,7 +117,6 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
     (cat) => (isEditMode || !budgets.some((b) => b.category === cat.name)) && cat.type === 'expense'
   );
 
-
   return (
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
@@ -126,14 +125,12 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
                 <Label htmlFor="category">Категорія</Label>
                 <Select required value={category} onValueChange={setCategory} disabled={isEditMode}>
                     <SelectTrigger>
-                    <SelectValue placeholder="Оберіть категорію" />
+                        <SelectValue placeholder="Оберіть категорію" />
                     </SelectTrigger>
                     <SelectContent>
                     {isEditMode && budget ? (
-                         <SelectItem key={budget.category} value={budget.category}>
-                            <div className="flex items-center gap-2">
-                                <span>{budget.category}</span>
-                            </div>
+                        <SelectItem key={budget.category} value={budget.category}>
+                            {budget.category}
                         </SelectItem>
                     ) : (
                         availableCategories.map((cat) => {
