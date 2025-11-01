@@ -113,25 +113,39 @@ export default function ReportsView() {
   }, [earliestTransactionDate]);
 
   const incomeVsExpenseData = useMemo(() => {
-    if (isLoading || transactions.length === 0 || !earliestTransactionDate) return [];
+    if (isLoading || transactions.length === 0) return [];
+    
+    if (period === 'all') {
+      const totals = transactions.reduce((acc, t) => {
+        if (t.type === 'income') {
+          acc.income += t.amount;
+        } else {
+          acc.expenses += t.amount;
+        }
+        return acc;
+      }, { income: 0, expenses: 0 });
+      return [{ month: 'За весь час', income: totals.income, expenses: totals.expenses }];
+    }
 
-    const now = new Date();
     let startDate;
-    let endDate = endOfMonth(now);
+    let endDate = endOfMonth(new Date());
 
     if (period === 'prev_month') {
-        const prevMonth = subMonths(now, 1);
+        const prevMonth = subMonths(new Date(), 1);
         startDate = startOfMonth(prevMonth);
         endDate = endOfMonth(prevMonth);
-    } else if (period === 'all') {
-        startDate = earliestTransactionDate;
-    } else {
+    } else if (period !== 'all' && earliestTransactionDate) {
         const monthsToSubtract = parseInt(period, 10);
-        startDate = startOfMonth(subMonths(now, monthsToSubtract));
-        if (startDate < earliestTransactionDate) {
+        startDate = startOfMonth(subMonths(new Date(), monthsToSubtract));
+         if (startDate < earliestTransactionDate) {
           startDate = earliestTransactionDate;
         }
+    } else if (period === 'all' && earliestTransactionDate) {
+        startDate = earliestTransactionDate;
+    } else {
+      startDate = startOfMonth(new Date());
     }
+
 
     const data: { [key: string]: { month: string, income: number, expenses: number } } = {};
     
@@ -152,7 +166,7 @@ export default function ReportsView() {
       }
     });
 
-    return Object.values(data).sort((a,b) => a.month.localeCompare(b.month));
+    return Object.values(data).sort((a,b) => a.month.localeCompare(b.month, 'uk', { numeric: true }));
 
   }, [transactions, period, isLoading, earliestTransactionDate]);
   
