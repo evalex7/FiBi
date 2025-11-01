@@ -11,7 +11,8 @@ import {
   Loader2,
   User as UserIcon,
   Users,
-  Shapes
+  Shapes,
+  Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -183,6 +184,10 @@ export default function AppLayout({
               <DropdownMenuContent className="w-56" side="top" align="start">
                 <DropdownMenuLabel>{familyMember?.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                 <DropdownMenuItem onClick={() => router.push('/settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Налаштування</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Вийти</span>
@@ -212,6 +217,10 @@ export default function AppLayout({
                         <p className="text-xs text-muted-foreground font-normal">{familyMember?.email}</p>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push('/settings')}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Налаштування</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Вийти</span>
