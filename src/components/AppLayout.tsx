@@ -10,8 +10,6 @@ import {
   LogOut,
   Loader2,
   User as UserIcon,
-  Users,
-  Shapes,
   Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -49,7 +47,6 @@ const menuItems = [
   { href: '/budgets', label: 'Бюджети', icon: Target },
   { href: '/payments', label: 'Платежі', icon: Repeat },
   { href: '/reports', label: 'Звіти', icon: AreaChart },
-  { href: '/categories', label: 'Категорії', icon: Shapes },
 ];
 
 export default function AppLayout({
@@ -169,6 +166,18 @@ export default function AppLayout({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+               <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={getIsActive('/settings')}
+                    tooltip="Налаштування"
+                  >
+                    <Link href="/settings">
+                      <Settings />
+                      <span>Налаштування</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
@@ -254,6 +263,16 @@ export default function AppLayout({
                   </Link>
                 );
               })}
+                 <Link
+                    href="/settings"
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-1 w-full h-full",
+                      getIsActive('/settings') ? "text-primary" : "text-muted-foreground"
+                    )}
+                  >
+                    <Settings className="h-6 w-6" />
+                    <span className="text-xs">Налаштування</span>
+                  </Link>
             </div>
           </nav>
         </div>
