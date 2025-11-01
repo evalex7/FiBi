@@ -35,7 +35,7 @@ type PaymentFormProps = {
 
 
 export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
-  const { addPayment, updatePayment } = usePayments();
+  const { addPayment, updatePayment, payments } = usePayments();
   const { categories } = useCategories();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
@@ -105,7 +105,9 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
     }
   };
 
-  const currentCategory = isEditMode && payment ? categories.find(c => c.name === payment.category) : null;
+  const availableCategories = expenseCategories.filter(
+    (cat) => !payments.some(p => p.category === cat.name) || (isEditMode && payment?.category === cat.name)
+  );
 
   return (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -125,15 +127,7 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
                     <SelectValue placeholder="Оберіть категорію" />
                     </SelectTrigger>
                     <SelectContent>
-                    {isEditMode && currentCategory ? (
-                        <SelectItem key={currentCategory.id} value={currentCategory.name}>
-                          <div className="flex items-center gap-2">
-                            {categoryIcons[currentCategory.icon] && <div as-jsx-element="categoryIcons[currentCategory.icon]" className="h-4 w-4" />}
-                            {currentCategory.name}
-                          </div>
-                        </SelectItem>
-                    ) : null}
-                    {expenseCategories.map((cat) => {
+                    {availableCategories.map((cat) => {
                         const Icon = categoryIcons[cat.icon];
                         return (
                             <SelectItem key={cat.id} value={cat.name}>
