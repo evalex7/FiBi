@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths } from 'date-fns';
+import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths, subDays } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -96,15 +96,9 @@ export default function ReportsView() {
       const now = new Date();
       const totalMonths = differenceInMonths(now, earliestTransactionDate) + 1;
       
-      if (totalMonths >= 3) {
-        options.push({ value: 'last_3_months', label: 'Останні 3 місяці' });
-      }
-      if (totalMonths >= 6) {
-        options.push({ value: 'last_6_months', label: 'Останні 6 місяців' });
-      }
-      if (totalMonths >= 12) {
-        options.push({ value: 'last_12_months', label: 'Останній рік' });
-      }
+      options.push({ value: 'last_3_months', label: 'Останні 3 місяці' });
+      options.push({ value: 'last_6_months', label: 'Останні 6 місяців' });
+      options.push({ value: 'last_12_months', label: 'Останній рік' });
     }
     
     options.push({ value: 'all', label: 'За весь час' });
@@ -120,10 +114,13 @@ export default function ReportsView() {
     let endDate: Date = endOfMonth(now);
     let aggregate = false;
     let label = '';
+    
+    const shouldAggregate = ['all', 'last_3_months', 'last_6_months', 'last_12_months'].includes(period);
 
     switch (period) {
         case '0':
             startDate = startOfMonth(now);
+            endDate = endOfMonth(now);
             break;
         case 'prev_month':
             const prevMonth = subMonths(now, 1);
@@ -132,29 +129,23 @@ export default function ReportsView() {
             break;
         case 'last_3_months':
             startDate = startOfMonth(subMonths(now, 2));
-            aggregate = true;
             label = 'Останні 3 місяці';
             break;
         case 'last_6_months':
             startDate = startOfMonth(subMonths(now, 5));
-            aggregate = true;
             label = 'Останні 6 місяців';
             break;
         case 'last_12_months':
             startDate = startOfMonth(subMonths(now, 11));
-            aggregate = true;
             label = 'Останній рік';
             break;
         case 'all':
-        default:
-            aggregate = true;
             label = 'За весь час';
-            // No start/end date needed, will filter all transactions
             break;
     }
 
 
-    if (aggregate) {
+    if (shouldAggregate) {
       const totals = transactions
         .filter(t => {
             if (period === 'all') return true;
@@ -194,10 +185,8 @@ export default function ReportsView() {
     });
 
     return Object.values(data).sort((a,b) => {
-        const [aMonth, aYear] = a.month.split('. ');
-        const [bMonth, bYear] = b.month.split('. ');
-        const aDate = new Date(`${aYear}-${format(new Date(2000, uk.localize?.month(uk.locale.match.months.findIndex(m => m.test(aMonth))), 1), 'MM')}-01`);
-        const bDate = new Date(`${bYear}-${format(new Date(2000, uk.localize?.month(uk.locale.match.months.findIndex(m => m.test(bMonth))), 1), 'MM')}-01`);
+        const aDate = new Date(a.month.split('. ')[1], uk.localize?.month(uk.locale.match.months.findIndex(m => m.test(a.month.split('. ')[0]))), 1);
+        const bDate = new Date(b.month.split('. ')[1], uk.localize?.month(uk.locale.match.months.findIndex(m => m.test(b.month.split('. ')[0]))), 1);
         return aDate.getTime() - bDate.getTime();
     });
 
@@ -244,9 +233,19 @@ export default function ReportsView() {
                   <SelectValue placeholder="Оберіть період" />
                 </SelectTrigger>
                 <SelectContent>
-                  {periodOptions.map(option => (
-                     <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                  ))}
+                  {periodOptions.map(option => {
+                      let disabled = false;
+                      if (earliestTransactionDate) {
+                        const totalMonths = differenceInMonths(new Date(), earliestTransactionDate) + 1;
+                        if (option.value === 'last_3_months' && totalMonths < 3) disabled = true;
+                        if (option.value === 'last_6_months' && totalMonths < 6) disabled = true;
+                        if (option.value === 'last_12_months' && totalMonths < 12) disabled = true;
+                      } else if (['last_3_months', 'last_6_months', 'last_12_months'].includes(option.value)) {
+                        disabled = true;
+                      }
+
+                     return <SelectItem key={option.value} value={option.value} disabled={disabled}>{option.label}</SelectItem>
+                  })}
                 </SelectContent>
               </Select>
             </div>
