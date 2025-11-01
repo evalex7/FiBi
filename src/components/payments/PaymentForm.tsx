@@ -105,9 +105,18 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
     }
   };
 
-  const availableCategories = expenseCategories.filter(
-    (cat) => !payments.some(p => p.category === cat.name) || (isEditMode && payment?.category === cat.name)
+  const unusedCategories = expenseCategories.filter(
+    (cat) => !payments.some(p => p.category === cat.name)
   );
+  
+  const availableCategories = [...unusedCategories];
+  if (isEditMode && payment) {
+    const currentCategory = expenseCategories.find(c => c.name === payment.category);
+    if (currentCategory && !availableCategories.some(c => c.name === currentCategory.name)) {
+        availableCategories.unshift(currentCategory);
+    }
+  }
+
 
   return (
         <form onSubmit={handleSubmit} className="space-y-4">
