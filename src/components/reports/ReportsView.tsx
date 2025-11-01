@@ -67,7 +67,7 @@ export default function ReportsView() {
   const isLoading = isTransactionsLoading || isCategoriesLoading;
 
   const incomeVsExpenseData = useMemo(() => {
-    if (isLoading) return { income: [], expenses: [] };
+    if (isLoading) return [];
     const monthsToSubtract = parseInt(period);
     const startDate = startOfDay(subMonths(new Date(), monthsToSubtract));
 
@@ -85,11 +85,11 @@ export default function ReportsView() {
       },
       { income: 0, expenses: 0 }
     );
-
-    return {
-        income: [{ name: 'income', value: income }],
-        expenses: [{ name: 'expenses', value: expenses }],
-    };
+    
+    return [
+      { name: 'Дохід', income: income, expenses: 0 },
+      { name: 'Витрати', income: 0, expenses: expenses },
+    ];
   }, [transactions, period, isLoading]);
   
   const { data: categoryData, config: pieChartConfig } = useMemo(() => {
@@ -155,30 +155,22 @@ export default function ReportsView() {
               </div>
             ) : (
             <ChartContainer config={barChartConfig} className="h-[300px] w-full">
-               <div className="relative h-full w-full">
-                  <ResponsiveContainer width="100%" height="100%" className="absolute">
-                      <BarChart data={[{}]} margin={{ left: 0, right: 16 }} maxBarSize={120}>
-                          <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
-                      </BarChart>
-                  </ResponsiveContainer>
-                  <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={incomeVsExpenseData.income} margin={{ left: 0, right: 16 }} maxBarSize={120} barGap={0}>
-                          <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
-                          <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel indicator="line" nameKey="name" />} />
-                          <Bar dataKey="value" name="Дохід" fill="var(--color-income)" radius={4} />
-                      </BarChart>
-                  </ResponsiveContainer>
-                  <ResponsiveContainer width="100%" height="100%" className="absolute inset-0">
-                       <BarChart data={incomeVsExpenseData.expenses} margin={{ left: 0, right: 16 }} maxBarSize={120} barGap={0}>
-                           <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
-                           <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel indicator="line" nameKey="name" />} />
-                           <Bar dataKey="value" name="Витрати" fill="var(--color-expenses)" radius={4} />
-                       </BarChart>
-                  </ResponsiveContainer>
-                  <div className="absolute bottom-0 w-full">
-                       <ChartLegend content={<ChartLegendContent />} />
-                  </div>
-              </div>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={incomeVsExpenseData} margin={{ left: -20, right: 16 }} barCategoryGap="20%">
+                    <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                    <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={50} fontSize={12} />
+                    <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent 
+                            formatter={(value) => value > 0 ? formatCurrency(value as number) : null}
+                            indicator="dot" 
+                        />}
+                    />
+                    <Bar dataKey="income" fill="var(--color-income)" radius={4} name="Дохід" />
+                    <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} name="Витрати" />
+                    <ChartLegend content={<ChartLegendContent />} />
+                </BarChart>
+              </ResponsiveContainer>
             </ChartContainer>
             )}
           </CardContent>
