@@ -7,13 +7,12 @@
  *
  * @interface BudgetAdjustmentSuggestionsInput - Input data schema for the budget adjustment suggestions flow.
  * @interface BudgetAdjustmentSuggestionsOutput - Output data schema for the budget adjustment suggestions flow.
- * @function getBudgetAdjustmentSuggestions - The main function to trigger the budget adjustment suggestions flow.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const BudgetAdjustmentSuggestionsInputSchema = z.object({
+export const BudgetAdjustmentSuggestionsInputSchema = z.object({
   spendingPatterns: z
     .string()
     .describe(
@@ -25,7 +24,7 @@ const BudgetAdjustmentSuggestionsInputSchema = z.object({
 });
 export type BudgetAdjustmentSuggestionsInput = z.infer<typeof BudgetAdjustmentSuggestionsInputSchema>;
 
-const BudgetAdjustmentSuggestionsOutputSchema = z.object({
+export const BudgetAdjustmentSuggestionsOutputSchema = z.object({
   suggestions: z
     .string()
     .describe(
@@ -34,11 +33,6 @@ const BudgetAdjustmentSuggestionsOutputSchema = z.object({
 });
 export type BudgetAdjustmentSuggestionsOutput = z.infer<typeof BudgetAdjustmentSuggestionsOutputSchema>;
 
-export async function getBudgetAdjustmentSuggestions(
-  input: BudgetAdjustmentSuggestionsInput
-): Promise<BudgetAdjustmentSuggestionsOutput> {
-  return budgetAdjustmentSuggestionsFlow(input);
-}
 
 const budgetAdjustmentSuggestionsPrompt = ai.definePrompt({
   name: 'budgetAdjustmentSuggestionsPrompt',
