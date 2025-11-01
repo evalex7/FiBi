@@ -263,16 +263,6 @@ export default function AppLayout({
                   </Link>
                 );
               })}
-                 <Link
-                    href="/settings"
-                    className={cn(
-                      "flex flex-col items-center justify-center gap-1 w-full h-full",
-                      getIsActive('/settings') ? "text-primary" : "text-muted-foreground"
-                    )}
-                  >
-                    <Settings className="h-6 w-6" />
-                    <span className="text-xs">Налаштування</span>
-                  </Link>
             </div>
           </nav>
         </div>
