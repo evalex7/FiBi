@@ -53,12 +53,16 @@ const barChartConfig = {
 } satisfies ChartConfig;
 
 const COLORS = [
-    '#ef4444', // red
-    '#f59e0b', // yellow
-    '#22c55e', // green
-    '#3b82f6', // blue
-    '#8b5cf6', // violet
-    '#ec4899', // pink
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(220, 80%, 70%)",
+  "hsl(340, 80%, 70%)",
+  "hsl(100, 60%, 50%)",
+  "hsl(280, 70%, 60%)",
+  "hsl(40, 90%, 60%)",
 ];
 
 export default function ReportsView() {
@@ -108,7 +112,7 @@ export default function ReportsView() {
 
   const incomeVsExpenseData = useMemo(() => {
     if (isLoading || transactions.length === 0 || !earliestTransactionDate) return [];
-    
+
     const now = new Date();
     let startDate;
     let endDate = endOfMonth(now);
@@ -128,31 +132,25 @@ export default function ReportsView() {
     }
 
     const data: { [key: string]: { month: string, income: number, expenses: number } } = {};
-    let currentDate = startDate;
-
-    while (currentDate <= endDate) {
-      const monthKey = format(currentDate, 'yyyy-MM');
-      const monthLabel = `${format(currentDate, 'LLL', {locale: uk})}. ${getYear(currentDate)}`;
-      data[monthKey] = { month: monthLabel, income: 0, expenses: 0 };
-      currentDate = addMonths(currentDate, 1);
-    }
     
     transactions.forEach(t => {
       const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
       
       if (transactionDate >= startDate && transactionDate <= endDate) {
           const monthKey = format(transactionDate, 'yyyy-MM');
-          if (data[monthKey]) {
-            if (t.type === 'income') {
-              data[monthKey].income += t.amount;
-            } else {
-              data[monthKey].expenses += t.amount;
-            }
+          if (!data[monthKey]) {
+            const monthLabel = `${format(transactionDate, 'LLL', {locale: uk})}. ${getYear(transactionDate)}`;
+            data[monthKey] = { month: monthLabel, income: 0, expenses: 0 };
+          }
+          if (t.type === 'income') {
+            data[monthKey].income += t.amount;
+          } else {
+            data[monthKey].expenses += t.amount;
           }
       }
     });
-    
-    return Object.values(data);
+
+    return Object.values(data).sort((a,b) => a.month.localeCompare(b.month));
 
   }, [transactions, period, isLoading, earliestTransactionDate]);
   
@@ -170,15 +168,8 @@ export default function ReportsView() {
       value,
     })).sort((a, b) => b.value - a.value);
     
-    let colorIndex = 0;
-    const chartConfig = chartData.reduce((acc, entry) => {
-        let color;
-        if (entry.name === 'Харчування поза домом') {
-            color = '#ef4444'; // red-500
-        } else {
-            color = COLORS[colorIndex % COLORS.length];
-            colorIndex++;
-        }
+    const chartConfig = chartData.reduce((acc, entry, index) => {
+        const color = COLORS[index % COLORS.length];
         acc[entry.name] = {
             label: entry.name,
             color: color,
