@@ -46,8 +46,8 @@ const formatCurrency = (amount: number) => {
 }
 
 const barChartConfig = {
-  income: { label: "Дохід", color: "hsl(var(--chart-2))" },
-  expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
+  Дохід: { label: "Дохід", color: "hsl(var(--chart-2))" },
+  Витрати: { label: "Витрати", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
 
 const COLORS = [
@@ -87,8 +87,8 @@ export default function ReportsView() {
     );
     
     return [
-      { name: 'Дохід', income: income, expenses: 0 },
-      { name: 'Витрати', income: 0, expenses: expenses },
+      { name: 'Дохід', value: income, fill: 'var(--color-Дохід)' },
+      { name: 'Витрати', value: expenses, fill: 'var(--color-Витрати)' },
     ];
   }, [transactions, period, isLoading]);
   
@@ -156,18 +156,17 @@ export default function ReportsView() {
             ) : (
             <ChartContainer config={barChartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={incomeVsExpenseData} margin={{ left: -20, right: 16 }} barCategoryGap="20%">
+                <BarChart data={incomeVsExpenseData} margin={{ left: -20, right: 16 }} maxBarSize={60}>
                     <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                     <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={50} fontSize={12} />
                     <ChartTooltip
                         cursor={false}
                         content={<ChartTooltipContent 
-                            formatter={(value) => value > 0 ? formatCurrency(value as number) : null}
+                            formatter={(value, name) => `${formatCurrency(value as number)}`}
                             indicator="dot" 
                         />}
                     />
-                    <Bar dataKey="income" fill="var(--color-income)" radius={4} name="Дохід" />
-                    <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} name="Витрати" />
+                    <Bar dataKey="value" radius={4} />
                     <ChartLegend content={<ChartLegendContent />} />
                 </BarChart>
               </ResponsiveContainer>
