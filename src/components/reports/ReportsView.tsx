@@ -76,10 +76,12 @@ export default function ReportsView() {
 
     const monthsToProcess = (period: string) => {
       const dates = [];
+      const now = new Date();
+
       if (period === 'prev_month') {
         dates.push(subMonths(now, 1));
       } else {
-        const monthsToSubtract = parseInt(period);
+        const monthsToSubtract = parseInt(period, 10);
         for (let i = monthsToSubtract; i >= 0; i--) {
             dates.push(subMonths(now, i));
         }
@@ -166,9 +168,9 @@ export default function ReportsView() {
                 <SelectContent>
                   <SelectItem value="0">Поточний місяць</SelectItem>
                   <SelectItem value="prev_month">Попередній місяць</SelectItem>
-                  <SelectItem value="3">Останні 3 місяці</SelectItem>
-                  <SelectItem value="6">Останні 6 місяці</SelectItem>
-                  <SelectItem value="12">Останній рік</SelectItem>
+                  <SelectItem value="2">Останні 3 місяці</SelectItem>
+                  <SelectItem value="5">Останні 6 місяці</SelectItem>
+                  <SelectItem value="11">Останній рік</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -181,13 +183,13 @@ export default function ReportsView() {
             ) : (
             <ChartContainer config={barChartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={incomeVsExpenseData} margin={{ left: -20, right: 16 }}>
+                <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }}>
                     <XAxis dataKey='month' tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                    <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={50} fontSize={12} />
+                    <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                     <ChartTooltip
                         cursor={false}
                         content={<ChartTooltipContent 
-                            formatter={(value) => formatCurrency(value as number)}
+                            formatter={(value) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(value as number)}
                             indicator="dot" 
                         />}
                     />
@@ -217,7 +219,7 @@ export default function ReportsView() {
               <ChartContainer config={pieChartConfig} className="w-full h-[400px] flex flex-col items-center justify-center">
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
-                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                    <ChartTooltip content={<ChartTooltipContent hideLabel formatter={(value) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(value as number)} />} />
                     <Pie
                       data={categoryData}
                       dataKey="value"
