@@ -13,7 +13,7 @@ export default function DashboardPage() {
   return (
     <AppLayout pageTitle="Панель">
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-row justify-between items-center gap-4">
             <h2 className="text-2xl font-bold tracking-tight">Огляд</h2>
             <MonthSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
         </div>
