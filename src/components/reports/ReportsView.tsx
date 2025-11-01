@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfMonth, format, getYear, lastDayOfMonth } from 'date-fns';
+import { subMonths, startOfMonth, format, getYear, lastDayOfMonth, endOfMonth } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -73,24 +73,23 @@ export default function ReportsView() {
     
     const now = new Date();
     const data: { [key: string]: { month: string, income: number, expenses: number } } = {};
-    let startDate: Date;
-    let endDate: Date;
 
     const monthsToProcess = (period: string) => {
-      if (period === 'prev_month') {
-        return [subMonths(now, 1)];
-      }
-      const monthsToSubtract = parseInt(period);
       const dates = [];
-      for (let i = monthsToSubtract; i >= 0; i--) {
-          dates.push(subMonths(now, i));
+      if (period === 'prev_month') {
+        dates.push(subMonths(now, 1));
+      } else {
+        const monthsToSubtract = parseInt(period);
+        for (let i = monthsToSubtract; i >= 0; i--) {
+            dates.push(subMonths(now, i));
+        }
       }
       return dates;
     }
     
     const relevantDates = monthsToProcess(period);
-    startDate = startOfMonth(relevantDates[0]);
-    endDate = lastDayOfMonth(relevantDates[relevantDates.length - 1]);
+    const startDate = startOfMonth(relevantDates[0]);
+    const endDate = endOfMonth(relevantDates[relevantDates.length - 1]);
 
     relevantDates.forEach(date => {
         const monthKey = format(date, 'yyyy-MM');
@@ -272,5 +271,3 @@ export default function ReportsView() {
     </div>
   );
 }
-
-    
