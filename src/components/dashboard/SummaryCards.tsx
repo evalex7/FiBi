@@ -27,12 +27,15 @@ export default function SummaryCards({ selectedDate }: SummaryCardsProps) {
     // End of the selected period is the end of the selected month.
     const periodEnd = endOfMonth(selectedDate);
     // Start of the period is 30 days before the end date.
-    const periodStart = subDays(periodEnd, 30);
+    const periodStart = startOfMonth(periodEnd);
 
     const { income, expenses } = transactions.reduce(
       (acc, transaction) => {
         const transactionDate = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
-        if (transactionDate >= periodStart && transactionDate <= periodEnd) {
+        
+        // Check if the transaction is within the 30-day window ending on periodEnd
+        const thirtyDaysBeforeEnd = subDays(periodEnd, 30);
+        if (transactionDate >= thirtyDaysBeforeEnd && transactionDate <= periodEnd) {
             if (transaction.type === 'income') {
                 acc.income += transaction.amount;
             } else {
