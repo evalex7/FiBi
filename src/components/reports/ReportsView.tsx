@@ -35,7 +35,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfDay } from 'date-fns';
+import { subMonths, startOfDay, format, getMonth, getYear } from 'date-fns';
+import { uk } from 'date-fns/locale';
 import type { Timestamp } from 'firebase/firestore';
 
 const formatCurrency = (amount: number) => {
@@ -46,8 +47,8 @@ const formatCurrency = (amount: number) => {
 }
 
 const barChartConfig = {
-  Дохід: { label: "Дохід", color: "hsl(var(--chart-2))" },
-  Витрати: { label: "Витрати", color: "hsl(var(--chart-1))" },
+  income: { label: "Дохід", color: "hsl(var(--chart-2))" },
+  expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
 
 const COLORS = [
@@ -68,28 +69,48 @@ export default function ReportsView() {
 
   const incomeVsExpenseData = useMemo(() => {
     if (isLoading) return [];
-    const monthsToSubtract = parseInt(period);
-    const startDate = startOfDay(subMonths(new Date(), monthsToSubtract));
-
-    const { income, expenses } = transactions.reduce(
-      (acc, t) => {
-        const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
-        if (transactionDate >= startDate) {
-          if (t.type === 'income') {
-            acc.income += t.amount;
-          } else {
-            acc.expenses += t.amount;
-          }
-        }
-        return acc;
-      },
-      { income: 0, expenses: 0 }
-    );
     
-    return [
-      { name: 'Дохід', value: income, fill: 'var(--color-Дохід)' },
-      { name: 'Витрати', value: expenses, fill: 'var(--color-Витрати)' },
-    ];
+    const monthsToSubtract = parseInt(period);
+    let data: { month: string, income: number, expenses: number }[] = [];
+    const monthNames = Array.from({length: 12}, (_, i) => format(new Date(0, i), 'LLL', {locale: uk}));
+
+    const now = new Date();
+
+    for (let i = 0; i < monthsToSubtract; i++) {
+      const date = subMonths(now, i);
+      const monthIndex = getMonth(date);
+      const year = getYear(date);
+      const monthLabel = monthsToSubtract > 1 ? `${monthNames[monthIndex]} ${year}`: format(date, 'LLLL yyyy', {locale: uk});
+      
+      data.push({ month: monthLabel, income: 0, expenses: 0 });
+    }
+
+    transactions.forEach(t => {
+      const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
+      const monthIndex = getMonth(transactionDate);
+      const year = getYear(transactionDate);
+      const monthLabel = monthsToSubtract > 1 ? `${monthNames[monthIndex]} ${year}`: format(transactionDate, 'LLLL yyyy', {locale: uk});
+
+      const monthData = data.find(d => d.month === monthLabel);
+
+      if (monthData) {
+        if (t.type === 'income') {
+          monthData.income += t.amount;
+        } else {
+          monthData.expenses += t.amount;
+        }
+      }
+    });
+
+    if (monthsToSubtract === 1) {
+      const singleMonthData = data[0] || { month: format(now, 'LLLL yyyy', {locale: uk}), income: 0, expenses: 0 };
+      return [
+        { group: "Дохід vs. Витрати", income: singleMonthData.income, expenses: singleMonthData.expenses }
+      ];
+    }
+    
+    return data.reverse();
+
   }, [transactions, period, isLoading]);
   
   const { data: categoryData, config: pieChartConfig } = useMemo(() => {
@@ -156,18 +177,19 @@ export default function ReportsView() {
             ) : (
             <ChartContainer config={barChartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={incomeVsExpenseData} margin={{ left: -20, right: 16 }} maxBarSize={60}>
-                    <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                <BarChart data={incomeVsExpenseData} margin={{ left: -20, right: 16 }} barGap={parseInt(period) === 1 ? 100 : 4}>
+                    <XAxis dataKey={parseInt(period) === 1 ? 'group' : 'month'} tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                     <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={50} fontSize={12} />
                     <ChartTooltip
                         cursor={false}
                         content={<ChartTooltipContent 
-                            formatter={(value, name) => `${formatCurrency(value as number)}`}
+                            formatter={(value, name) => `${(name as string).charAt(0).toUpperCase() + (name as string).slice(1)}: ${formatCurrency(value as number)}`}
                             indicator="dot" 
                         />}
                     />
-                    <Bar dataKey="value" radius={4} />
-                    <ChartLegend content={<ChartLegendContent />} />
+                    <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
+                    <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={60} />
+                    {parseInt(period) > 1 && <ChartLegend content={<ChartLegendContent />} />}
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
