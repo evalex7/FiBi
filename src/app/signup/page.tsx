@@ -137,7 +137,7 @@ export default function SignupPage() {
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="full-name">Повне ім\'я</Label>
+              <Label htmlFor="full-name">Повне ім'я</Label>
               <Input
                 id="full-name"
                 placeholder="John Doe"
