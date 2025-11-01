@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -156,7 +155,7 @@ export default function ReportsView() {
               <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }} maxBarSize={120}>
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
                 <Bar dataKey="income" fill="var(--color-income)" radius={4} />
                 <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
                 <ChartLegend content={<ChartLegendContent />} />
