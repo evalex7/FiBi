@@ -1,6 +1,5 @@
 'use client';
 
-import { runFlow } from '@genkit-ai/next/client';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +13,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BrainCircuit, Loader2 } from 'lucide-react';
-import { getBudgetAdjustmentSuggestions } from '@/ai/flows/budget-adjustment-suggestions';
+import { budgetAdjustmentSuggestions } from '@/ai/flows/budget-adjustment-suggestions';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useTransactions } from '@/contexts/transactions-context';
@@ -60,7 +59,7 @@ export default function AiSuggestions() {
     }
 
     try {
-      const response = await getBudgetAdjustmentSuggestions({
+      const response = await budgetAdjustmentSuggestions({
         spendingPatterns: spendingPatternsText,
         financialGoals,
       });

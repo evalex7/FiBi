@@ -39,7 +39,7 @@ export const budgetAdjustmentSuggestionsFlow = ai.defineFlow(
   }
 );
 
-export async function getBudgetAdjustmentSuggestions(
+export async function budgetAdjustmentSuggestions(
   input: BudgetAdjustmentSuggestionsInput
 ): Promise<BudgetAdjustmentSuggestionsOutput> {
   return budgetAdjustmentSuggestionsFlow(input);
