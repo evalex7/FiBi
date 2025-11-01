@@ -29,7 +29,7 @@ import { Logo } from './Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from './ui/skeleton';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { doc } from 'firebase/firestore';
 import type { FamilyMember } from '@/lib/types';
@@ -64,6 +64,9 @@ export default function AppLayout({
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [headerVisible, setHeaderVisible] = useState(true);
+
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
@@ -76,6 +79,26 @@ export default function AppLayout({
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setHeaderVisible(true);
+      return;
+    }
+    
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 64) {
+        setHeaderVisible(false);
+      } else {
+        setHeaderVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY, isMobile]);
 
   const handleLogout = () => {
     auth.signOut();
@@ -204,7 +227,9 @@ export default function AppLayout({
         </Sidebar>
 
         <div className="flex flex-col flex-1 overflow-x-hidden">
-          <header className="flex h-16 items-center justify-between border-b px-4 md:px-6 sticky top-0 bg-white z-10">
+          <header className={cn("flex h-16 items-center justify-between border-b px-4 md:px-6 sticky top-0 bg-white z-20 transition-transform duration-300",
+            !headerVisible && isMobile ? "-translate-y-full" : "translate-y-0"
+          )}>
             <div className="flex items-center gap-2 md:gap-4">
               <SidebarTrigger className="md:hidden" />
               <h1 className="text-xl md:text-2xl font-semibold text-gray-800">{pageTitle}</h1>
@@ -239,7 +264,9 @@ export default function AppLayout({
               {children}
           </main>
 
-          <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t z-10 md:hidden">
+          <nav className={cn("fixed bottom-0 left-0 right-0 h-16 bg-white border-t z-10 md:hidden transition-transform duration-300",
+            !headerVisible && isMobile ? "translate-y-full" : "translate-y-0"
+          )}>
             <div className="flex justify-around items-center h-full">
               {menuItems.map((item) => {
                 const isActive = getIsActive(item.href);
