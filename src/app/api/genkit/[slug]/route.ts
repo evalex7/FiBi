@@ -5,6 +5,7 @@ import '@/ai/flows/budget-adjustment-suggestions';
 
 const { GET, POST } = defineNextJsHandler({
   ai,
+  flows: [],
 });
 
 export { GET, POST };
