@@ -8,10 +8,10 @@
 
 import {ai} from '@/ai/genkit';
 import {
-  BudgetAdjustmentSuggestionsInputSchema,
-  BudgetAdjustmentSuggestionsOutputSchema,
   type BudgetAdjustmentSuggestionsInput,
   type BudgetAdjustmentSuggestionsOutput,
+  BudgetAdjustmentSuggestionsInputSchema,
+  BudgetAdjustmentSuggestionsOutputSchema
 } from '@/lib/types-ai';
 
 const budgetAdjustmentSuggestionsPrompt = ai.definePrompt({
@@ -19,15 +19,15 @@ const budgetAdjustmentSuggestionsPrompt = ai.definePrompt({
   model: 'gemini-pro',
   input: {schema: BudgetAdjustmentSuggestionsInputSchema},
   output: {schema: BudgetAdjustmentSuggestionsOutputSchema},
-  prompt: `Ви — особистий фінансовий консультант. Проаналізуйте моделі витрат користувача та фінансові цілі, щоб надати пропозиції щодо коригування бюджету.
+  prompt: `You are a personal finance advisor. Analyze the user's spending patterns and financial goals to provide budget adjustment suggestions.
 
-Моделі витрат: {{{spendingPatterns}}}
-Фінансові цілі: {{{financialGoals}}}
+Spending Patterns: {{{spendingPatterns}}}
+Financial Goals: {{{financialGoals}}}
 
-Надайте чіткі та дієві пропозиції, які допоможуть користувачеві заощадити гроші та оптимізувати розподіл бюджету. Зосередьтеся на конкретних категоріях і поясніть причину кожної пропозиції. Відповідайте українською мовою.`,
+Provide clear and actionable suggestions to help the user save money and optimize their budget allocation. Focus on specific categories and explain the reasoning behind each suggestion.`,
 });
 
-export const budgetAdjustmentSuggestionsFlow = ai.defineFlow(
+const budgetAdjustmentSuggestionsFlow = ai.defineFlow(
   {
     name: 'budgetAdjustmentSuggestionsFlow',
     inputSchema: BudgetAdjustmentSuggestionsInputSchema,

@@ -45,7 +45,7 @@ export default function AiSuggestions() {
       }, {} as Record<string, number>);
 
     const spendingPatternsText = Object.entries(spendingPatterns)
-      .map(([category, amount]) => `${category}: ${amount.toFixed(2)} грн`)
+      .map(([category, amount]) => `${category}: ${amount.toFixed(2)} UAH`)
       .join(', ');
 
     if (!spendingPatternsText) {
