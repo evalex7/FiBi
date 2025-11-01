@@ -10,7 +10,8 @@ import {
   LogOut,
   Loader2,
   User as UserIcon,
-  Settings
+  Settings,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -32,7 +33,7 @@ import { useEffect } from 'react';
 import { Button } from './ui/button';
 import { doc } from 'firebase/firestore';
 import type { FamilyMember } from '@/lib/types';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Avatar, AvatarFallback } from './ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,7 +88,6 @@ export default function AppLayout({
     return pathname.startsWith(href);
   };
   
-  // Skeleton layout to prevent flicker during initial render
   if (isMobile === null) {
       return (
         <div className="flex min-h-screen w-full">
@@ -109,7 +109,6 @@ export default function AppLayout({
       )
   }
 
-  // Main loader while waiting for user authentication
   if (isUserLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -125,8 +124,8 @@ export default function AppLayout({
       .join('');
   };
 
-  const UserAvatar = () => (
-    <Avatar className="h-8 w-8">
+  const UserAvatar = ({ large = false }: { large?: boolean }) => (
+    <Avatar className={cn(large ? "h-16 w-16" : "h-8 w-8")}>
       {familyMember ? (
         <AvatarFallback style={{ backgroundColor: familyMember.color }} className="text-white font-bold">
           {getInitials(familyMember.name)}
@@ -139,18 +138,18 @@ export default function AppLayout({
     </Avatar>
   );
 
-  return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        {/* Desktop Sidebar */}
-        <Sidebar className="hidden md:flex">
-          <SidebarHeader>
-            <div className="flex items-center gap-2">
-              <Logo className="w-7 h-7 text-primary" />
-              <span className="text-xl font-semibold">Сімейні фінанси</span>
+  const SidebarMenuContent = () => (
+    <>
+      <SidebarHeader className="p-0">
+          <div className="flex flex-col items-start gap-3 p-4 bg-gradient-to-br from-green-400 to-green-600 text-white">
+            <UserAvatar large />
+            <div className="flex flex-col">
+              <span className="font-semibold text-lg">{familyMember?.name || 'Користувач'}</span>
+              <span className="text-sm opacity-90">Мій гаманець</span>
             </div>
-          </SidebarHeader>
-          <SidebarContent>
+          </div>
+        </SidebarHeader>
+        <SidebarContent className="bg-white text-gray-800">
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
@@ -158,6 +157,7 @@ export default function AppLayout({
                     asChild
                     isActive={getIsActive(item.href)}
                     tooltip={item.label}
+                    className="text-gray-600 hover:bg-gray-100 data-[active=true]:bg-blue-100 data-[active=true]:text-blue-600"
                   >
                     <Link href={item.href}>
                       <item.icon />
@@ -166,11 +166,16 @@ export default function AppLayout({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-               <SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarContent>
+        <SidebarFooter className="bg-white mt-auto p-4 border-t border-gray-200">
+             <SidebarMenu>
+                <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
                     isActive={getIsActive('/settings')}
                     tooltip="Налаштування"
+                     className="text-gray-600 hover:bg-gray-100"
                   >
                     <Link href="/settings">
                       <Settings />
@@ -178,40 +183,31 @@ export default function AppLayout({
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarContent>
-          <SidebarFooter>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start items-center gap-3 px-2 h-12 text-base">
-                  <UserAvatar />
-                  <div className="flex flex-col items-start">
-                    <span className="font-medium">{familyMember?.name || 'User'}</span>
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" side="top" align="start">
-                <DropdownMenuLabel>{familyMember?.email}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                 <DropdownMenuItem onClick={() => router.push('/settings')}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Налаштування</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Вийти</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarFooter>
+                <SidebarMenuItem>
+                    <SidebarMenuButton onClick={handleLogout} className="text-gray-600 hover:bg-gray-100">
+                        <LogOut />
+                        <span>Вийти</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+             </SidebarMenu>
+        </SidebarFooter>
+    </>
+  );
+
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-gray-50">
+        
+        {/* Desktop Sidebar */}
+        <Sidebar className="hidden md:flex !bg-white !border-r !border-gray-200">
+            <SidebarMenuContent />
         </Sidebar>
 
         <div className="flex flex-col flex-1 overflow-x-hidden">
-          {/* Mobile and Desktop Header */}
-          <header className="flex h-16 items-center justify-between border-b px-4 md:px-6 sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+          <header className="flex h-16 items-center justify-between border-b px-4 md:px-6 sticky top-0 bg-white z-10">
             <div className="flex items-center gap-2 md:gap-4">
               <SidebarTrigger className="md:hidden" />
-              <h1 className="text-xl md:text-2xl font-semibold font-headline">{pageTitle}</h1>
+              <h1 className="text-xl md:text-2xl font-semibold text-gray-800">{pageTitle}</h1>
             </div>
             <div className="flex items-center gap-2">
                 <DropdownMenu>
@@ -239,13 +235,11 @@ export default function AppLayout({
             </div>
           </header>
           
-          {/* Main Content */}
           <main className="flex-1 p-4 md:p-6 mb-16 md:mb-0">
               {children}
           </main>
 
-          {/* Mobile Bottom Nav */}
-          <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-10 md:hidden">
+          <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t z-10 md:hidden">
             <div className="flex justify-around items-center h-full">
               {menuItems.map((item) => {
                 const isActive = getIsActive(item.href);
