@@ -4,7 +4,7 @@ import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTransactions } from '@/contexts/transactions-context';
 import { useState, useEffect } from 'react';
-import { startOfMonth, endOfMonth, subDays } from 'date-fns';
+import { startOfMonth, endOfMonth } from 'date-fns';
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('uk-UA', {
@@ -24,16 +24,13 @@ export default function SummaryCards({ selectedDate }: SummaryCardsProps) {
   const [formattedBalance, setFormattedBalance] = useState('');
 
   useEffect(() => {
-    // End of the selected period is the end of the selected month.
+    const periodStart = startOfMonth(selectedDate);
     const periodEnd = endOfMonth(selectedDate);
-    // Start of the period is 30 days before the end date.
-    const periodStart = subDays(periodEnd, 30);
 
     const { income, expenses } = transactions.reduce(
       (acc, transaction) => {
         const transactionDate = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
         
-        // Check if the transaction is within the 30-day window ending on periodEnd
         if (transactionDate >= periodStart && transactionDate <= periodEnd) {
             if (transaction.type === 'income') {
                 acc.income += transaction.amount;
@@ -63,22 +60,22 @@ export default function SummaryCards({ selectedDate }: SummaryCardsProps) {
     <div className="grid gap-4 md:grid-cols-3">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Дохід за 30 днів</CardTitle>
+          <CardTitle className="text-sm font-medium">Дохід за місяць</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formattedIncome}</div>
-          <p className="text-xs text-muted-foreground">за останні 30 днів</p>
+          <p className="text-xs text-muted-foreground">за обраний місяць</p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Витрати за 30 днів</CardTitle>
+          <CardTitle className="text-sm font-medium">Витрати за місяць</CardTitle>
           <TrendingDown className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formattedExpenses}</div>
-          <p className="text-xs text-muted-foreground">за останні 30 днів</p>
+          <p className="text-xs text-muted-foreground">за обраний місяць</p>
         </CardContent>
       </Card>
       <Card>
