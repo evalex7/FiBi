@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { useCategories } from '@/contexts/categories-context';
 import type { Category } from '@/lib/types';
 import { categoryIcons } from '@/lib/category-icons';
@@ -46,53 +45,51 @@ export default function CategoryList() {
   );
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        {isLoading ? (
-          <LoadingSkeleton />
-        ) : categories.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            Ще немає категорій.
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {categories.map(category => {
-              const Icon = categoryIcons[category.icon];
-              return (
-                <div key={category.id} className="flex items-center gap-4 p-2 rounded-lg border">
-                  {Icon && <div className="h-8 w-8 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}
-                  <div className="flex-grow font-medium">
-                    {category.name}
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground">
-                        {category.type === 'expense' ? 'Витрата' : 'Дохід'}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Відкрити меню</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setCategoryToEdit(category)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          <span>Редагувати</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setCategoryToDelete(category)} className="text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          <span>Видалити</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+    <>
+      {isLoading ? (
+        <LoadingSkeleton />
+      ) : categories.length === 0 ? (
+        <div className="text-center text-muted-foreground py-8 border rounded-lg">
+          Ще немає категорій.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {categories.map(category => {
+            const Icon = categoryIcons[category.icon];
+            return (
+              <div key={category.id} className="flex items-center gap-4 p-2 rounded-lg border">
+                {Icon && <div className="h-8 w-8 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}
+                <div className="flex-grow font-medium">
+                  {category.name}
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
+                <div className="flex items-center gap-4">
+                  <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
+                      {category.type === 'expense' ? 'Витрата' : 'Дохід'}
+                  </Badge>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Відкрити меню</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setCategoryToEdit(category)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        <span>Редагувати</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setCategoryToDelete(category)} className="text-destructive">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Видалити</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
       
       <AlertDialog open={!!categoryToDelete} onOpenChange={(isOpen) => !isOpen && setCategoryToDelete(null)}>
         <AlertDialogContent>
@@ -118,6 +115,6 @@ export default function CategoryList() {
             {categoryToEdit && <CategoryForm category={categoryToEdit} onSave={() => setCategoryToEdit(null)} />}
         </DialogContent>
       </Dialog>
-    </Card>
+    </>
   );
 }

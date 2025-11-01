@@ -12,32 +12,34 @@ export default function CategoriesSettings() {
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
 
   return (
-    <Card>
+    <>
+      <Card>
         <CardHeader>
-            <div className="flex justify-between items-center">
-                <div>
-                    <CardTitle>Категорії витрат та доходів</CardTitle>
-                    <CardDescription>Керуйте своїми категоріями для транзакцій.</CardDescription>
-                </div>
-                <Button onClick={() => setIsAddCategoryOpen(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Додати категорію
-                </Button>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <CardTitle>Категорії витрат та доходів</CardTitle>
+              <CardDescription>Керуйте своїми категоріями для транзакцій.</CardDescription>
             </div>
+            <Button onClick={() => setIsAddCategoryOpen(true)}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Додати категорію
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-            <CategoryList />
+          <CategoryList />
         </CardContent>
+      </Card>
 
-        <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Додати категорію</DialogTitle>
-                    <DialogDescription>Створіть нову категорію для ваших транзакцій.</DialogDescription>
-                </DialogHeader>
-                <CategoryForm onSave={() => setIsAddCategoryOpen(false)} />
-            </DialogContent>
-        </Dialog>
-    </Card>
+      <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Додати категорію</DialogTitle>
+            <DialogDescription>Створіть нову категорію для ваших транзакцій.</DialogDescription>
+          </DialogHeader>
+          <CategoryForm onSave={() => setIsAddCategoryOpen(false)} />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
