@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfMonth, format, getMonth, getYear, lastDayOfMonth } from 'date-fns';
+import { subMonths, startOfMonth, format, getYear, lastDayOfMonth } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -76,25 +76,27 @@ export default function ReportsView() {
     let startDate: Date;
     let endDate: Date;
 
-    if (period === 'prev_month') {
-        const prevMonthDate = subMonths(now, 1);
-        startDate = startOfMonth(prevMonthDate);
-        endDate = lastDayOfMonth(prevMonthDate);
-        const monthKey = format(startDate, 'yyyy-MM');
-        const monthLabel = `${format(startDate, 'LLL', {locale: uk})}. ${getYear(startDate)}`;
-        data[monthKey] = { month: monthLabel, income: 0, expenses: 0 };
-    } else {
-        const monthsToSubtract = parseInt(period);
-        for (let i = monthsToSubtract; i >= 0; i--) {
-            const date = subMonths(now, i);
-            const monthKey = format(date, 'yyyy-MM');
-            const monthLabel = `${format(date, 'LLL', {locale: uk})}. ${getYear(date)}`;
-            data[monthKey] = { month: monthLabel, income: 0, expenses: 0 };
-        }
-        startDate = startOfMonth(subMonths(now, monthsToSubtract));
-        endDate = now;
+    const monthsToProcess = (period: string) => {
+      if (period === 'prev_month') {
+        return [subMonths(now, 1)];
+      }
+      const monthsToSubtract = parseInt(period);
+      const dates = [];
+      for (let i = monthsToSubtract; i >= 0; i--) {
+          dates.push(subMonths(now, i));
+      }
+      return dates;
     }
+    
+    const relevantDates = monthsToProcess(period);
+    startDate = startOfMonth(relevantDates[0]);
+    endDate = lastDayOfMonth(relevantDates[relevantDates.length - 1]);
 
+    relevantDates.forEach(date => {
+        const monthKey = format(date, 'yyyy-MM');
+        const monthLabel = `${format(date, 'LLL', {locale: uk})}. ${getYear(date)}`;
+        data[monthKey] = { month: monthLabel, income: 0, expenses: 0 };
+    });
 
     transactions.forEach(t => {
       const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
