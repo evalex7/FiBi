@@ -49,6 +49,16 @@ export default function AiSuggestions() {
       .map(([category, amount]) => `${category}: ${amount.toFixed(2)} грн`)
       .join(', ');
 
+    if (!spendingPatternsText) {
+        toast({
+            variant: 'destructive',
+            title: 'Немає даних',
+            description: 'Недостатньо даних про витрати для аналізу.',
+        });
+        setIsLoading(false);
+        return;
+    }
+
     try {
       const response = await runFlow(getBudgetAdjustmentSuggestions, {
         spendingPatterns: spendingPatternsText,
@@ -66,6 +76,8 @@ export default function AiSuggestions() {
       setIsLoading(false);
     }
   };
+
+  const hasExpenses = transactions.some(t => t.type === 'expense');
 
   return (
     <Card className="sticky top-20">
@@ -99,7 +111,7 @@ export default function AiSuggestions() {
         )}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleGetSuggestions} disabled={isLoading || transactions.filter(t => t.type === 'expense').length === 0} className="w-full" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
+        <Button onClick={handleGetSuggestions} disabled={isLoading || !hasExpenses} className="w-full" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
