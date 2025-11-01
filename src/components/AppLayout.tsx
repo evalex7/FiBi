@@ -118,6 +118,7 @@ export default function AppLayout({
   }
 
   const getInitials = (name: string) => {
+    if (!name) return '';
     return name
       .split(' ')
       .map((n) => n[0])
@@ -149,7 +150,7 @@ export default function AppLayout({
             </div>
           </div>
         </SidebarHeader>
-        <SidebarContent className="bg-white text-gray-800">
+        <SidebarContent className="bg-white text-gray-800 flex-1">
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
@@ -198,7 +199,6 @@ export default function AppLayout({
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-gray-50">
         
-        {/* Desktop Sidebar */}
         <Sidebar className="hidden md:flex !bg-white !border-r !border-gray-200">
             <SidebarMenuContent />
         </Sidebar>
