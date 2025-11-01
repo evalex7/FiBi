@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCategories } from '@/contexts/categories-context';
 import type { Category } from '@/lib/types';
 import { categoryIcons } from '@/lib/category-icons';
@@ -22,6 +22,18 @@ export default function CategoryList() {
   const { categories, isLoading, deleteCategory } = useCategories();
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
+
+  const sortedCategories = useMemo(() => {
+    if (!categories) return [];
+    
+    const otherCategories = categories.filter(c => c.name.startsWith('Інше'));
+    const regularCategories = categories.filter(c => !c.name.startsWith('Інше'));
+
+    regularCategories.sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+    otherCategories.sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+    
+    return [...regularCategories, ...otherCategories];
+  }, [categories]);
 
   const handleDelete = () => {
     if (categoryToDelete) {
@@ -48,13 +60,13 @@ export default function CategoryList() {
     <>
       {isLoading ? (
         <LoadingSkeleton />
-      ) : categories.length === 0 ? (
+      ) : sortedCategories.length === 0 ? (
         <div className="text-center text-muted-foreground py-8 border rounded-lg">
           Ще немає категорій.
         </div>
       ) : (
         <div className="space-y-2">
-          {categories.map(category => {
+          {sortedCategories.map(category => {
             const Icon = categoryIcons[category.icon];
             return (
               <div key={category.id} className="flex items-center gap-4 p-2 rounded-lg border">
