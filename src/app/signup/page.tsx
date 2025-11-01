@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/components/AuthLayout';
 import { useState, FormEvent, useEffect, useCallback } from 'react';
-import { useAuth, useUser, useFirestore, errorEmitter, useCollection, useMemoFirebase } from '@/firebase';
+import { useAuth, useUser, useFirestore, errorEmitter } from '@/firebase';
 import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
@@ -42,6 +42,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSigningUp, setIsSigningUp] = useState(false);
+  const [randomColor, setRandomColor] = useState<string | null>(null);
 
   const auth = useAuth();
   const firestore = useFirestore();
@@ -49,33 +50,20 @@ export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   
-  const usersCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'users');
-  }, [firestore]);
-
-  const { data: familyMembers } = useCollection<FamilyMember>(usersCollectionRef);
-
-  const getUniqueColor = useCallback(() => {
-    if (!familyMembers) {
-      return colors[0];
-    }
-    
-    // This provides a consistent color for a new member based on how many members already exist.
-    // It avoids randomness which could lead to duplicates if multiple users sign up around the same time.
-    return colors[familyMembers.length % colors.length];
-  }, [familyMembers]);
+  useEffect(() => {
+    // Set a random color on component mount on the client side
+    setRandomColor(colors[Math.floor(Math.random() * colors.length)]);
+  }, []);
 
   useEffect(() => {
-    if (user && !isUserLoading && firestore && fullName) {
+    if (user && !isUserLoading && firestore && fullName && randomColor) {
       const userRef = doc(firestore, 'users', user.uid);
-      const userColor = getUniqueColor();
       
       const userData = {
         id: user.uid,
         name: fullName,
         email: user.email,
-        color: userColor,
+        color: randomColor,
       };
 
       setDocumentNonBlocking(userRef, userData, { merge: true }).catch(error => {
@@ -91,7 +79,7 @@ export default function SignupPage() {
       
       router.push('/dashboard');
     }
-  }, [user, isUserLoading, router, firestore, fullName, getUniqueColor]);
+  }, [user, isUserLoading, router, firestore, fullName, randomColor]);
 
   const showSignupError = (message: string) => {
     setIsSigningUp(false);
@@ -128,7 +116,7 @@ export default function SignupPage() {
     initiateEmailSignUp(auth, email, password);
   };
   
-  if (isUserLoading) {
+  if (isUserLoading || !randomColor) {
      return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-secondary">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
