@@ -81,7 +81,7 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
     };
 
     if (isEditMode && payment) {
-        updatePayment({ ...paymentData, id: payment.id });
+        updatePayment({ ...payment, ...paymentData });
         toast({
           title: 'Успіх!',
           description: 'Ваш платіж було оновлено.',
@@ -105,6 +105,8 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
     }
   };
 
+  const currentCategory = isEditMode && payment ? categories.find(c => c.name === payment.category) : null;
+
   return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-2">
@@ -123,6 +125,14 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
                     <SelectValue placeholder="Оберіть категорію" />
                     </SelectTrigger>
                     <SelectContent>
+                    {isEditMode && currentCategory ? (
+                        <SelectItem key={currentCategory.id} value={currentCategory.name}>
+                          <div className="flex items-center gap-2">
+                            {categoryIcons[currentCategory.icon] && <div as-jsx-element="categoryIcons[currentCategory.icon]" className="h-4 w-4" />}
+                            {currentCategory.name}
+                          </div>
+                        </SelectItem>
+                    ) : null}
                     {expenseCategories.map((cat) => {
                         const Icon = categoryIcons[cat.icon];
                         return (
