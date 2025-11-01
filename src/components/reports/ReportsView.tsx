@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/chart';
 import { useTransactions } from '@/contexts/transactions-context';
 import { useCategories } from '@/contexts/categories-context';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfMonth, format, getYear, lastDayOfMonth, endOfMonth } from 'date-fns';
+import { subMonths, startOfMonth, format, getYear, lastDayOfMonth, endOfMonth, differenceInMonths, addMonths } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -65,40 +65,78 @@ export default function ReportsView() {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const { categories, isLoading: isCategoriesLoading } = useCategories();
   const [period, setPeriod] = useState('0'); // Default to current month
+  const [periodOptions, setPeriodOptions] = useState<{value: string, label: string}[]>([]);
+  const [earliestTransactionDate, setEarliestTransactionDate] = useState<Date | null>(null);
 
   const isLoading = isTransactionsLoading || isCategoriesLoading;
 
+  useEffect(() => {
+    if (transactions.length > 0) {
+      const earliestDate = transactions.reduce((earliest, t) => {
+        const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
+        return transactionDate < earliest ? transactionDate : earliest;
+      }, new Date());
+      setEarliestTransactionDate(startOfMonth(earliestDate));
+    }
+  }, [transactions]);
+  
+  useEffect(() => {
+    const options = [
+      { value: '0', label: 'Поточний місяць' },
+      { value: 'prev_month', label: 'Попередній місяць' },
+    ];
+    
+    if (earliestTransactionDate) {
+      const now = new Date();
+      const totalMonths = differenceInMonths(now, earliestTransactionDate) + 1;
+      
+      if (totalMonths >= 3) {
+        options.push({ value: '2', label: 'Останні 3 місяці' });
+      }
+      if (totalMonths >= 6) {
+        options.push({ value: '5', label: 'Останні 6 місяці' });
+      }
+      if (totalMonths >= 12) {
+        options.push({ value: '11', label: 'Останній рік' });
+      }
+      if (totalMonths > 1) {
+        options.push({ value: 'all', label: 'За весь час' });
+      }
+    }
+    setPeriodOptions(options);
+  }, [earliestTransactionDate]);
+
   const incomeVsExpenseData = useMemo(() => {
-    if (isLoading || transactions.length === 0) return [];
+    if (isLoading || transactions.length === 0 || !earliestTransactionDate) return [];
     
     const now = new Date();
-    const data: { [key: string]: { month: string, income: number, expenses: number } } = {};
+    let startDate;
+    let endDate = endOfMonth(now);
 
-    const monthsToProcess = (period: string) => {
-      const dates = [];
-      const now = new Date();
-
-      if (period === 'prev_month') {
-        dates.push(subMonths(now, 1));
-      } else {
+    if (period === 'prev_month') {
+        const prevMonth = subMonths(now, 1);
+        startDate = startOfMonth(prevMonth);
+        endDate = endOfMonth(prevMonth);
+    } else if (period === 'all') {
+        startDate = earliestTransactionDate;
+    } else {
         const monthsToSubtract = parseInt(period, 10);
-        for (let i = monthsToSubtract; i >= 0; i--) {
-            dates.push(subMonths(now, i));
+        startDate = startOfMonth(subMonths(now, monthsToSubtract));
+        if (startDate < earliestTransactionDate) {
+          startDate = earliestTransactionDate;
         }
-      }
-      return dates;
+    }
+
+    const data: { [key: string]: { month: string, income: number, expenses: number } } = {};
+    let currentDate = startDate;
+
+    while (currentDate <= endDate) {
+      const monthKey = format(currentDate, 'yyyy-MM');
+      const monthLabel = `${format(currentDate, 'LLL', {locale: uk})}. ${getYear(currentDate)}`;
+      data[monthKey] = { month: monthLabel, income: 0, expenses: 0 };
+      currentDate = addMonths(currentDate, 1);
     }
     
-    const relevantDates = monthsToProcess(period);
-    const startDate = startOfMonth(relevantDates[0]);
-    const endDate = endOfMonth(relevantDates[relevantDates.length - 1]);
-
-    relevantDates.forEach(date => {
-        const monthKey = format(date, 'yyyy-MM');
-        const monthLabel = `${format(date, 'LLL', {locale: uk})}. ${getYear(date)}`;
-        data[monthKey] = { month: monthLabel, income: 0, expenses: 0 };
-    });
-
     transactions.forEach(t => {
       const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
       
@@ -116,7 +154,7 @@ export default function ReportsView() {
     
     return Object.values(data);
 
-  }, [transactions, period, isLoading]);
+  }, [transactions, period, isLoading, earliestTransactionDate]);
   
   const { data: categoryData, config: pieChartConfig } = useMemo(() => {
     if (isLoading) return { data: [], config: {} };
@@ -166,11 +204,9 @@ export default function ReportsView() {
                   <SelectValue placeholder="Оберіть період" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">Поточний місяць</SelectItem>
-                  <SelectItem value="prev_month">Попередній місяць</SelectItem>
-                  <SelectItem value="2">Останні 3 місяці</SelectItem>
-                  <SelectItem value="5">Останні 6 місяці</SelectItem>
-                  <SelectItem value="11">Останній рік</SelectItem>
+                  {periodOptions.map(option => (
+                     <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
