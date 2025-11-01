@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfMonth, format, getMonth, getYear } from 'date-fns';
+import { subMonths, startOfMonth, format, getMonth, getYear, lastDayOfMonth } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -64,35 +64,50 @@ const COLORS = [
 export default function ReportsView() {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const { categories, isLoading: isCategoriesLoading } = useCategories();
-  const [period, setPeriod] = useState('3'); // Default to 3 months
+  const [period, setPeriod] = useState('0'); // Default to current month
 
   const isLoading = isTransactionsLoading || isCategoriesLoading;
 
   const incomeVsExpenseData = useMemo(() => {
     if (isLoading || transactions.length === 0) return [];
     
-    const monthsToSubtract = parseInt(period);
     const now = new Date();
-    
     const data: { [key: string]: { month: string, income: number, expenses: number } } = {};
+    let startDate: Date;
+    let endDate: Date;
 
-    for (let i = monthsToSubtract - 1; i >= 0; i--) {
-        const date = subMonths(now, i);
-        const monthKey = format(date, 'yyyy-MM');
-        const monthLabel = `${format(date, 'LLL', {locale: uk})}. ${getYear(date)}`;
+    if (period === 'prev_month') {
+        const prevMonthDate = subMonths(now, 1);
+        startDate = startOfMonth(prevMonthDate);
+        endDate = lastDayOfMonth(prevMonthDate);
+        const monthKey = format(startDate, 'yyyy-MM');
+        const monthLabel = `${format(startDate, 'LLL', {locale: uk})}. ${getYear(startDate)}`;
         data[monthKey] = { month: monthLabel, income: 0, expenses: 0 };
+    } else {
+        const monthsToSubtract = parseInt(period);
+        for (let i = monthsToSubtract; i >= 0; i--) {
+            const date = subMonths(now, i);
+            const monthKey = format(date, 'yyyy-MM');
+            const monthLabel = `${format(date, 'LLL', {locale: uk})}. ${getYear(date)}`;
+            data[monthKey] = { month: monthLabel, income: 0, expenses: 0 };
+        }
+        startDate = startOfMonth(subMonths(now, monthsToSubtract));
+        endDate = now;
     }
+
 
     transactions.forEach(t => {
       const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
-      const monthKey = format(transactionDate, 'yyyy-MM');
       
-      if (data[monthKey]) {
-        if (t.type === 'income') {
-          data[monthKey].income += t.amount;
-        } else {
-          data[monthKey].expenses += t.amount;
-        }
+      if (transactionDate >= startDate && transactionDate <= endDate) {
+          const monthKey = format(transactionDate, 'yyyy-MM');
+          if (data[monthKey]) {
+            if (t.type === 'income') {
+              data[monthKey].income += t.amount;
+            } else {
+              data[monthKey].expenses += t.amount;
+            }
+          }
       }
     });
     
@@ -148,7 +163,8 @@ export default function ReportsView() {
                   <SelectValue placeholder="Оберіть період" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Останній місяць</SelectItem>
+                  <SelectItem value="0">Поточний місяць</SelectItem>
+                  <SelectItem value="prev_month">Попередній місяць</SelectItem>
                   <SelectItem value="3">Останні 3 місяці</SelectItem>
                   <SelectItem value="6">Останні 6 місяці</SelectItem>
                   <SelectItem value="12">Останній рік</SelectItem>
