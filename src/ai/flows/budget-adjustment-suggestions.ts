@@ -27,7 +27,7 @@ Financial Goals: {{{financialGoals}}}
 Provide clear and actionable suggestions to help the user save money and optimize their budget allocation. Focus on specific categories and explain the reasoning behind each suggestion.`,
 });
 
-const budgetAdjustmentSuggestionsFlow = ai.defineFlow(
+export const budgetAdjustmentSuggestionsFlow = ai.defineFlow(
   {
     name: 'budgetAdjustmentSuggestionsFlow',
     inputSchema: BudgetAdjustmentSuggestionsInputSchema,
