@@ -16,6 +16,7 @@ import {
 
 const budgetAdjustmentSuggestionsPrompt = ai.definePrompt({
   name: 'budgetAdjustmentSuggestionsPrompt',
+  model: 'gemini-pro',
   input: {schema: BudgetAdjustmentSuggestionsInputSchema},
   output: {schema: BudgetAdjustmentSuggestionsOutputSchema},
   prompt: `Ви — особистий фінансовий консультант. Проаналізуйте моделі витрат користувача та фінансові цілі, щоб надати пропозиції щодо коригування бюджету.
