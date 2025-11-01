@@ -97,13 +97,13 @@ export default function ReportsView() {
       const totalMonths = differenceInMonths(now, earliestTransactionDate) + 1;
       
       if (totalMonths >= 3) {
-        options.push({ value: '2', label: 'Останні 3 місяці' });
+        options.push({ value: 'last_3_months', label: 'Останні 3 місяці' });
       }
       if (totalMonths >= 6) {
-        options.push({ value: '5', label: 'Останні 6 місяців' });
+        options.push({ value: 'last_6_months', label: 'Останні 6 місяців' });
       }
       if (totalMonths >= 12) {
-        options.push({ value: '11', label: 'Останній рік' });
+        options.push({ value: 'last_12_months', label: 'Останній рік' });
       }
     }
     
@@ -114,36 +114,63 @@ export default function ReportsView() {
 
   const incomeVsExpenseData = useMemo(() => {
     if (isLoading || transactions.length === 0) return [];
-    
-    if (period === 'all') {
-      const totals = transactions.reduce((acc, t) => {
-        if (t.type === 'income') {
-          acc.income += t.amount;
-        } else {
-          acc.expenses += t.amount;
-        }
-        return acc;
-      }, { income: 0, expenses: 0 });
-      return [{ month: 'За весь час', income: totals.income, expenses: totals.expenses }];
+
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date = endOfMonth(now);
+    let aggregate = false;
+    let label = '';
+
+    switch (period) {
+        case '0':
+            startDate = startOfMonth(now);
+            break;
+        case 'prev_month':
+            const prevMonth = subMonths(now, 1);
+            startDate = startOfMonth(prevMonth);
+            endDate = endOfMonth(prevMonth);
+            break;
+        case 'last_3_months':
+            startDate = startOfMonth(subMonths(now, 2));
+            aggregate = true;
+            label = 'Останні 3 місяці';
+            break;
+        case 'last_6_months':
+            startDate = startOfMonth(subMonths(now, 5));
+            aggregate = true;
+            label = 'Останні 6 місяців';
+            break;
+        case 'last_12_months':
+            startDate = startOfMonth(subMonths(now, 11));
+            aggregate = true;
+            label = 'Останній рік';
+            break;
+        case 'all':
+        default:
+            aggregate = true;
+            label = 'За весь час';
+            // No start/end date needed, will filter all transactions
+            break;
     }
 
-    let startDate;
-    let endDate = endOfMonth(new Date());
 
-    if (period === 'prev_month') {
-        const prevMonth = subMonths(new Date(), 1);
-        startDate = startOfMonth(prevMonth);
-        endDate = endOfMonth(prevMonth);
-    } else if (period !== 'all' && earliestTransactionDate) {
-        const monthsToSubtract = parseInt(period, 10);
-        startDate = startOfMonth(subMonths(new Date(), monthsToSubtract));
-         if (startDate < earliestTransactionDate) {
-          startDate = earliestTransactionDate;
-        }
-    } else if (period === 'all' && earliestTransactionDate) {
-        startDate = earliestTransactionDate;
-    } else {
-      startDate = startOfMonth(new Date());
+    if (aggregate) {
+      const totals = transactions
+        .filter(t => {
+            if (period === 'all') return true;
+            const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
+            return transactionDate >= startDate && transactionDate <= endDate;
+        })
+        .reduce((acc, t) => {
+            if (t.type === 'income') {
+            acc.income += t.amount;
+            } else {
+            acc.expenses += t.amount;
+            }
+            return acc;
+        }, { income: 0, expenses: 0 });
+
+      return [{ month: label, income: totals.income, expenses: totals.expenses }];
     }
 
 
@@ -166,7 +193,13 @@ export default function ReportsView() {
       }
     });
 
-    return Object.values(data).sort((a,b) => a.month.localeCompare(b.month, 'uk', { numeric: true }));
+    return Object.values(data).sort((a,b) => {
+        const [aMonth, aYear] = a.month.split('. ');
+        const [bMonth, bYear] = b.month.split('. ');
+        const aDate = new Date(`${aYear}-${format(new Date(2000, uk.localize?.month(uk.locale.match.months.findIndex(m => m.test(aMonth))), 1), 'MM')}-01`);
+        const bDate = new Date(`${bYear}-${format(new Date(2000, uk.localize?.month(uk.locale.match.months.findIndex(m => m.test(bMonth))), 1), 'MM')}-01`);
+        return aDate.getTime() - bDate.getTime();
+    });
 
   }, [transactions, period, isLoading, earliestTransactionDate]);
   
