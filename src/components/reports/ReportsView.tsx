@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfDay, format, getMonth, getYear } from 'date-fns';
+import { subMonths, startOfMonth, format, getMonth, getYear } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -64,7 +64,7 @@ const COLORS = [
 export default function ReportsView() {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const { categories, isLoading: isCategoriesLoading } = useCategories();
-  const [period, setPeriod] = useState('1'); // Default to 1 month
+  const [period, setPeriod] = useState('3'); // Default to 3 months
 
   const isLoading = isTransactionsLoading || isCategoriesLoading;
 
@@ -75,10 +75,10 @@ export default function ReportsView() {
     const now = new Date();
 
     if (monthsToSubtract === 1) {
-        const firstDay = startOfDay(subMonths(now, 0));
+        const currentMonthStart = startOfMonth(now);
         const monthTransactions = transactions.filter(t => {
             const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
-            return getYear(transactionDate) === getYear(firstDay) && getMonth(transactionDate) === getMonth(firstDay);
+            return transactionDate >= currentMonthStart;
         });
 
         const income = monthTransactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
@@ -90,36 +90,30 @@ export default function ReportsView() {
         ];
     }
     
-    let data: { month: string, income: number, expenses: number }[] = [];
+    const data: { [key: string]: { month: string, income: number, expenses: number } } = {};
     const monthNames = Array.from({length: 12}, (_, i) => format(new Date(0, i), 'LLL', {locale: uk}));
 
-    for (let i = 0; i < monthsToSubtract; i++) {
-      const date = subMonths(now, i);
-      const monthIndex = getMonth(date);
-      const year = getYear(date);
-      const monthLabel = `${monthNames[monthIndex]} ${year}`;
-      
-      data.push({ month: monthLabel, income: 0, expenses: 0 });
+    for (let i = monthsToSubtract - 1; i >= 0; i--) {
+        const date = subMonths(now, i);
+        const monthKey = format(date, 'yyyy-MM');
+        const monthLabel = `${monthNames[getMonth(date)]}. ${getYear(date)}`;
+        data[monthKey] = { month: monthLabel, income: 0, expenses: 0 };
     }
 
     transactions.forEach(t => {
       const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
-      const monthIndex = getMonth(transactionDate);
-      const year = getYear(transactionDate);
-      const monthLabel = `${monthNames[monthIndex]} ${year}`;
-
-      const monthData = data.find(d => d.month === monthLabel);
-
-      if (monthData) {
+      const monthKey = format(transactionDate, 'yyyy-MM');
+      
+      if (data[monthKey]) {
         if (t.type === 'income') {
-          monthData.income += t.amount;
+          data[monthKey].income += t.amount;
         } else {
-          monthData.expenses += t.amount;
+          data[monthKey].expenses += t.amount;
         }
       }
     });
     
-    return data.reverse();
+    return Object.values(data);
 
   }, [transactions, period, isLoading]);
   
