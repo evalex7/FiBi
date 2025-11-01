@@ -67,7 +67,7 @@ export default function ReportsView() {
   const isLoading = isTransactionsLoading || isCategoriesLoading;
 
   const incomeVsExpenseData = useMemo(() => {
-    if (isLoading) return [];
+    if (isLoading) return { income: [], expenses: [] };
     const monthsToSubtract = parseInt(period);
     const startDate = startOfDay(subMonths(new Date(), monthsToSubtract));
 
@@ -86,7 +86,10 @@ export default function ReportsView() {
       { income: 0, expenses: 0 }
     );
 
-    return [{ name: 'vs', income, expenses }];
+    return {
+        income: [{ name: 'income', value: income }],
+        expenses: [{ name: 'expenses', value: expenses }],
+    };
   }, [transactions, period, isLoading]);
   
   const { data: categoryData, config: pieChartConfig } = useMemo(() => {
@@ -139,7 +142,7 @@ export default function ReportsView() {
                 <SelectContent>
                   <SelectItem value="1">Останній місяць</SelectItem>
                   <SelectItem value="3">Останні 3 місяці</SelectItem>
-                  <SelectItem value="6">Останні 6 місяців</SelectItem>
+                  <SelectItem value="6">Останні 6 місяці</SelectItem>
                   <SelectItem value="12">Останній рік</SelectItem>
                 </SelectContent>
               </Select>
@@ -152,14 +155,30 @@ export default function ReportsView() {
               </div>
             ) : (
             <ChartContainer config={barChartConfig} className="h-[300px] w-full">
-              <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }} maxBarSize={120}>
-                <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
-                <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                <Bar dataKey="income" fill="var(--color-income)" radius={4} />
-                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
-                <ChartLegend content={<ChartLegendContent />} />
-              </BarChart>
+               <div className="relative h-full w-full">
+                  <ResponsiveContainer width="100%" height="100%" className="absolute">
+                      <BarChart data={[{}]} margin={{ left: 0, right: 16 }} maxBarSize={120}>
+                          <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={30} fontSize={12} />
+                      </BarChart>
+                  </ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={incomeVsExpenseData.income} margin={{ left: 0, right: 16 }} maxBarSize={120} barGap={0}>
+                          <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
+                          <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel indicator="line" nameKey="name" />} />
+                          <Bar dataKey="value" name="Дохід" fill="var(--color-income)" radius={4} />
+                      </BarChart>
+                  </ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height="100%" className="absolute inset-0">
+                       <BarChart data={incomeVsExpenseData.expenses} margin={{ left: 0, right: 16 }} maxBarSize={120} barGap={0}>
+                           <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} tick={() => null} />
+                           <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel indicator="line" nameKey="name" />} />
+                           <Bar dataKey="value" name="Витрати" fill="var(--color-expenses)" radius={4} />
+                       </BarChart>
+                  </ResponsiveContainer>
+                  <div className="absolute bottom-0 w-full">
+                       <ChartLegend content={<ChartLegendContent />} />
+                  </div>
+              </div>
             </ChartContainer>
             )}
           </CardContent>
