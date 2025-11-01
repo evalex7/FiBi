@@ -63,6 +63,8 @@ const COLORS = [
   "hsl(100, 60%, 50%)",
   "hsl(280, 70%, 60%)",
   "hsl(40, 90%, 60%)",
+  "hsl(150, 70%, 50%)",
+  "hsl(300, 75%, 65%)",
 ];
 
 export default function ReportsView() {
@@ -286,8 +288,8 @@ export default function ReportsView() {
                         );
                       }}
                     >
-                    {categoryData.map((entry) => (
-                      <Cell key={`cell-${entry.name}`} fill={`var(--color-${entry.name})`} />
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                     </Pie>
                   </PieChart>
