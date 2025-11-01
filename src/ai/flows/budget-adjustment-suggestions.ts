@@ -52,7 +52,7 @@ const budgetAdjustmentSuggestionsPrompt = ai.definePrompt({
 Надайте чіткі та дієві пропозиції, які допоможуть користувачеві заощадити гроші та оптимізувати розподіл бюджету. Зосередьтеся на конкретних категоріях і поясніть причину кожної пропозиції. Відповідайте українською мовою.`,
 });
 
-const budgetAdjustmentSuggestionsFlow = ai.defineFlow(
+export const budgetAdjustmentSuggestionsFlow = ai.defineFlow(
   {
     name: 'budgetAdjustmentSuggestionsFlow',
     inputSchema: BudgetAdjustmentSuggestionsInputSchema,
