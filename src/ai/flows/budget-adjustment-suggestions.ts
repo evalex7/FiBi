@@ -33,7 +33,6 @@ export const BudgetAdjustmentSuggestionsOutputSchema = z.object({
 });
 export type BudgetAdjustmentSuggestionsOutput = z.infer<typeof BudgetAdjustmentSuggestionsOutputSchema>;
 
-
 const budgetAdjustmentSuggestionsPrompt = ai.definePrompt({
   name: 'budgetAdjustmentSuggestionsPrompt',
   input: {schema: BudgetAdjustmentSuggestionsInputSchema},
@@ -57,3 +56,7 @@ export const budgetAdjustmentSuggestionsFlow = ai.defineFlow(
     return output!;
   }
 );
+
+export async function getBudgetAdjustmentSuggestions(input: BudgetAdjustmentSuggestionsInput): Promise<BudgetAdjustmentSuggestionsOutput> {
+  return budgetAdjustmentSuggestionsFlow(input);
+}

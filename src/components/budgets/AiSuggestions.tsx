@@ -14,7 +14,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BrainCircuit, Loader2 } from 'lucide-react';
-import { budgetAdjustmentSuggestionsFlow } from '@/ai/flows/budget-adjustment-suggestions';
+import { getBudgetAdjustmentSuggestions } from '@/ai/flows/budget-adjustment-suggestions';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useTransactions } from '@/contexts/transactions-context';
@@ -60,7 +60,7 @@ export default function AiSuggestions() {
     }
 
     try {
-      const response = await runFlow(budgetAdjustmentSuggestionsFlow, {
+      const response = await getBudgetAdjustmentSuggestions({
         spendingPatterns: spendingPatternsText,
         financialGoals,
       });
