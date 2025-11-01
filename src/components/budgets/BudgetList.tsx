@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import BudgetForm from './BudgetForm';
 import { Skeleton } from '../ui/skeleton';
 import { useCategories } from '@/contexts/categories-context';
-import { format, startOfMonth, startOfQuarter, startOfYear, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
+import { format, startOfMonth, startOfQuarter, startOfYear, endOfMonth, endOfQuarter, endOfYear, addMonths, addQuarters, addYears } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { useUser } from '@/firebase';
 import { Timestamp } from 'firebase/firestore';
@@ -36,16 +36,58 @@ const formatCurrency = (amount: number) =>
     currency: 'UAH',
   }).format(amount);
 
-const getPeriodDates = (period: Budget['period'], baseDate: Date) => {
-    switch (period) {
+const getPeriodDates = (budget: Budget) => {
+    const rawStartDate = budget.startDate;
+    let budgetStartDate: Date;
+
+    if (rawStartDate instanceof Timestamp) {
+        budgetStartDate = rawStartDate.toDate();
+    } else if (rawStartDate && typeof rawStartDate === 'object' && 'seconds' in rawStartDate) {
+        budgetStartDate = new Date((rawStartDate as any).seconds * 1000);
+    } else if (rawStartDate instanceof Date) {
+        budgetStartDate = rawStartDate;
+    } else {
+        console.warn(`Invalid or missing startDate for budget ${budget.id}`);
+        budgetStartDate = new Date();
+    }
+
+    let start = budgetStartDate;
+    let end: Date;
+
+    switch (budget.period) {
         case 'quarterly':
-            return { start: startOfQuarter(baseDate), end: endOfQuarter(baseDate) };
+            end = endOfQuarter(start);
+            break;
         case 'yearly':
-            return { start: startOfYear(baseDate), end: endOfYear(baseDate) };
+            end = endOfYear(start);
+            break;
         case 'monthly':
         default:
-            return { start: startOfMonth(baseDate), end: endOfMonth(baseDate) };
+            end = endOfMonth(start);
+            break;
     }
+    
+    // Check if the current date is past the end date
+    const now = new Date();
+    if (now > end) {
+        switch (budget.period) {
+            case 'quarterly':
+                start = startOfQuarter(now);
+                end = endOfQuarter(now);
+                break;
+            case 'yearly':
+                start = startOfYear(now);
+                end = endOfYear(now);
+                break;
+            case 'monthly':
+            default:
+                start = startOfMonth(now);
+                end = endOfMonth(now);
+                break;
+        }
+    }
+    
+    return { start, end };
 }
 
 export default function BudgetList() {
@@ -61,22 +103,7 @@ export default function BudgetList() {
     if(!budgets || !transactions) return;
 
     const newFormattedBudgets = budgets.map(budget => {
-       const rawStartDate = budget.startDate;
-       let budgetStartDate: Date;
-
-       if (rawStartDate instanceof Timestamp) {
-         budgetStartDate = rawStartDate.toDate();
-       } else if (rawStartDate && typeof rawStartDate === 'object' && 'seconds' in rawStartDate) {
-         budgetStartDate = new Date((rawStartDate as any).seconds * 1000);
-       } else if (rawStartDate instanceof Date) {
-         budgetStartDate = rawStartDate;
-       } else {
-         // Fallback or error handling if date is invalid/missing
-         console.warn(`Invalid or missing startDate for budget ${budget.id}`);
-         budgetStartDate = new Date(); // Use current date as a fallback
-       }
-          
-      const { start, end } = getPeriodDates(budget.period, budgetStartDate);
+      const { start, end } = getPeriodDates(budget);
 
       const spent = transactions.reduce((acc, t) => {
         const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);

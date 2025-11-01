@@ -11,13 +11,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PlusCircle, Pencil } from 'lucide-react';
+import { PlusCircle, Pencil, Calendar as CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useBudgets } from '@/contexts/budgets-context';
 import type { Budget } from '@/lib/types';
 import { useCategories } from '@/contexts/categories-context';
 import { categoryIcons } from '@/lib/category-icons';
-import { startOfMonth, startOfQuarter, startOfYear, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { uk } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
 
 type BudgetFormProps = {
@@ -33,6 +41,7 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [period, setPeriod] = useState<Budget['period']>('monthly');
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
 
   const isEditMode = !!budget;
 
@@ -41,6 +50,12 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
         setAmount(String(budget.amount));
         setCategory(budget.category);
         setPeriod(budget.period);
+        if (budget.startDate) {
+          const budgetStartDate = budget.startDate instanceof Timestamp
+            ? budget.startDate.toDate()
+            : new Date(budget.startDate);
+          setStartDate(budgetStartDate);
+        }
     }
   }, [budget, isEditMode]);
 
@@ -48,7 +63,7 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!amount || !category || !period) {
+    if (!amount || !category || !period || !startDate) {
       toast({
         variant: 'destructive',
         title: 'Помилка',
@@ -67,32 +82,11 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
       return;
     }
 
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
-
-    switch(period) {
-      case 'quarterly':
-        startDate = startOfQuarter(now);
-        endDate = endOfQuarter(now);
-        break;
-      case 'yearly':
-        startDate = startOfYear(now);
-        endDate = endOfYear(now);
-        break;
-      case 'monthly':
-      default:
-        startDate = startOfMonth(now);
-        endDate = endOfMonth(now);
-        break;
-    }
-
     const budgetData = {
         amount: parseFloat(amount),
         category,
         period,
         startDate: Timestamp.fromDate(startDate),
-        endDate: Timestamp.fromDate(endDate),
     };
 
     if (isEditMode && budget) {
@@ -115,6 +109,7 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
         setAmount('');
         setCategory('');
         setPeriod('monthly');
+        setStartDate(new Date());
     }
   };
 
@@ -161,18 +156,46 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
                 <Input id="amount" type="number" placeholder="0.00" required value={amount} onChange={(e) => setAmount(e.target.value)} />
               </div>
             </div>
-             <div className="grid gap-2">
-                <Label htmlFor="period">Період</Label>
-                <Select required value={period} onValueChange={(value: Budget['period']) => setPeriod(value)} disabled={isEditMode}>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Оберіть період" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="monthly">Щомісяця</SelectItem>
-                        <SelectItem value="quarterly">Щокварталу</SelectItem>
-                        <SelectItem value="yearly">Щорічно</SelectItem>
-                    </SelectContent>
-                </Select>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="period">Період</Label>
+                    <Select required value={period} onValueChange={(value: Budget['period']) => setPeriod(value)}>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Оберіть період" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="monthly">Щомісяця</SelectItem>
+                            <SelectItem value="quarterly">Щокварталу</SelectItem>
+                            <SelectItem value="yearly">Щорічно</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="date">Дата початку</Label>
+                    <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                        variant={'outline'}
+                        className={cn(
+                            'w-full justify-start text-left font-normal',
+                            !startDate && 'text-muted-foreground'
+                        )}
+                        >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                        locale={uk}
+                        />
+                    </PopoverContent>
+                    </Popover>
+                </div>
              </div>
           </div>
           <Button type="submit" className="w-full">
