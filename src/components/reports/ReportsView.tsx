@@ -95,15 +95,6 @@ export default function ReportsView() {
         }
       }
     });
-
-    if (monthsToSubtract === 1) {
-        const monthKey = format(now, 'yyyy-MM');
-        const singleMonthData = data[monthKey];
-        return [
-            { name: 'Дохід', value: singleMonthData.income, fill: 'var(--color-income)' },
-            { name: 'Витрати', value: singleMonthData.expenses, fill: 'var(--color-expenses)' },
-        ];
-    }
     
     return Object.values(data);
 
@@ -173,8 +164,8 @@ export default function ReportsView() {
             ) : (
             <ChartContainer config={barChartConfig} className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={incomeVsExpenseData} margin={{ left: -20, right: 16 }} barGap={parseInt(period) === 1 ? 100 : 4}>
-                    <XAxis dataKey={parseInt(period) === 1 ? 'name' : 'month'} tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                <BarChart data={incomeVsExpenseData} margin={{ left: -20, right: 16 }}>
+                    <XAxis dataKey='month' tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                     <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={50} fontSize={12} />
                     <ChartTooltip
                         cursor={false}
@@ -183,16 +174,9 @@ export default function ReportsView() {
                             indicator="dot" 
                         />}
                     />
-                    {parseInt(period) > 1 ? (
-                        <>
-                            <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
-                            <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={60} />
-                        </>
-                    ) : (
-                        <Bar dataKey="value" radius={4} maxBarSize={60} />
-                    )}
-
-                    {parseInt(period) > 1 && <ChartLegend content={<ChartLegendContent />} />}
+                    <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
+                    <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={60} />
+                    <ChartLegend content={<ChartLegendContent />} />
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -270,3 +254,5 @@ export default function ReportsView() {
     </div>
   );
 }
+
+    
