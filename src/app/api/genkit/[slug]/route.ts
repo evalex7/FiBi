@@ -1,11 +1,11 @@
 'use server';
 import { ai } from '@/ai/genkit';
 import { defineNextJsHandler } from '@genkit-ai/next';
-import '@/ai/flows/budget-adjustment-suggestions';
+import { budgetAdjustmentSuggestionsFlow } from '@/ai/flows/budget-adjustment-suggestions';
 
 const { GET, POST } = defineNextJsHandler({
   ai,
-  flows: [],
+  flows: [budgetAdjustmentSuggestionsFlow],
 });
 
 export { GET, POST };
