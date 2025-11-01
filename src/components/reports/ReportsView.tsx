@@ -69,34 +69,17 @@ export default function ReportsView() {
   const isLoading = isTransactionsLoading || isCategoriesLoading;
 
   const incomeVsExpenseData = useMemo(() => {
-    if (isLoading) return [];
+    if (isLoading || transactions.length === 0) return [];
     
     const monthsToSubtract = parseInt(period);
     const now = new Date();
-
-    if (monthsToSubtract === 1) {
-        const currentMonthStart = startOfMonth(now);
-        const monthTransactions = transactions.filter(t => {
-            const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
-            return transactionDate >= currentMonthStart;
-        });
-
-        const income = monthTransactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-        const expenses = monthTransactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
-        
-        return [
-            { name: 'Дохід', value: income, fill: 'var(--color-income)' },
-            { name: 'Витрати', value: expenses, fill: 'var(--color-expenses)' },
-        ];
-    }
     
     const data: { [key: string]: { month: string, income: number, expenses: number } } = {};
-    const monthNames = Array.from({length: 12}, (_, i) => format(new Date(0, i), 'LLL', {locale: uk}));
 
     for (let i = monthsToSubtract - 1; i >= 0; i--) {
         const date = subMonths(now, i);
         const monthKey = format(date, 'yyyy-MM');
-        const monthLabel = `${monthNames[getMonth(date)]}. ${getYear(date)}`;
+        const monthLabel = `${format(date, 'LLL', {locale: uk})}. ${getYear(date)}`;
         data[monthKey] = { month: monthLabel, income: 0, expenses: 0 };
     }
 
@@ -112,6 +95,15 @@ export default function ReportsView() {
         }
       }
     });
+
+    if (monthsToSubtract === 1) {
+        const monthKey = format(now, 'yyyy-MM');
+        const singleMonthData = data[monthKey];
+        return [
+            { name: 'Дохід', value: singleMonthData.income, fill: 'var(--color-income)' },
+            { name: 'Витрати', value: singleMonthData.expenses, fill: 'var(--color-expenses)' },
+        ];
+    }
     
     return Object.values(data);
 
@@ -174,7 +166,7 @@ export default function ReportsView() {
             </div>
           </CardHeader>
           <CardContent className="px-2 sm:px-4">
-            {isLoading || transactions.length === 0 ? (
+            {isLoading || incomeVsExpenseData.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">
                 Недостатньо даних для відображення графіка.
               </div>
