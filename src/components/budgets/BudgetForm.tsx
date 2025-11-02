@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -113,15 +113,26 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
     }
   };
   
-  const availableCategories = expenseCategories.filter(cat => {
-    if (cat.type !== 'expense') return false;
-    // In edit mode, show the current category + categories that don't have a budget yet for the same period.
+  const availableCategories = useMemo(() => {
+    const expenseCats = expenseCategories.filter(cat => cat.type === 'expense');
+
     if (isEditMode) {
-      return cat.name === budget?.category || !budgets.some(b => b.category === cat.name && b.period === period);
+      // In edit mode, show the current category + categories that don't have a budget yet for the same period.
+      const currentCategoryInList = expenseCats.find(c => c.name === budget?.category);
+      const otherCategories = expenseCats.filter(cat => 
+        !budgets.some(b => b.category === cat.name && b.period === period && b.id !== budget?.id)
+      );
+      if (currentCategoryInList && !otherCategories.some(c => c.id === currentCategoryInList.id)) {
+        return otherCategories; // This logic was wrong.
+      }
+      return otherCategories;
     }
+    
     // In add mode, only show categories that don't have a budget yet for the same period.
-    return !budgets.some(b => b.category === cat.name && b.period === period);
-  });
+    return expenseCats.filter(cat => 
+      !budgets.some(b => b.category === cat.name && b.period === period)
+    );
+  }, [expenseCategories, budgets, period, isEditMode, budget]);
 
 
   return (
@@ -135,7 +146,16 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
                         <SelectValue placeholder="Оберіть категорію" />
                     </SelectTrigger>
                     <SelectContent>
-                    {availableCategories.map((cat) => {
+                    {expenseCategories.filter(c => c.type === 'expense').map((cat) => {
+                       // In edit mode, allow current category. For others, check if a budget for that period already exists.
+                      if (isEditMode && budget?.category !== cat.name && budgets.some(b => b.category === cat.name && b.period === period && b.id !== budget.id)) {
+                        return null;
+                      }
+                      // In add mode, check if budget for that period already exists.
+                      if (!isEditMode && budgets.some(b => b.category === cat.name && b.period === period)) {
+                        return null;
+                      }
+                      
                       const Icon = categoryIcons[cat.icon];
                       return (
                         <SelectItem key={cat.id} value={cat.name}>
