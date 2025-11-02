@@ -33,10 +33,11 @@ import { Timestamp } from 'firebase/firestore';
 type TransactionFormProps = {
     transaction?: Transaction;
     onSave?: () => void;
+    initialAmount?: number;
 };
 
 
-export default function TransactionForm({ transaction, onSave }: TransactionFormProps) {
+export default function TransactionForm({ transaction, onSave, initialAmount }: TransactionFormProps) {
   const { addTransaction, updateTransaction } = useTransactions();
   const { categories: availableCategories } = useCategories();
   const [type, setType] = useState<Transaction['type']>('expense');
@@ -61,8 +62,11 @@ export default function TransactionForm({ transaction, onSave }: TransactionForm
                 : new Date(transaction.date);
             setDate(transactionDate);
         }
+    } else if (initialAmount) {
+        setAmount(String(initialAmount));
+        setType('expense');
     }
-  }, [transaction, isEditMode]);
+  }, [transaction, isEditMode, initialAmount]);
 
 
   const categories = availableCategories.filter(c => c.type === type);
