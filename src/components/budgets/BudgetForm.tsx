@@ -112,9 +112,13 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
         setStartDate(new Date());
     }
   };
-
+  
   const availableCategories = expenseCategories.filter(
-    (cat) => (isEditMode || !budgets.some((b) => b.category === cat.name)) && cat.type === 'expense'
+    (cat) =>
+      cat.type === 'expense' &&
+      // In edit mode, the current category is always available.
+      // In add mode, only categories without an existing budget are available.
+      (isEditMode ? true : !budgets.some((b) => b.category === cat.name))
   );
 
   return (
@@ -123,28 +127,22 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                <div className="grid gap-2">
                 <Label htmlFor="category">Категорія</Label>
-                <Select required value={category} onValueChange={setCategory} disabled={isEditMode}>
+                <Select required value={category} onValueChange={setCategory}>
                     <SelectTrigger>
                         <SelectValue placeholder="Оберіть категорію" />
                     </SelectTrigger>
                     <SelectContent>
-                    {isEditMode && budget ? (
-                        <SelectItem key={budget.category} value={budget.category}>
-                            {budget.category}
+                    {availableCategories.map((cat) => {
+                      const Icon = categoryIcons[cat.icon];
+                      return (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          <div className="flex items-center gap-2">
+                            {Icon && <Icon className="h-4 w-4" />}
+                            <span>{cat.name}</span>
+                          </div>
                         </SelectItem>
-                    ) : (
-                        availableCategories.map((cat) => {
-                          const Icon = categoryIcons[cat.icon];
-                          return (
-                            <SelectItem key={cat.id} value={cat.name}>
-                              <div className="flex items-center gap-2">
-                                {Icon && <Icon className="h-4 w-4" />}
-                                <span>{cat.name}</span>
-                              </div>
-                            </SelectItem>
-                          );
-                        })
-                    )}
+                      );
+                    })}
                     </SelectContent>
                 </Select>
              </div>
