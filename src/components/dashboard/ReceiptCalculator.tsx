@@ -110,14 +110,12 @@ export default function ReceiptCalculator({ onDone, initialAmount = 0 }: Receipt
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('1')}>1</Button>
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('2')}>2</Button>
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('3')}>3</Button>
-            <Button variant="destructive" className="h-full text-lg row-span-2" onClick={handleAllClear}>AC</Button>
+            <Button variant="destructive" className="h-10 text-lg" onClick={handleAllClear}>AC</Button>
             
             <Button variant="outline" className="h-10 text-lg col-span-2" onClick={() => handleNumberClick('0')}>0</Button>
             <Button variant="outline" className="h-10 text-lg" onClick={handleDecimalClick}>.</Button>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-            <Button className="h-10" onClick={handleEquals}>=</Button>
-            <Button className="h-10" onClick={handleDone}>Готово</Button>
+            <Button className="h-10 text-lg" onClick={handleEquals}>=</Button>
+            <Button className="h-10 text-lg" onClick={handleDone}>Готово</Button>
         </div>
     </div>
   );
