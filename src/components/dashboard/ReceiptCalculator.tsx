@@ -8,12 +8,19 @@ type ReceiptCalculatorProps = {
     initialAmount?: number;
 };
 
+type Operator = '+' | '-' | '*' | '/';
+
 export default function ReceiptCalculator({ onDone, initialAmount = 0 }: ReceiptCalculatorProps) {
   const [currentValue, setCurrentValue] = useState('0');
   const [total, setTotal] = useState(initialAmount);
+  const [operator, setOperator] = useState<Operator | null>(null);
+  const [isNewEntry, setIsNewEntry] = useState(true);
 
   const handleNumberClick = (num: string) => {
-    if (currentValue === '0' && num !== '.') {
+    if (isNewEntry) {
+      setCurrentValue(num);
+      setIsNewEntry(false);
+    } else if (currentValue === '0' && num !== '.') {
       setCurrentValue(num);
     } else {
       setCurrentValue(currentValue + num);
@@ -21,65 +28,104 @@ export default function ReceiptCalculator({ onDone, initialAmount = 0 }: Receipt
   };
 
   const handleDecimalClick = () => {
-    if (!currentValue.includes('.')) {
+    if (isNewEntry) {
+      setCurrentValue('0.');
+      setIsNewEntry(false);
+    } else if (!currentValue.includes('.')) {
       setCurrentValue(currentValue + '.');
     }
   };
+  
+  const performCalculation = () => {
+    const current = parseFloat(currentValue);
+    if (operator === '+') {
+      return total + current;
+    }
+    if (operator === '-') {
+      return total - current;
+    }
+    if (operator === '*') {
+      return total * current;
+    }
+    if (operator === '/') {
+      return total / current;
+    }
+    return current;
+  };
 
-  const handleAdd = () => {
-    if (currentValue !== '0') {
-      setTotal(total + parseFloat(currentValue));
-      setCurrentValue('0');
+  const handleOperatorClick = (op: Operator) => {
+    if (!isNewEntry) {
+      const newTotal = performCalculation();
+      setTotal(newTotal);
+      setCurrentValue(String(newTotal));
+    }
+    setOperator(op);
+    setIsNewEntry(true);
+  };
+  
+  const handleEquals = () => {
+    if(operator && !isNewEntry) {
+        const newTotal = performCalculation();
+        setTotal(newTotal);
+        setCurrentValue(String(newTotal));
+        setOperator(null);
+        setIsNewEntry(true);
     }
   };
 
   const handleClear = () => {
     setCurrentValue('0');
+    setIsNewEntry(true);
   };
 
   const handleAllClear = () => {
     setCurrentValue('0');
     setTotal(0);
+    setOperator(null);
+    setIsNewEntry(true);
   };
   
   const handleDone = () => {
-    const finalTotal = total + parseFloat(currentValue);
+    let finalTotal = total;
+    if (!isNewEntry) {
+        finalTotal = performCalculation();
+    }
     onDone(finalTotal);
   };
 
-  const calculatorButtons = [
-    '7', '8', '9',
-    '4', '5', '6',
-    '1', '2', '3',
-    '0', '.',
-  ];
 
   return (
-    <div className="space-y-4 p-4">
-        <div className="rounded-lg bg-muted p-4 text-right">
-        <div className="text-sm text-muted-foreground">Загальна сума: {total.toFixed(2)} грн</div>
-        <div className="text-3xl font-bold">{currentValue}</div>
+    <div className="space-y-2 p-2">
+        <div className="rounded-lg bg-muted p-3 text-right">
+        <div className="text-xs text-muted-foreground truncate">
+            {operator && !isNewEntry ? `${total.toFixed(2)} ${operator}` : 'Загальна сума'}
+        </div>
+        <div className="text-3xl font-bold">{parseFloat(currentValue).toLocaleString('uk-UA', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</div>
         </div>
         <div className="grid grid-cols-4 gap-2">
-        {calculatorButtons.slice(0, 3).map((btn) => (
-            <Button key={btn} variant="outline" className="h-14 text-xl" onClick={() => handleNumberClick(btn)}>{btn}</Button>
-        ))}
-        <Button variant="outline" className="h-14 text-xl" onClick={handleAdd}>+</Button>
-        
-        {calculatorButtons.slice(3, 6).map((btn) => (
-            <Button key={btn} variant="outline" className="h-14 text-xl" onClick={() => handleNumberClick(btn)}>{btn}</Button>
-        ))}
-        <Button variant="destructive" className="h-14" onClick={handleClear}>C</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={handleAllClear}>AC</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleOperatorClick('/')}>/</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleOperatorClick('*')}>*</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleOperatorClick('-')}>-</Button>
+            
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleNumberClick('7')}>7</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleNumberClick('8')}>8</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleNumberClick('9')}>9</Button>
+            <Button variant="outline" className="h-12 text-lg row-span-2" onClick={() => handleOperatorClick('+')}>+</Button>
 
-        {calculatorButtons.slice(6, 9).map((btn) => (
-            <Button key={btn} variant="outline" className="h-14 text-xl" onClick={() => handleNumberClick(btn)}>{btn}</Button>
-        ))}
-        <Button variant="destructive" className="h-14" onClick={handleAllClear}>AC</Button>
-
-        <Button variant="outline" className="h-14 text-xl" onClick={() => handleNumberClick('0')}>0</Button>
-        <Button variant="outline" className="h-14 text-xl" onClick={handleDecimalClick}>.</Button>
-        <Button className="h-14 col-span-2" onClick={handleDone}>Готово</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleNumberClick('4')}>4</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleNumberClick('5')}>5</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleNumberClick('6')}>6</Button>
+            
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleNumberClick('1')}>1</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleNumberClick('2')}>2</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={() => handleNumberClick('3')}>3</Button>
+            <Button className="h-12 text-lg row-span-2" onClick={handleEquals}>=</Button>
+           
+            <Button variant="outline" className="h-12 text-lg col-span-2" onClick={() => handleNumberClick('0')}>0</Button>
+            <Button variant="outline" className="h-12 text-lg" onClick={handleDecimalClick}>.</Button>
         </div>
+        <Button className="w-full h-12" onClick={handleDone}>Готово</Button>
     </div>
   );
 }
