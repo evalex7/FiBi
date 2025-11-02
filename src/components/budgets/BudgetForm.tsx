@@ -115,12 +115,12 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
   
   const availableCategories = expenseCategories.filter(cat => {
     if (cat.type !== 'expense') return false;
-    // In add mode, only show categories that don't have a budget yet.
-    if (!isEditMode) {
-        return !budgets.some(b => b.category === cat.name && b.period === period);
+    // In edit mode, show the current category + categories that don't have a budget yet for the same period.
+    if (isEditMode) {
+      return cat.name === budget?.category || !budgets.some(b => b.category === cat.name && b.period === period);
     }
-    // In edit mode, show the current category + categories that don't have a budget yet.
-    return cat.name === budget?.category || !budgets.some(b => b.category === cat.name && b.period === period);
+    // In add mode, only show categories that don't have a budget yet for the same period.
+    return !budgets.some(b => b.category === cat.name && b.period === period);
   });
 
 
