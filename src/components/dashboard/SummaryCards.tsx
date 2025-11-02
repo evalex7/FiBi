@@ -57,34 +57,34 @@ export default function SummaryCards({ selectedDate }: SummaryCardsProps) {
 
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Дохід за місяць</CardTitle>
+    <div className="grid gap-2 md:grid-cols-3">
+      <Card className="p-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+          <CardTitle className="text-xs font-medium">Дохід за місяць</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{formattedIncome}</div>
+        <CardContent className="p-0">
+          <div className="text-xl font-bold">{formattedIncome}</div>
           <p className="text-xs text-muted-foreground">за обраний місяць</p>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Витрати за місяць</CardTitle>
+      <Card className="p-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+          <CardTitle className="text-xs font-medium">Витрати за місяць</CardTitle>
           <TrendingDown className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{formattedExpenses}</div>
+        <CardContent className="p-0">
+          <div className="text-xl font-bold">{formattedExpenses}</div>
           <p className="text-xs text-muted-foreground">за обраний місяць</p>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Загальний залишок</CardTitle>
+      <Card className="p-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+          <CardTitle className="text-xs font-medium">Загальний залишок</CardTitle>
           <Wallet className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{formattedBalance}</div>
+        <CardContent className="p-0">
+          <div className="text-xl font-bold">{formattedBalance}</div>
           <p className="text-xs text-muted-foreground">Поточний залишок</p>
         </CardContent>
       </Card>
