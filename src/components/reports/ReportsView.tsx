@@ -294,7 +294,12 @@ export default function ReportsView() {
               <ChartContainer config={pieChartConfig} className="w-full h-[400px] flex flex-col items-center justify-center">
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
-                    <ChartTooltip content={<ChartTooltipContent formatter={(value) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(value as number)} />} />
+                    <ChartTooltip
+                      content={<ChartTooltipContent
+                        nameKey="name"
+                        formatter={(value) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(value as number)}
+                      />}
+                    />
                     <Pie
                       data={categoryData}
                       dataKey="value"
