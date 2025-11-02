@@ -296,7 +296,6 @@ export default function ReportsView() {
                   <PieChart>
                     <ChartTooltip
                       content={<ChartTooltipContent
-                        nameKey="name"
                         formatter={(value) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(value as number)}
                       />}
                     />
