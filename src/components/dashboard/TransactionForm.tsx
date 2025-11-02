@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar as CalendarIcon, PlusCircle, Pencil } from 'lucide-react';
+import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -28,6 +28,7 @@ import { useTransactions } from '@/contexts/transactions-context';
 import type { Transaction } from '@/lib/types';
 import { useCategories } from '@/contexts/categories-context';
 import { Timestamp } from 'firebase/firestore';
+import ReceiptCalculator from './ReceiptCalculator';
 
 
 type TransactionFormProps = {
@@ -47,6 +48,7 @@ export default function TransactionForm({ transaction, onSave, initialAmount }: 
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
   const isEditMode = !!transaction;
 
@@ -142,7 +144,25 @@ export default function TransactionForm({ transaction, onSave, initialAmount }: 
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="amount">Сума</Label>
-                <Input id="amount" type="number" placeholder="0.00" required value={amount} onChange={(e) => setAmount(e.target.value)} />
+                <div className="flex items-center gap-2">
+                    <Input id="amount" type="number" placeholder="0.00" required value={amount} onChange={(e) => setAmount(e.target.value)} />
+                    <Popover open={isCalculatorOpen} onOpenChange={setIsCalculatorOpen}>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" size="icon">
+                                <Calculator className="h-4 w-4" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <ReceiptCalculator
+                                initialAmount={parseFloat(amount) || 0}
+                                onDone={(total) => {
+                                    setAmount(total.toFixed(2));
+                                    setIsCalculatorOpen(false);
+                                }}
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="date">Дата</Label>

@@ -6,7 +6,6 @@ import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import SummaryCards from '@/components/dashboard/SummaryCards';
 import MonthSelector from '@/components/dashboard/MonthSelector';
 import { useState } from 'react';
-import ReceiptCalculator from '@/components/dashboard/ReceiptCalculator';
 
 export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -25,7 +24,6 @@ export default function DashboardPage() {
           </div>
           <div className="lg:col-span-1 order-1 lg:order-2 space-y-6">
              <AddTransactionForm />
-             <ReceiptCalculator />
           </div>
         </div>
       </div>
