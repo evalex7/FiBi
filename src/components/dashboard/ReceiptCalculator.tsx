@@ -60,23 +60,25 @@ export default function ReceiptCalculator({ onDone, initialAmount = 0 }: Receipt
         <div className="text-sm text-muted-foreground">Загальна сума: {total.toFixed(2)} грн</div>
         <div className="text-3xl font-bold">{currentValue}</div>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-        {calculatorButtons.map((btn) => (
-            <Button
-            key={btn}
-            variant="outline"
-            className="h-14 text-xl"
-            onClick={() => (btn === '.' ? handleDecimalClick() : handleNumberClick(btn))}
-            >
-            {btn}
-            </Button>
+        <div className="grid grid-cols-4 gap-2">
+        {calculatorButtons.slice(0, 3).map((btn) => (
+            <Button key={btn} variant="outline" className="h-14 text-xl" onClick={() => handleNumberClick(btn)}>{btn}</Button>
         ))}
-        <Button variant="outline" className="h-14" onClick={handleClear}>C</Button>
-        <Button className="h-14 text-xl col-span-2" onClick={handleAdd}>+</Button>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-            <Button variant="destructive" className="h-14" onClick={handleAllClear}>Очистити все</Button>
-            <Button className="h-14" onClick={handleDone}>Готово</Button>
+        <Button variant="outline" className="h-14 text-xl" onClick={handleAdd}>+</Button>
+        
+        {calculatorButtons.slice(3, 6).map((btn) => (
+            <Button key={btn} variant="outline" className="h-14 text-xl" onClick={() => handleNumberClick(btn)}>{btn}</Button>
+        ))}
+        <Button variant="destructive" className="h-14" onClick={handleClear}>C</Button>
+
+        {calculatorButtons.slice(6, 9).map((btn) => (
+            <Button key={btn} variant="outline" className="h-14 text-xl" onClick={() => handleNumberClick(btn)}>{btn}</Button>
+        ))}
+        <Button variant="destructive" className="h-14" onClick={handleAllClear}>AC</Button>
+
+        <Button variant="outline" className="h-14 text-xl" onClick={() => handleNumberClick('0')}>0</Button>
+        <Button variant="outline" className="h-14 text-xl" onClick={handleDecimalClick}>.</Button>
+        <Button className="h-14 col-span-2" onClick={handleDone}>Готово</Button>
         </div>
     </div>
   );
