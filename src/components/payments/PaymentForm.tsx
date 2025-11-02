@@ -105,12 +105,14 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
     }
   };
 
-  const availableCategories = expenseCategories.filter(
-    (cat) =>
-      // In edit mode, the current category is always available.
-      // In add mode, only categories without an existing payment are available.
-      (isEditMode ? true : !payments.some((p) => p.category === cat.name))
-  );
+  const availableCategories = expenseCategories.filter(cat => {
+    // In edit mode, the currently selected category should always be in the list.
+    if (isEditMode && cat.name === payment.category) {
+      return true;
+    }
+    // In add mode, or for other categories in edit mode, only show categories that don't have a payment yet.
+    return !payments.some(p => p.category === cat.name);
+  });
 
   return (
         <form onSubmit={handleSubmit} className="space-y-4">
