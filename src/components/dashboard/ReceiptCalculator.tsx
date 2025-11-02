@@ -97,27 +97,28 @@ export default function ReceiptCalculator({ onDone, initialAmount = 0 }: Receipt
         <div className="text-3xl font-bold">{parseFloat(currentValue).toLocaleString('uk-UA', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</div>
         </div>
         <div className="grid grid-cols-4 gap-2">
-            <Button variant="outline" className="h-10 text-lg" onClick={handleAllClear}>AC</Button>
-            <Button variant="outline" className="h-10 text-lg col-span-2" onClick={() => handleOperatorClick('-')}>-</Button>
-            <Button variant="outline" className="h-10 text-lg" onClick={() => handleOperatorClick('+')}>+</Button>
-            
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('7')}>7</Button>
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('8')}>8</Button>
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('9')}>9</Button>
-            <Button className="h-full text-lg row-span-3" onClick={handleEquals}>=</Button>
-
+            <Button variant="outline" className="h-10 text-lg" onClick={() => handleOperatorClick('+')}>+</Button>
+            
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('4')}>4</Button>
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('5')}>5</Button>
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('6')}>6</Button>
-            
+            <Button variant="outline" className="h-10 text-lg" onClick={() => handleOperatorClick('-')}>-</Button>
+
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('1')}>1</Button>
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('2')}>2</Button>
             <Button variant="outline" className="h-10 text-lg" onClick={() => handleNumberClick('3')}>3</Button>
-           
+            <Button variant="destructive" className="h-full text-lg row-span-2" onClick={handleAllClear}>AC</Button>
+            
             <Button variant="outline" className="h-10 text-lg col-span-2" onClick={() => handleNumberClick('0')}>0</Button>
             <Button variant="outline" className="h-10 text-lg" onClick={handleDecimalClick}>.</Button>
         </div>
-        <Button className="w-full h-10" onClick={handleDone}>Готово</Button>
+        <div className="grid grid-cols-2 gap-2">
+            <Button className="h-10" onClick={handleEquals}>=</Button>
+            <Button className="h-10" onClick={handleDone}>Готово</Button>
+        </div>
     </div>
   );
 }
