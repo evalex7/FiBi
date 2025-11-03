@@ -54,8 +54,6 @@ export default function AppLayout({
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [headerVisible, setHeaderVisible] = useState(true);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
@@ -70,26 +68,6 @@ export default function AppLayout({
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
-
-  useEffect(() => {
-    if (!isMobile) {
-      setHeaderVisible(true);
-      return;
-    }
-    
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 64) {
-        setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY, isMobile]);
 
   const handleLogout = () => {
     auth.signOut();
@@ -160,7 +138,7 @@ export default function AppLayout({
           key={item.href} 
           href={item.href}
           className={cn(
-            "rounded-md px-3 py-1 text-sm font-medium transition-colors hover:text-foreground",
+            "rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:text-foreground",
             getIsActive(item.href) ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
           )}
         >
@@ -222,6 +200,36 @@ export default function AppLayout({
     </Sheet>
   );
 
+  const MobileBottomNav = () => (
+    <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t">
+        <div className="grid h-full max-w-lg grid-cols-5 mx-auto font-medium">
+             {menuItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "inline-flex flex-col items-center justify-center px-2 hover:bg-muted group",
+                    getIsActive(item.href) ? "text-primary" : "text-muted-foreground"
+                  )}
+                >
+                  <item.icon className="w-5 h-5 mb-1" />
+                  <span className="text-xs">{item.label}</span>
+                </Link>
+              ))}
+              <Link
+                href="/settings"
+                className={cn(
+                    "inline-flex flex-col items-center justify-center px-2 hover:bg-muted group",
+                    getIsActive('/settings') ? "text-primary" : "text-muted-foreground"
+                )}
+                >
+                <Settings className="w-5 h-5 mb-1" />
+                <span className="text-xs">Налаштування</span>
+              </Link>
+        </div>
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
         <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-30">
@@ -263,9 +271,12 @@ export default function AppLayout({
             </div>
         </header>
 
-        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 pb-20 md:pb-8">
             {children}
         </main>
+        {isMobile && <MobileBottomNav />}
     </div>
   );
 }
+
+    
