@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { categoryIcons } from '@/lib/category-icons';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { useTransactions } from '@/contexts/transactions-context';
 import { Button } from '../ui/button';
@@ -45,7 +45,11 @@ import TransactionUserAvatar from './TransactionUserAvatar';
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
 
-export default function RecentTransactions() {
+type RecentTransactionsProps = {
+  selectedPeriod: string;
+};
+
+export default function RecentTransactions({ selectedPeriod }: RecentTransactionsProps) {
   const { transactions, deleteTransaction, isLoading } = useTransactions();
   const { categories } = useCategories();
   const { user } = useUser();
@@ -63,7 +67,18 @@ export default function RecentTransactions() {
     };
 
     if (transactions) {
-      const newSorted = [...transactions]
+      const filtered = transactions.filter(t => {
+        if (selectedPeriod === 'all') return true;
+        
+        const periodDate = parseISO(`${selectedPeriod}-01`);
+        const periodStart = startOfMonth(periodDate);
+        const periodEnd = endOfMonth(periodDate);
+
+        const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
+        return transactionDate >= periodStart && transactionDate <= periodEnd;
+      });
+
+      const newSorted = [...filtered]
         .sort((a, b) => {
             const dateA = a.date && (a.date as any).toDate ? (a.date as any).toDate() : new Date(a.date);
             const dateB = b.date && (b.date as any).toDate ? (b.date as any).toDate() : new Date(b.date);
@@ -72,7 +87,7 @@ export default function RecentTransactions() {
         .map(t => ({ ...t, formattedAmount: formatCurrency(t.amount) }));
       setSortedTransactions(newSorted);
     }
-  }, [transactions]);
+  }, [transactions, selectedPeriod]);
 
   const handleDelete = () => {
     if (transactionToDelete) {
@@ -136,7 +151,7 @@ export default function RecentTransactions() {
           <LoadingSkeleton />
         ) : sortedTransactions.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
-            Ще немає транзакцій. Додайте першу!
+            За цей період транзакцій немає.
           </div>
         ) : (
           <>

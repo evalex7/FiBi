@@ -18,7 +18,7 @@ import TransactionForm from '@/components/dashboard/TransactionForm';
 
 
 export default function DashboardPage() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [period, setPeriod] = useState('0'); // '0' for current month
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
 
   return (
@@ -26,12 +26,12 @@ export default function DashboardPage() {
       <div className="space-y-4">
         <div className="flex flex-row justify-between items-center gap-4">
             <h2 className="text-2xl font-bold tracking-tight">Огляд</h2>
-            <MonthSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
+            <MonthSelector selectedPeriod={period} onPeriodChange={setPeriod} />
         </div>
-        <SummaryCards selectedDate={selectedDate} />
+        <SummaryCards selectedPeriod={period} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 order-2 lg:order-1">
-             <RecentTransactions />
+             <RecentTransactions selectedPeriod={period} />
           </div>
           <div className="lg:col-span-1 order-1 lg:order-2 space-y-6">
              <div className="sticky top-20">
