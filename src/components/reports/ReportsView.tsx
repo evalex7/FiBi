@@ -253,7 +253,7 @@ export default function ReportsView() {
       value,
     })).sort((a, b) => b.value - a.value);
     
-    const chartConfig = chartData.reduce((acc, entry, index) => {
+    const config = chartData.reduce((acc, entry, index) => {
         const color = COLORS[index % COLORS.length];
         acc[entry.name] = {
             label: entry.name,
@@ -262,7 +262,7 @@ export default function ReportsView() {
         return acc;
     }, {} as ChartConfig);
 
-    return { data: chartData, config: pieChartConfig };
+    return { data: chartData, config: config };
   }, [transactions, isLoading, categoryPeriod]);
 
   const monthlyTrendData = useMemo(() => {
