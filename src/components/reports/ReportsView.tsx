@@ -16,6 +16,9 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
+  CartesianGrid,
 } from 'recharts';
 import {
   ChartContainer,
@@ -59,6 +62,11 @@ const barChartConfig = {
   income: { label: "Дохід", color: "hsl(var(--chart-2))" },
   expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
   value: { label: "Сума" },
+} satisfies ChartConfig;
+
+const lineChartConfig = {
+  income: { label: "Дохід", color: "hsl(var(--chart-2))" },
+  expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
 
 const COLORS = [
@@ -254,8 +262,35 @@ export default function ReportsView() {
         return acc;
     }, {} as ChartConfig);
 
-    return { data: chartData, config: chartConfig };
+    return { data: chartData, config: pieChartConfig };
   }, [transactions, isLoading, categoryPeriod]);
+
+  const monthlyTrendData = useMemo(() => {
+    if (isLoading || transactions.length < 2) return [];
+
+    const data: { [key: string]: { month: string, income: number, expenses: number, date: Date } } = {};
+
+    transactions.forEach(t => {
+      const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
+      const monthKey = format(transactionDate, 'yyyy-MM');
+
+      if (!data[monthKey]) {
+        data[monthKey] = {
+          month: format(transactionDate, 'LLL yy', { locale: uk }),
+          income: 0,
+          expenses: 0,
+          date: startOfMonth(transactionDate),
+        };
+      }
+      if (t.type === 'income') {
+        data[monthKey].income += t.amount;
+      } else {
+        data[monthKey].expenses += t.amount;
+      }
+    });
+
+    return Object.values(data).sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [transactions, isLoading]);
 
 
   return (
@@ -302,19 +337,32 @@ export default function ReportsView() {
                     <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                     <ChartTooltip
                       cursor={false}
-                      content={
-                        <ChartTooltipContent
-                          labelClassName="font-bold"
-                          formatter={(value, name, item) => {
-                            return (
-                                <div className="flex items-center justify-between w-full">
-                                    <span className="capitalize">{barChartConfig[name as keyof typeof barChartConfig]?.label}</span>
-                                    <span className="font-medium ml-4">{formatCurrencyTooltip(value as number)}</span>
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                              <div className="font-medium">{label}</div>
+                              {payload.map(item => (
+                                <div key={item.dataKey} className="flex w-full items-center gap-2">
+                                  <div
+                                    className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                                    style={{ backgroundColor: item.color }}
+                                  />
+                                  <div className="flex flex-1 justify-between">
+                                    <span className="text-muted-foreground">
+                                      {barChartConfig[item.dataKey as keyof typeof barChartConfig]?.label || item.name}
+                                    </span>
+                                    <span className="font-medium">
+                                      {formatCurrencyTooltip(item.value as number)}
+                                    </span>
+                                  </div>
                                 </div>
-                            )
-                          }}
-                        />
-                      }
+                              ))}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
                     />
                     <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
                     <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={60} />
@@ -355,19 +403,19 @@ export default function ReportsView() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <ChartTooltip
-                      content={
-                        <ChartTooltipContent
-                           formatter={(value, name, item) => (
-                            <div>
-                              <p className="font-medium">{item.payload.name}</p>
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                              <p className="font-medium">{payload[0].name}</p>
                               <p className="text-muted-foreground">
-                                {formatCurrencyTooltip(value as number)}
+                                {formatCurrencyTooltip(payload[0].value as number)}
                               </p>
                             </div>
-                          )}
-                          nameKey="name"
-                        />
-                      }
+                          );
+                        }
+                        return null;
+                      }}
                     />
                     <Pie
                       data={categoryData}
@@ -418,6 +466,92 @@ export default function ReportsView() {
               </ChartContainer>
             )}
           </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Динаміка доходів та витрат</CardTitle>
+                <CardDescription>
+                Порівняння ваших доходів та витрат по місяцях.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="px-2 sm:px-4">
+                {isLoading || monthlyTrendData.length < 2 ? (
+                     <div className="text-center text-muted-foreground py-8">
+                        Потрібно більше даних для відображення динаміки.
+                     </div>
+                ) : (
+                <ChartContainer config={lineChartConfig} className="h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                            data={monthlyTrendData}
+                            margin={{ left: 0, right: 16 }}
+                        >
+                            <CartesianGrid vertical={false} />
+                            <XAxis
+                                dataKey="month"
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                fontSize={12}
+                            />
+                            <YAxis
+                                tickFormatter={formatCurrency}
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                width={40}
+                                fontSize={12}
+                            />
+                            <ChartTooltip
+                                cursor={false}
+                                content={({ active, payload, label }) => {
+                                if (active && payload && payload.length) {
+                                    return (
+                                    <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                                        <div className="font-medium">{label}</div>
+                                        {payload.map(item => (
+                                        <div key={item.dataKey} className="flex w-full items-center gap-2">
+                                            <div
+                                            className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                                            style={{ backgroundColor: item.color }}
+                                            />
+                                            <div className="flex flex-1 justify-between">
+                                            <span className="text-muted-foreground">
+                                                {lineChartConfig[item.dataKey as keyof typeof lineChartConfig]?.label || item.name}
+                                            </span>
+                                            <span className="font-medium">
+                                                {formatCurrencyTooltip(item.value as number)}
+                                            </span>
+                                            </div>
+                                        </div>
+                                        ))}
+                                    </div>
+                                    );
+                                }
+                                return null;
+                                }}
+                            />
+                            <Line
+                                dataKey="income"
+                                type="monotone"
+                                stroke="var(--color-income)"
+                                strokeWidth={2}
+                                dot={false}
+                            />
+                            <Line
+                                dataKey="expenses"
+                                type="monotone"
+                                stroke="var(--color-expenses)"
+                                strokeWidth={2}
+                                dot={false}
+                            />
+                             <ChartLegend content={<ChartLegendContent />} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </ChartContainer>
+                )}
+            </CardContent>
         </Card>
     </div>
   );
