@@ -143,8 +143,8 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Останні транзакції</CardTitle>
-        <CardDescription>Огляд ваших останніх доходів та витрат.</CardDescription>
+        <CardTitle>Транзакції</CardTitle>
+        <CardDescription>Огляд ваших доходів та витрат.</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
