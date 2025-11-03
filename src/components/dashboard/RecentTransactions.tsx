@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { categoryIcons } from '@/lib/category-icons';
 import { cn } from '@/lib/utils';
@@ -24,7 +24,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import EditTransactionSheet from './EditTransactionSheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import TransactionForm from './TransactionForm';
+
 import type { Transaction } from '@/lib/types';
 import {
   AlertDialog,
@@ -127,6 +129,7 @@ export default function RecentTransactions() {
     <Card>
       <CardHeader>
         <CardTitle>Останні транзакції</CardTitle>
+        <CardDescription>Огляд ваших останніх доходів та витрат.</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -225,11 +228,17 @@ export default function RecentTransactions() {
         )}
       </CardContent>
       {editingTransaction && (
-        <EditTransactionSheet
-          transaction={editingTransaction}
-          open={!!editingTransaction}
-          onOpenChange={(isOpen) => !isOpen && setEditingTransaction(null)}
-        />
+        <Dialog open={!!editingTransaction} onOpenChange={(isOpen) => !isOpen && setEditingTransaction(null)}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Редагувати транзакцію</DialogTitle>
+                    <DialogDescription>
+                    Оновіть деталі вашої транзакції.
+                    </DialogDescription>
+                </DialogHeader>
+                <TransactionForm transaction={editingTransaction} onSave={() => setEditingTransaction(null)} />
+            </DialogContent>
+        </Dialog>
       )}
       <AlertDialog open={!!transactionToDelete} onOpenChange={(isOpen) => !isOpen && setTransactionToDelete(null)}>
         <AlertDialogContent>

@@ -11,20 +11,9 @@ import {
   Loader2,
   User as UserIcon,
   Settings,
-  X,
+  Menu,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
 import { Logo } from './Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from './ui/skeleton';
@@ -41,7 +30,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
@@ -66,6 +56,7 @@ export default function AppLayout({
 
   const [lastScrollY, setLastScrollY] = useState(0);
   const [headerVisible, setHeaderVisible] = useState(true);
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -148,8 +139,8 @@ export default function AppLayout({
       .join('');
   };
 
-  const UserAvatar = ({ large = false }: { large?: boolean }) => (
-    <Avatar className={cn(large ? "h-16 w-16" : "h-8 w-8")}>
+  const UserAvatar = ({ className }: { className?: string }) => (
+    <Avatar className={cn("h-8 w-8", className)}>
       {familyMember ? (
         <AvatarFallback style={{ backgroundColor: familyMember.color }} className="text-white font-bold">
           {getInitials(familyMember.name)}
@@ -162,132 +153,119 @@ export default function AppLayout({
     </Avatar>
   );
 
-  const SidebarMenuContent = () => (
-    <>
-      <SidebarHeader className="p-0">
-          <div className="flex flex-col items-start gap-3 p-4 bg-gradient-to-br from-green-400 to-green-600 text-white">
-            <UserAvatar large />
-            <div className="flex flex-col">
-              <span className="font-semibold text-lg">{familyMember?.name || 'Користувач'}</span>
-              <span className="text-sm opacity-90">Мій гаманець</span>
+  const DesktopNav = () => (
+    <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+      {menuItems.map((item) => (
+        <Link 
+          key={item.href} 
+          href={item.href}
+          className={cn(
+            "transition-colors hover:text-foreground",
+            getIsActive(item.href) ? "text-foreground" : "text-muted-foreground"
+          )}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  );
+
+  const MobileNavSheet = () => (
+    <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
+        <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Відкрити меню</span>
+            </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-full max-w-[280px] p-0 flex flex-col">
+            <div className="flex h-16 items-center border-b px-4">
+              <Link href="/dashboard" className="flex items-center gap-2 font-bold" onClick={() => setIsMobileSheetOpen(false)}>
+                  <Logo className="h-6 w-6" />
+                  <span>Сімейні фінанси</span>
+              </Link>
             </div>
-          </div>
-        </SidebarHeader>
-        <SidebarContent className="bg-white text-gray-800 flex-1">
-            <SidebarMenu>
+            <nav className="flex-1 space-y-1 p-4">
               {menuItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={getIsActive(item.href)}
-                    tooltip={item.label}
-                    className="text-gray-600 hover:bg-gray-100 data-[active=true]:bg-blue-100 data-[active=true]:text-blue-600"
-                  >
-                    <Link href={item.href}>
-                      <item.icon />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsMobileSheetOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                    getIsActive(item.href) ? "bg-muted text-primary" : "text-muted-foreground"
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
               ))}
-            </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter className="bg-white mt-auto p-4 border-t border-gray-200">
-             <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={getIsActive('/settings')}
-                    tooltip="Налаштування"
-                     className="text-gray-600 hover:bg-gray-100"
-                  >
-                    <Link href="/settings">
-                      <Settings />
-                      <span>Налаштування</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <SidebarMenuButton onClick={handleLogout} className="text-gray-600 hover:bg-gray-100">
-                        <LogOut />
-                        <span>Вийти</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-             </SidebarMenu>
-        </SidebarFooter>
-    </>
+            </nav>
+             <div className="mt-auto border-t p-4">
+                <Link
+                  href="/settings"
+                  onClick={() => setIsMobileSheetOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                     getIsActive('/settings') && "text-primary"
+                  )}
+                >
+                  <Settings className="h-4 w-4" />
+                  Налаштування
+                </Link>
+                <Button variant="ghost" className="w-full justify-start gap-3 px-3 mt-2 text-muted-foreground" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4" />
+                    Вийти
+                </Button>
+             </div>
+        </SheetContent>
+    </Sheet>
   );
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-gray-50">
-        
-        <Sidebar className="hidden md:flex !bg-white !border-r !border-gray-200">
-            <SidebarMenuContent />
-        </Sidebar>
-
-        <div className="flex flex-col flex-1 overflow-x-hidden">
-          <header className={cn("flex h-16 items-center justify-between border-b px-4 md:px-6 sticky top-0 bg-white z-20 transition-transform duration-300",
-            !headerVisible && isMobile ? "-translate-y-full" : "translate-y-0"
-          )}>
-            <div className="flex items-center gap-2 md:gap-4">
-              <SidebarTrigger className="md:hidden" />
-              <h1 className="text-xl md:text-2xl font-semibold text-gray-800">{pageTitle}</h1>
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+        <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-30">
+           <div className="flex items-center gap-2">
+              <MobileNavSheet />
+              <Link href="/dashboard" className="hidden md:flex items-center gap-2 font-semibold">
+                <Logo className="h-6 w-6" />
+                <span className="text-lg">Сімейні фінанси</span>
+              </Link>
+           </div>
+           
+            <div className="hidden md:flex flex-1 justify-center">
+              <DesktopNav />
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex w-full flex-1 md:w-auto md:flex-initial justify-end items-center gap-2">
                 <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                       <UserAvatar />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end">
-                    <DropdownMenuLabel>
-                        <p>{familyMember?.name}</p>
-                        <p className="text-xs text-muted-foreground font-normal">{familyMember?.email}</p>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push('/settings')}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Налаштування</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Вийти</span>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="rounded-full">
+                           <UserAvatar />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end">
+                        <DropdownMenuLabel>
+                            <p>{familyMember?.name}</p>
+                            <p className="text-xs text-muted-foreground font-normal">{familyMember?.email}</p>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => router.push('/settings')}>
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Налаштування</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleLogout}>
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Вийти</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-          </header>
-          
-          <main className="flex-1 p-4 md:p-6 mb-16 md:mb-0">
-              {children}
-          </main>
+        </header>
 
-          <nav className={cn("fixed bottom-0 left-0 right-0 h-16 bg-white border-t z-10 md:hidden transition-transform duration-300",
-            !headerVisible && isMobile ? "translate-y-full" : "translate-y-0"
-          )}>
-            <div className="flex justify-around items-center h-full">
-              {menuItems.map((item) => {
-                const isActive = getIsActive(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex flex-col items-center justify-center gap-1 w-full h-full",
-                      isActive ? "text-primary" : "text-muted-foreground"
-                    )}
-                  >
-                    <item.icon className="h-6 w-6" />
-                    <span className="text-xs">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </nav>
-        </div>
-      </div>
-    </SidebarProvider>
+        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+            {children}
+        </main>
+    </div>
   );
 }
