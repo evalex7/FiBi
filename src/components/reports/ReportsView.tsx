@@ -97,7 +97,7 @@ export default function ReportsView() {
       const totalMonths = differenceInMonths(now, earliestTransactionDate) + 1;
       
       options.push({ value: 'last_3_months', label: 'Останні 3 місяці' });
-      options.push({ value: 'last_6_months', label: 'Останні 6 місяців' });
+      options.push({ value: 'last_6_months', label: 'Останні 6 місяці' });
       options.push({ value: 'last_12_months', label: 'Останній рік' });
     }
     
@@ -296,14 +296,13 @@ export default function ReportsView() {
                   <PieChart>
                     <ChartTooltip
                       content={<ChartTooltipContent
-                        formatter={(value, name, item) => {
-                          return (
-                            <div className="flex items-center gap-2">
-                              <span>{item.payload.name}</span>
+                        formatter={(value, name, item) => (
+                            <div>
+                                <p className="font-medium">{item.payload.name}</p>
+                                <p className="text-muted-foreground">{new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(value as number)}</p>
                             </div>
-                          );
-                        }}
-                        labelFormatter={(value, payload) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(payload[0].value as number)}
+                        )}
+                        nameKey="name"
                       />}
                     />
                     <Pie
