@@ -215,7 +215,7 @@ export default function ReportsView() {
         return acc;
     }, {} as ChartConfig);
 
-    return { data: chartData, config: chartConfig };
+    return { data: chartData, config: pieChartConfig };
   }, [transactions, isLoading]);
 
 
@@ -297,6 +297,10 @@ export default function ReportsView() {
                     <ChartTooltip
                       content={<ChartTooltipContent
                         nameKey="name"
+                        formatter={(value, name, item, index) => {
+                            // This formatter will only return the label (name)
+                            return <div className="flex items-center gap-2"><span>{item.payload.name}</span></div>;
+                        }}
                         labelFormatter={(value, payload) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(payload[0].value as number)}
                       />}
                     />
