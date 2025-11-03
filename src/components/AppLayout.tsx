@@ -55,6 +55,8 @@ export default function AppLayout({
   const router = useRouter();
 
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -68,6 +70,26 @@ export default function AppLayout({
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
+  
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+        // Scrolling down
+        setIsHeaderVisible(false);
+      } else {
+        // Scrolling up
+        setIsHeaderVisible(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMobile]);
 
   const handleLogout = () => {
     auth.signOut();
@@ -201,31 +223,10 @@ export default function AppLayout({
   );
 
   const MobileBottomNav = () => {
-    const [isVisible, setIsVisible] = useState(true);
-    const lastScrollY = useRef(0);
-  
-    useEffect(() => {
-      const handleScroll = () => {
-        const currentScrollY = window.scrollY;
-        if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
-          // Scrolling down
-          setIsVisible(false);
-        } else {
-          // Scrolling up
-          setIsVisible(true);
-        }
-        lastScrollY.current = currentScrollY;
-      };
-  
-      window.addEventListener('scroll', handleScroll, { passive: true });
-  
-      return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-  
     return (
       <div className={cn(
           "md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t transition-transform duration-300",
-          isVisible ? "translate-y-0" : "translate-y-full"
+          isHeaderVisible ? "translate-y-0" : "translate-y-full"
       )}>
         <div className="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
           {menuItems.map((item) => (
@@ -248,7 +249,10 @@ export default function AppLayout({
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
-        <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-30">
+        <header className={cn(
+          "sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-30 transition-transform duration-300",
+          isMobile && !isHeaderVisible && "-translate-y-full"
+        )}>
            <div className="flex items-center gap-2">
               <MobileNavSheet />
               <Link href="/dashboard" className="hidden md:flex items-center gap-2 font-semibold">
