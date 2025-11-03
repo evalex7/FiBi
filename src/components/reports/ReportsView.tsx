@@ -80,6 +80,7 @@ export default function ReportsView() {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const { categories, isLoading: isCategoriesLoading } = useCategories();
   const [period, setPeriod] = useState('0');
+  const [categoryPeriod, setCategoryPeriod] = useState('all');
   const [periodOptions, setPeriodOptions] = useState<{value: string, label: string}[]>([]);
   const [earliestTransactionDate, setEarliestTransactionDate] = useState<Date | null>(null);
 
@@ -203,9 +204,38 @@ export default function ReportsView() {
   
   const { data: categoryData, config: pieChartConfig } = useMemo(() => {
     if (isLoading) return { data: [], config: {} };
+
+    const now = new Date();
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+    
+    switch (categoryPeriod) {
+        case '0':
+            startDate = startOfMonth(now);
+            endDate = endOfMonth(now);
+            break;
+        case 'prev_month':
+            const prevMonth = subMonths(now, 1);
+            startDate = startOfMonth(prevMonth);
+            endDate = endOfMonth(prevMonth);
+            break;
+        case 'all':
+        default:
+            // No date filtering needed
+            break;
+    }
+
+
     const dataMap: { [key: string]: number } = {};
     transactions
-      .filter((t) => t.type === 'expense')
+      .filter((t) => {
+        if (t.type !== 'expense') return false;
+        if (startDate && endDate) {
+             const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
+             return transactionDate >= startDate && transactionDate <= endDate;
+        }
+        return true;
+      })
       .forEach((t) => {
         dataMap[t.category] = (dataMap[t.category] || 0) + t.amount;
       });
@@ -225,7 +255,7 @@ export default function ReportsView() {
     }, {} as ChartConfig);
 
     return { data: chartData, config: chartConfig };
-  }, [transactions, isLoading]);
+  }, [transactions, isLoading, categoryPeriod]);
 
 
   return (
@@ -300,8 +330,20 @@ export default function ReportsView() {
           <CardHeader>
             <CardTitle>Витрати по категоріях</CardTitle>
             <CardDescription>
-              Розбивка ваших витрат за весь час.
+              Розбивка ваших витрат за обраний період.
             </CardDescription>
+             <div className="pt-2">
+              <Select value={categoryPeriod} onValueChange={setCategoryPeriod}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Оберіть період" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">За весь час</SelectItem>
+                  <SelectItem value="0">Поточний місяць</SelectItem>
+                  <SelectItem value="prev_month">Попередній місяць</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
             {isLoading || categoryData.length === 0 ? (
@@ -315,7 +357,7 @@ export default function ReportsView() {
                     <ChartTooltip
                       content={
                         <ChartTooltipContent
-                          formatter={(value, name, item) => (
+                           formatter={(value, name, item) => (
                             <div>
                               <p className="font-medium">{item.payload.name}</p>
                               <p className="text-muted-foreground">
