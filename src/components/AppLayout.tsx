@@ -154,14 +154,14 @@ export default function AppLayout({
   );
 
   const DesktopNav = () => (
-    <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+     <nav className="hidden md:flex items-center gap-1 rounded-lg bg-muted p-1">
       {menuItems.map((item) => (
         <Link 
           key={item.href} 
           href={item.href}
           className={cn(
-            "transition-colors hover:text-foreground",
-            getIsActive(item.href) ? "text-foreground" : "text-muted-foreground"
+            "rounded-md px-3 py-1 text-sm font-medium transition-colors hover:text-foreground",
+            getIsActive(item.href) ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
           )}
         >
           {item.label}

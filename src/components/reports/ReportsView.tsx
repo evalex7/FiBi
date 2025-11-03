@@ -256,7 +256,7 @@ export default function ReportsView() {
                 Недостатньо даних для відображення графіка.
               </div>
             ) : (
-            <ChartContainer config={barChartConfig} className="h-[300px] w-full">
+            <ChartContainer config={barChartConfig} className="h-[400px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }}>
                     <XAxis dataKey='month' tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
@@ -291,12 +291,13 @@ export default function ReportsView() {
                 Немає даних про витрати для відображення.
               </div>
             ) : (
-              <ChartContainer config={pieChartConfig} className="w-full h-[400px] flex flex-col items-center justify-center">
-                <ResponsiveContainer width="100%" height={250}>
+              <ChartContainer config={pieChartConfig} className="w-full h-[450px] flex flex-col items-center justify-center">
+                <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <ChartTooltip
                       content={<ChartTooltipContent
-                        formatter={(value) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(value as number)}
+                        nameKey="name"
+                        labelFormatter={(value, payload) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(payload[0].value as number)}
                       />}
                     />
                     <Pie
@@ -305,8 +306,8 @@ export default function ReportsView() {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      outerRadius={80}
-                      innerRadius={50}
+                      outerRadius={100}
+                      innerRadius={60}
                       paddingAngle={2}
                       labelLine={false}
                       label={({
