@@ -202,7 +202,7 @@ export default function AppLayout({
 
   const MobileBottomNav = () => (
     <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t">
-        <div className="grid h-full max-w-lg grid-cols-5 mx-auto font-medium">
+        <div className="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
              {menuItems.map((item) => (
                 <Link
                   key={item.href}
@@ -216,16 +216,6 @@ export default function AppLayout({
                   <span className="text-xs">{item.label}</span>
                 </Link>
               ))}
-              <Link
-                href="/settings"
-                className={cn(
-                    "inline-flex flex-col items-center justify-center px-2 hover:bg-muted group",
-                    getIsActive('/settings') ? "text-primary" : "text-muted-foreground"
-                )}
-                >
-                <Settings className="w-5 h-5 mb-1" />
-                <span className="text-xs">Налаштування</span>
-              </Link>
         </div>
     </div>
   );
