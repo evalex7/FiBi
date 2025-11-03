@@ -264,7 +264,7 @@ export default function ReportsView() {
                     <ChartTooltip
                         cursor={false}
                         content={<ChartTooltipContent 
-                            formatter={(value) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(value as number)}
+                            labelFormatter={(value, payload) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(payload[0].value as number)}
                             indicator="dot" 
                         />}
                     />
@@ -292,7 +292,7 @@ export default function ReportsView() {
               </div>
             ) : (
               <ChartContainer config={pieChartConfig} className="w-full h-[450px] flex flex-col items-center justify-center">
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <ChartTooltip
                       content={<ChartTooltipContent
@@ -306,8 +306,8 @@ export default function ReportsView() {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      outerRadius={100}
-                      innerRadius={60}
+                      outerRadius={120}
+                      innerRadius={80}
                       paddingAngle={2}
                       labelLine={false}
                       label={({
@@ -343,9 +343,9 @@ export default function ReportsView() {
                       <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                     </Pie>
+                    <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
                   </PieChart>
                 </ResponsiveContainer>
-                <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
               </ChartContainer>
             )}
           </CardContent>
