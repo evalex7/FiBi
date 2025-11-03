@@ -18,7 +18,7 @@ import { Logo } from './Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from './ui/skeleton';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from './ui/button';
 import { doc } from 'firebase/firestore';
 import type { FamilyMember } from '@/lib/types';
@@ -200,25 +200,51 @@ export default function AppLayout({
     </Sheet>
   );
 
-  const MobileBottomNav = () => (
-    <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t">
+  const MobileBottomNav = () => {
+    const [isVisible, setIsVisible] = useState(true);
+    const lastScrollY = useRef(0);
+  
+    useEffect(() => {
+      const handleScroll = () => {
+        const currentScrollY = window.scrollY;
+        if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+          // Scrolling down
+          setIsVisible(false);
+        } else {
+          // Scrolling up
+          setIsVisible(true);
+        }
+        lastScrollY.current = currentScrollY;
+      };
+  
+      window.addEventListener('scroll', handleScroll, { passive: true });
+  
+      return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+  
+    return (
+      <div className={cn(
+          "md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t transition-transform duration-300",
+          isVisible ? "translate-y-0" : "translate-y-full"
+      )}>
         <div className="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
-             {menuItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "inline-flex flex-col items-center justify-center px-2 hover:bg-muted group",
-                    getIsActive(item.href) ? "text-primary" : "text-muted-foreground"
-                  )}
-                >
-                  <item.icon className="w-5 h-5 mb-1" />
-                  <span className="text-xs">{item.label}</span>
-                </Link>
-              ))}
+          {menuItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "inline-flex flex-col items-center justify-center px-2 hover:bg-muted group",
+                getIsActive(item.href) ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              <item.icon className="w-5 h-5 mb-1" />
+              <span className="text-xs">{item.label}</span>
+            </Link>
+          ))}
         </div>
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -268,5 +294,3 @@ export default function AppLayout({
     </div>
   );
 }
-
-    
