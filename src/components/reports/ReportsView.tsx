@@ -46,6 +46,15 @@ const formatCurrency = (amount: number) => {
   return `${amount}`;
 }
 
+const formatCurrencyTooltip = (amount: number) => {
+  return new Intl.NumberFormat('uk-UA', {
+    style: 'currency',
+    currency: 'UAH',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
 const barChartConfig = {
   income: { label: "Дохід", color: "hsl(var(--chart-2))" },
   expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
@@ -262,11 +271,18 @@ export default function ReportsView() {
                     <XAxis dataKey='month' tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                     <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                     <ChartTooltip
-                        cursor={false}
-                        content={<ChartTooltipContent 
-                            labelFormatter={(value, payload) => new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(payload[0].value as number)}
-                            indicator="dot" 
-                        />}
+                      cursor={false}
+                      content={
+                        <ChartTooltipContent
+                          labelClassName="font-bold"
+                          formatter={(value, name) => (
+                            <div className="flex items-center justify-between w-full">
+                              <span>{barChartConfig[name as keyof typeof barChartConfig]?.label}</span>
+                              <span className="font-medium ml-4">{formatCurrencyTooltip(value as number)}</span>
+                            </div>
+                          )}
+                        />
+                      }
                     />
                     <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
                     <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={60} />
@@ -295,15 +311,19 @@ export default function ReportsView() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <ChartTooltip
-                      content={<ChartTooltipContent
-                        formatter={(value, name, item) => (
+                      content={
+                        <ChartTooltipContent
+                          formatter={(value, name, item) => (
                             <div>
-                                <p className="font-medium">{item.payload.name}</p>
-                                <p className="text-muted-foreground">{new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH' }).format(value as number)}</p>
+                              <p className="font-medium">{item.payload.name}</p>
+                              <p className="text-muted-foreground">
+                                {formatCurrencyTooltip(value as number)}
+                              </p>
                             </div>
-                        )}
-                        nameKey="name"
-                      />}
+                          )}
+                          nameKey="name"
+                        />
+                      }
                     />
                     <Pie
                       data={categoryData}
