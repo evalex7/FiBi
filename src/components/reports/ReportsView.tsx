@@ -199,7 +199,7 @@ export default function ReportsView() {
         return aDate.getTime() - bDate.getTime();
     });
 
-  }, [transactions, period, isLoading, earliestTransactionDate]);
+  }, [transactions, period, isLoading]);
   
   const { data: categoryData, config: pieChartConfig } = useMemo(() => {
     if (isLoading) return { data: [], config: {} };
@@ -275,12 +275,14 @@ export default function ReportsView() {
                       content={
                         <ChartTooltipContent
                           labelClassName="font-bold"
-                          formatter={(value, name) => (
-                            <div className="flex items-center justify-between w-full">
-                              <span>{barChartConfig[name as keyof typeof barChartConfig]?.label}</span>
-                              <span className="font-medium ml-4">{formatCurrencyTooltip(value as number)}</span>
-                            </div>
-                          )}
+                          formatter={(value, name, item) => {
+                            return (
+                                <div className="flex items-center justify-between w-full">
+                                    <span className="capitalize">{barChartConfig[name as keyof typeof barChartConfig]?.label}</span>
+                                    <span className="font-medium ml-4">{formatCurrencyTooltip(value as number)}</span>
+                                </div>
+                            )
+                          }}
                         />
                       }
                     />
