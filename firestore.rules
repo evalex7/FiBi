@@ -28,10 +28,10 @@ service cloud.firestore {
 
     /**
      * @description Rules for user profiles. Any signed-in user can read any profile,
-     *              but can only write to their own. Listing all users is disallowed.
+     *              but can only write to their own. Listing all users is still disallowed for broad queries.
      */
     match /users/{userId} {
-      allow get: if isSignedIn();
+      allow read: if isSignedIn();
       allow create, update, delete: if isSignedIn() && request.auth.uid == userId;
       allow list: if false; // Disallow listing all users for security.
     }
