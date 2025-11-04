@@ -81,8 +81,11 @@ service cloud.firestore {
      * @description Rules for goals. Any authenticated user can read all goals.
      *              Only the creator can create, update, or delete a goal.
      */
+    match /goals {
+      allow list: if isSignedIn();
+    }
     match /goals/{goalId} {
-      allow read, list: if isSignedIn();
+      allow read: if isSignedIn();
       allow create: if isOwnerOfNewData(request);
       allow update, delete: if isOwner(resource);
     }
