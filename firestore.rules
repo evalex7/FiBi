@@ -25,67 +25,79 @@ service cloud.firestore {
     function isOwnerOfNewData(request) {
         return isSignedIn() && request.auth.uid == request.resource.data.familyMemberId;
     }
+    
+    /**
+     * @description Generic rule to check if a user can read data (signed in).
+     */
+    function canReadData() {
+        return isSignedIn();
+    }
 
     /**
-     * @description Rules for user profiles. Any signed-in user can read any profile,
-     *              but can only write to their own. Listing all users is still disallowed for broad queries.
+     * @description Rules for user profiles.
      */
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow get: if canReadData();
       allow create, update, delete: if isSignedIn() && request.auth.uid == userId;
       allow list: if false; // Disallow listing all users for security.
     }
 
     /**
-     * @description Rules for categories. Any authenticated user can read all categories.
-     *              Only the creator can create, update, or delete a category.
-     *              isCommon categories are an exception and can be managed by anyone (future enhancement).
+     * @description Rules for categories.
      */
+    match /categories {
+        allow list: if canReadData();
+    }
     match /categories/{categoryId} {
-      allow read: if isSignedIn();
+      allow get: if canReadData();
       allow create: if isOwnerOfNewData(request);
       allow update, delete: if isOwner(resource);
     }
     
     /**
-     * @description Rules for expenses. Any authenticated user can read all expenses.
-     *              Only the creator can create, update, or delete an expense.
+     * @description Rules for expenses.
      */
+    match /expenses {
+       allow list: if canReadData();
+    }
     match /expenses/{expenseId} {
-      allow read, list: if isSignedIn();
+      allow get: if canReadData();
       allow create: if isOwnerOfNewData(request);
       allow update, delete: if isOwner(resource);
     }
 
     /**
-     * @description Rules for budgets. Any authenticated user can read all budgets.
-     *              Only the creator can create, update, or delete a budget.
+     * @description Rules for budgets.
      */
+    match /budgets {
+        allow list: if canReadData();
+    }
     match /budgets/{budgetId} {
-      allow read, list: if isSignedIn();
+      allow get: if canReadData();
       allow create: if isOwnerOfNewData(request);
       allow update, delete: if isOwner(resource);
     }
     
     /**
-     * @description Rules for recurring payments. Any authenticated user can read all payments.
-     *              Only the creator can create, update, or delete a payment.
+     * @description Rules for recurring payments.
      */
+    match /payments {
+        allow list: if canReadData();
+    }
     match /payments/{paymentId} {
-       allow read, list: if isSignedIn();
+       allow get: if canReadData();
        allow create: if isOwnerOfNewData(request);
        allow update, delete: if isOwner(resource);
     }
 
     /**
-     * @description Rules for goals. Any authenticated user can read all goals.
-     *              Only the creator can create, update, or delete a goal.
+     * @description Rules for goals.
      */
     match /goals {
-      allow list: if isSignedIn();
+      allow list: if canReadData();
     }
     match /goals/{goalId} {
-      allow read: if isSignedIn();
+      allow get: if canReadData();
       allow create: if isOwnerOfNewData(request);
       allow update, delete: if isOwner(resource);
     }
