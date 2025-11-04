@@ -112,11 +112,8 @@ export default function ReportsView() {
     ];
     
     if (earliestTransactionDate) {
-      const now = new Date();
-      const totalMonths = differenceInMonths(now, earliestTransactionDate) + 1;
-      
       options.push({ value: 'last_3_months', label: 'Останні 3 місяці' });
-      options.push({ value: 'last_6_months', label: 'Останні 6 місяці' });
+      options.push({ value: 'last_6_months', label: 'Останні 6 місяців' });
       options.push({ value: 'last_12_months', label: 'Останній рік' });
     }
     
@@ -131,7 +128,6 @@ export default function ReportsView() {
     const now = new Date();
     let startDate: Date;
     let endDate: Date = endOfMonth(now);
-    let aggregate = false;
     let label = '';
     
     const shouldAggregate = ['all', 'last_3_months', 'last_6_months', 'last_12_months'].includes(period);
@@ -160,7 +156,14 @@ export default function ReportsView() {
             break;
         case 'all':
             label = 'За весь час';
+            if (earliestTransactionDate) {
+              startDate = earliestTransactionDate;
+            } else {
+              startDate = new Date(0); // fallback
+            }
             break;
+        default:
+            startDate = startOfMonth(now);
     }
 
 
@@ -209,7 +212,7 @@ export default function ReportsView() {
         return aDate.getTime() - bDate.getTime();
     });
 
-  }, [transactions, period, isLoading]);
+  }, [transactions, period, isLoading, earliestTransactionDate]);
   
   const { data: categoryData, config: pieChartConfig } = useMemo(() => {
     if (isLoading) return { data: [], config: {} };
@@ -345,17 +348,7 @@ export default function ReportsView() {
                 </SelectTrigger>
                 <SelectContent>
                   {periodOptions.map(option => {
-                      let disabled = false;
-                      if (earliestTransactionDate) {
-                        const totalMonths = differenceInMonths(new Date(), earliestTransactionDate) + 1;
-                        if (option.value === 'last_3_months' && totalMonths < 3) disabled = true;
-                        if (option.value === 'last_6_months' && totalMonths < 6) disabled = true;
-                        if (option.value === 'last_12_months' && totalMonths < 12) disabled = true;
-                      } else if (['last_3_months', 'last_6_months', 'last_12_months'].includes(option.value)) {
-                        disabled = true;
-                      }
-
-                     return <SelectItem key={option.value} value={option.value} disabled={disabled}>{option.label}</SelectItem>
+                     return <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                   })}
                 </SelectContent>
               </Select>

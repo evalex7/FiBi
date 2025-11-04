@@ -12,7 +12,6 @@ import { useCategories } from '@/contexts/categories-context';
 import { Timestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '../ui/skeleton';
-import { DayPicker, DayProps } from 'react-day-picker';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('uk-UA', {
@@ -50,7 +49,9 @@ export default function PaymentsCalendar() {
   const paymentDays = useMemo(() => {
       const days: Date[] = [];
       paymentsByDay.forEach((_, dayKey) => {
-          days.push(new Date(dayKey));
+          // Adjust for timezone differences by creating date in UTC
+          const date = new Date(dayKey + 'T00:00:00');
+          days.push(date);
       });
       return days;
   }, [paymentsByDay]);
@@ -86,7 +87,7 @@ export default function PaymentsCalendar() {
           month={currentMonth}
           onMonthChange={setCurrentMonth}
           locale={uk}
-          className="p-3 w-full"
+          className="p-0 sm:p-3 w-full"
           modifiers={{ hasPayment: paymentDays }}
           modifiersClassNames={{
             hasPayment: 'bg-accent/50 rounded-full',
@@ -96,17 +97,17 @@ export default function PaymentsCalendar() {
             month: "space-y-4 w-full",
             table: "w-full border-collapse space-y-1",
             head_row: "flex",
-            head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem]",
+            head_cell: "text-muted-foreground rounded-md w-full justify-center flex font-normal text-[0.8rem]",
             row: "flex w-full mt-2",
             cell: cn(
-              "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
+              "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 flex-1",
               "[&:has([aria-selected])]:bg-accent",
               "[&:has([aria-selected].day-outside)]:bg-accent/50",
               "[&:has([aria-selected].day-range-end)]:rounded-r-md"
             ),
              day: cn(
-              "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-normal ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground h-9 w-9 p-0",
-              "aria-selected:opacity-100"
+              "h-10 w-10 p-0 font-normal aria-selected:opacity-100",
+              "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent hover:text-accent-foreground"
             ),
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
             day_today: "bg-muted text-foreground",

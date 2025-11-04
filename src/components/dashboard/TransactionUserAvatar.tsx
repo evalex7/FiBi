@@ -10,7 +10,10 @@ type TransactionUserAvatarProps = {
     userId?: string;
 }
 
-const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('');
+const getInitials = (name: string) => {
+    if (!name) return '';
+    return name.split(' ').map(n => n[0]).join('');
+}
 
 export default function TransactionUserAvatar({ userId }: TransactionUserAvatarProps) {
     const firestore = useFirestore();
