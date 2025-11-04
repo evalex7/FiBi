@@ -373,33 +373,8 @@ export default function ReportsView() {
                     <XAxis dataKey='month' tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                     <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                     <ChartTooltip
-                      content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          const activePayload = payload.find(p => p.payload.active);
-                          return (
-                            <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
-                              <div className="font-medium">{label}</div>
-                              {payload.map(item => (
-                                <div key={item.dataKey} className="flex w-full items-center gap-2">
-                                  <div
-                                    className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-                                    style={{ backgroundColor: item.color }}
-                                  />
-                                  <div className="flex flex-1 justify-between">
-                                    <span className="text-muted-foreground">
-                                      {barChartConfig[item.dataKey as keyof typeof barChartConfig]?.label || item.name}
-                                    </span>
-                                    <span className="font-medium">
-                                      {formatCurrencyTooltip(item.value as number)}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
+                      cursor={false}
+                      content={<ChartTooltipContent />}
                     />
                     <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
                     <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={60} />
