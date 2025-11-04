@@ -35,7 +35,7 @@ export default function AiSuggestions() {
 
     const startDate = startOfDay(subMonths(new Date(), 12));
 
-    const spendingPatterns = transactions
+    const spendingData = transactions
       .filter((t) => {
         const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
         return t.type === 'expense' && transactionDate >= startDate;
@@ -44,12 +44,10 @@ export default function AiSuggestions() {
         acc[t.category] = (acc[t.category] || 0) + t.amount;
         return acc;
       }, {} as Record<string, number>);
+    
+    const spendingPatterns = JSON.stringify(spendingData);
 
-    const spendingPatternsText = Object.entries(spendingPatterns)
-      .map(([category, amount]) => `${category}: ${amount.toFixed(2)} UAH`)
-      .join(', ');
-
-    if (!spendingPatternsText) {
+    if (Object.keys(spendingData).length === 0) {
         toast({
             variant: 'destructive',
             title: 'Немає даних',
@@ -61,7 +59,7 @@ export default function AiSuggestions() {
 
     try {
       const response = await budgetAdjustmentSuggestions({
-        spendingPatterns: spendingPatternsText,
+        spendingPatterns: spendingPatterns,
         financialGoals,
       });
       setSuggestions(response.suggestions);

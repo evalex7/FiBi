@@ -21,10 +21,10 @@ const budgetAdjustmentSuggestionsPrompt = ai.definePrompt({
   output: {schema: BudgetAdjustmentSuggestionsOutputSchema},
   prompt: `You are a personal finance advisor. Analyze the user's spending patterns and financial goals to provide budget adjustment suggestions.
 
-Spending Patterns: {{{spendingPatterns}}}
+Spending Patterns (as a JSON object): {{{spendingPatterns}}}
 Financial Goals: {{{financialGoals}}}
 
-Provide clear and actionable suggestions to help the user save money and optimize their budget allocation. Focus on specific categories and explain the reasoning behind each suggestion.`,
+Provide clear and actionable suggestions to help the user save money and optimize their budget allocation. Focus on specific categories and explain the reasoning behind each suggestion. The response should be in Ukrainian.`,
 });
 
 export const budgetAdjustmentSuggestionsFlow = ai.defineFlow(
