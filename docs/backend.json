@@ -147,6 +147,53 @@
         "startDate",
         "endDate"
       ]
+    },
+    "RecurringPayment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RecurringPayment",
+      "type": "object",
+      "description": "Represents a recurring payment or subscription.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the recurring payment."
+        },
+        "familyMemberId": {
+          "type": "string",
+          "description": "The UID of the family member who created the payment."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the payment (e.g., Netflix Subscription)."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the payment."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the payment."
+        },
+        "frequency": {
+          "type": "string",
+          "description": "How often the payment occurs.",
+          "enum": ["monthly", "quarterly", "yearly"]
+        },
+        "nextDueDate": {
+          "type": "string",
+          "description": "The next date the payment is due.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "familyMemberId",
+        "description",
+        "amount",
+        "category",
+        "frequency",
+        "nextDueDate"
+      ]
     }
   },
   "auth": {
