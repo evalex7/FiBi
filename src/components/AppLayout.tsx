@@ -12,7 +12,6 @@ import {
   User as UserIcon,
   Settings,
   Menu,
-  Goal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
@@ -37,7 +36,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
   { href: '/budgets', label: 'Бюджети', icon: Target },
-  { href: '/goals', label: 'Цілі', icon: Goal },
   { href: '/payments', label: 'Платежі', icon: Repeat },
   { href: '/reports', label: 'Звіти', icon: AreaChart },
 ];
@@ -229,7 +227,7 @@ export default function AppLayout({
     const mobileMenuItems = [
       menuItems.find(i => i.href === '/dashboard'),
       menuItems.find(i => i.href === '/budgets'),
-      menuItems.find(i => i.href === '/goals'),
+      menuItems.find(i => i.href === '/payments'),
       menuItems.find(i => i.href === '/reports'),
     ].filter(Boolean) as typeof menuItems;
 

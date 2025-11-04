@@ -147,47 +147,6 @@
         "startDate",
         "endDate"
       ]
-    },
-    "Goal": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Goal",
-      "type": "object",
-      "description": "Represents a financial goal for a user or family.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the goal."
-        },
-        "familyMemberId": {
-          "type": "string",
-          "description": "The UID of the family member who created the goal."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name or description of the goal."
-        },
-        "targetAmount": {
-          "type": "number",
-          "description": "The total amount of money to be saved for the goal."
-        },
-        "currentAmount": {
-          "type": "number",
-          "description": "The amount of money currently saved towards the goal."
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The date when the goal was created."
-        }
-      },
-      "required": [
-        "id",
-        "familyMemberId",
-        "name",
-        "targetAmount",
-        "currentAmount",
-        "createdAt"
-      ]
     }
   },
   "auth": {
@@ -274,22 +233,6 @@
             {
               "name": "paymentId",
               "description": "The unique ID of the recurring payment."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/goals/{goalId}",
-        "definition": {
-          "entityName": "Goal",
-          "schema": {
-            "$ref": "#/backend/entities/Goal"
-          },
-          "description": "Stores user financial goals. The 'familyMemberId' field indicates the owner.",
-          "params": [
-            {
-              "name": "goalId",
-              "description": "The unique ID of the goal."
             }
           ]
         }

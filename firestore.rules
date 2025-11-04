@@ -47,13 +47,5 @@ service cloud.firestore {
     match /payments/{paymentId} {
         allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
-    
-    match /goals/{document=**} {
-      allow read: if isSignedIn();
-    }
-    
-    match /goals/{goalId} {
-        allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
-    }
   }
 }
