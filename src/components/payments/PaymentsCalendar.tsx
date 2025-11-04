@@ -51,7 +51,7 @@ export default function PaymentsCalendar() {
     return (
       <div className="relative h-full w-full flex items-center justify-center">
         {format(date, 'd')}
-        {hasPayments && <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full bg-primary" />}
+        {hasPayments && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full bg-primary" />}
       </div>
     );
   };
@@ -70,11 +70,11 @@ export default function PaymentsCalendar() {
           month={currentMonth}
           onMonthChange={setCurrentMonth}
           locale={uk}
-          className="p-3"
+          className="p-0 sm:p-3"
           classNames={{
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-            day: "h-12 w-12 text-base rounded-md",
-            head_cell: "text-muted-foreground rounded-md w-12 font-normal text-sm",
+            day: "h-10 w-10 sm:h-12 sm:w-12 text-base rounded-md",
+            head_cell: "text-muted-foreground rounded-md w-10 sm:w-12 font-normal text-[0.8rem]",
             cell: 'w-full',
           }}
           components={{
