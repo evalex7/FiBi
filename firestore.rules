@@ -62,7 +62,7 @@ service cloud.firestore {
      *              Only the creator can create, update, or delete a budget.
      */
     match /budgets/{budgetId} {
-      allow read: if isSignedIn();
+      allow read, list: if isSignedIn();
       allow create: if isOwnerOfNewData(request);
       allow update, delete: if isOwner(resource);
     }
@@ -72,7 +72,7 @@ service cloud.firestore {
      *              Only the creator can create, update, or delete a payment.
      */
     match /payments/{paymentId} {
-       allow read: if isSignedIn();
+       allow read, list: if isSignedIn();
        allow create: if isOwnerOfNewData(request);
        allow update, delete: if isOwner(resource);
     }
@@ -82,7 +82,7 @@ service cloud.firestore {
      *              Only the creator can create, update, or delete a goal.
      */
     match /goals/{goalId} {
-      allow read: if isSignedIn();
+      allow read, list: if isSignedIn();
       allow create: if isOwnerOfNewData(request);
       allow update, delete: if isOwner(resource);
     }
