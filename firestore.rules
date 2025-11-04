@@ -17,12 +17,12 @@ service cloud.firestore {
     }
 
     match /categories/{categoryId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && (resource.data.isPrivate == false || resource.data.familyMemberId == request.auth.uid);
       allow write: if isSignedIn();
     }
 
     match /expenses/{expenseId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && (resource.data.isPrivate == false || resource.data.familyMemberId == request.auth.uid);
       allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
 

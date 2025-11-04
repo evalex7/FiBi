@@ -8,6 +8,7 @@ export type Transaction = {
   type: 'income' | 'expense';
   category: string;
   familyMemberId?: string;
+  isPrivate?: boolean;
 };
 
 export type Budget = {
@@ -26,6 +27,7 @@ export type Category = {
   type: 'income' | 'expense';
   familyMemberId?: string;
   isCommon?: boolean;
+  isPrivate?: boolean;
 };
 
 export type RecurringPayment = {

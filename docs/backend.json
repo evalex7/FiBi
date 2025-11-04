@@ -61,6 +61,10 @@
         "description": {
           "type": "string",
           "description": "A description of the expense."
+        },
+        "isPrivate": {
+          "type": "boolean",
+          "description": "If true, the expense is only visible to the owner."
         }
       },
       "required": [
@@ -92,6 +96,10 @@
         "isCommon": {
           "type": "boolean",
           "description": "Indicates if the category is common to all family members or specific to one."
+        },
+        "isPrivate": {
+          "type": "boolean",
+          "description": "If true, this category and its expenses are only visible to the owner."
         }
       },
       "required": [

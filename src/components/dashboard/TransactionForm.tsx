@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy } from 'lucide-react';
+import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -29,6 +29,7 @@ import type { Transaction } from '@/lib/types';
 import { useCategories } from '@/contexts/categories-context';
 import { Timestamp } from 'firebase/firestore';
 import ReceiptCalculator from './ReceiptCalculator';
+import { Switch } from '../ui/switch';
 
 
 type TransactionFormProps = {
@@ -49,6 +50,7 @@ export default function TransactionForm({ transaction, onSave, initialAmount, is
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
   const isEditMode = !!transaction && !isCopy;
@@ -59,6 +61,7 @@ export default function TransactionForm({ transaction, onSave, initialAmount, is
         setAmount(String(transaction.amount));
         setDescription(transaction.description);
         setCategory(transaction.category);
+        setIsPrivate(transaction.isPrivate || false);
         
         if (isCopy) {
             setDate(new Date());
@@ -95,6 +98,7 @@ export default function TransactionForm({ transaction, onSave, initialAmount, is
         type,
         category,
         date,
+        isPrivate,
     };
 
     if (isEditMode && transaction) {
@@ -121,6 +125,7 @@ export default function TransactionForm({ transaction, onSave, initialAmount, is
         setDescription('');
         setCategory('');
         setDate(new Date());
+        setIsPrivate(false);
     }
   };
   
@@ -138,23 +143,34 @@ export default function TransactionForm({ transaction, onSave, initialAmount, is
   return (
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Тип</Label>
-              <RadioGroup
-                defaultValue="expense"
-                className="flex"
-                value={type}
-                onValueChange={(value: 'income' | 'expense') => setType(value)}
-              >
-                <Label className="flex items-center space-x-2 cursor-pointer">
-                  <RadioGroupItem value="expense" id="r2" />
-                  <span>Витрата</span>
-                </Label>
-                <Label className="flex items-center space-x-2 cursor-pointer">
-                  <RadioGroupItem value="income" id="r3" />
-                  <span>Дохід</span>
-                </Label>
-              </RadioGroup>
+            <div className="flex justify-between items-center">
+              <div className="grid gap-2">
+                <Label>Тип</Label>
+                <RadioGroup
+                  defaultValue="expense"
+                  className="flex"
+                  value={type}
+                  onValueChange={(value: 'income' | 'expense') => setType(value)}
+                >
+                  <Label className="flex items-center space-x-2 cursor-pointer">
+                    <RadioGroupItem value="expense" id="r2" />
+                    <span>Витрата</span>
+                  </Label>
+                  <Label className="flex items-center space-x-2 cursor-pointer">
+                    <RadioGroupItem value="income" id="r3" />
+                    <span>Дохід</span>
+                  </Label>
+                </RadioGroup>
+              </div>
+              <div className="flex items-center space-x-2">
+                {isPrivate ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                <Label htmlFor="is-private">Особиста</Label>
+                <Switch 
+                    id="is-private" 
+                    checked={isPrivate} 
+                    onCheckedChange={setIsPrivate} 
+                />
+             </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="grid gap-2">

@@ -69,7 +69,7 @@ export default function CategoryList() {
         <div className="space-y-2">
           {sortedCategories.map(category => {
             const Icon = categoryIcons[category.icon];
-            const isPersonal = category.isCommon === false;
+            const isPersonal = category.isPrivate;
             return (
               <div key={category.id} className="flex items-center gap-4 p-2 rounded-lg border">
                 {Icon && <div className="h-8 w-8 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}

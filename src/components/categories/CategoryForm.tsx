@@ -12,11 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { PlusCircle, Pencil, LucideIcon } from 'lucide-react';
+import { PlusCircle, Pencil, LucideIcon, Lock, Unlock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCategories } from '@/contexts/categories-context';
 import type { Category } from '@/lib/types';
 import { categoryIcons } from '@/lib/category-icons';
+import { Switch } from '../ui/switch';
 
 
 type CategoryFormProps = {
@@ -31,6 +32,7 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
     const [name, setName] = useState('');
     const [type, setType] = useState<Category['type']>('expense');
     const [icon, setIcon] = useState('');
+    const [isPrivate, setIsPrivate] = useState(false);
   
     const isEditMode = !!category;
   
@@ -39,6 +41,7 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
           setName(category.name);
           setType(category.type);
           setIcon(category.icon);
+          setIsPrivate(category.isPrivate || false);
       }
     }, [category, isEditMode]);
   
@@ -59,6 +62,7 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
           name,
           type,
           icon,
+          isPrivate,
       };
   
       if (isEditMode && category) {
@@ -81,6 +85,7 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
           setName('');
           setType('expense');
           setIcon('');
+          setIsPrivate(false);
       }
     };
   
@@ -127,6 +132,15 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
                   </SelectContent>
               </Select>
             </div>
+             <div className="flex items-center space-x-2">
+                {isPrivate ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                <Label htmlFor="is-private">Особиста категорія</Label>
+                <Switch 
+                    id="is-private" 
+                    checked={isPrivate} 
+                    onCheckedChange={setIsPrivate} 
+                />
+             </div>
             <Button type="submit" className="w-full">
                 {isEditMode ? <Pencil className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}
                 {isEditMode ? 'Зберегти зміни' : 'Додати категорію'}
