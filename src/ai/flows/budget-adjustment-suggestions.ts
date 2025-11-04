@@ -16,7 +16,7 @@ import {
 
 const budgetAdjustmentSuggestionsPrompt = ai.definePrompt({
   name: 'budgetAdjustmentSuggestionsPrompt',
-  model: 'gemini-pro',
+  model: 'gemini-1.5-flash-latest',
   input: {schema: BudgetAdjustmentSuggestionsInputSchema},
   output: {schema: BudgetAdjustmentSuggestionsOutputSchema},
   prompt: `You are a personal finance advisor. Analyze the user's spending patterns and financial goals to provide budget adjustment suggestions.
