@@ -1,10 +1,11 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, Scale } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTransactions } from '@/contexts/transactions-context';
 import { useState, useEffect } from 'react';
 import { startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('uk-UA', {
@@ -21,7 +22,8 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const { transactions } = useTransactions();
   const [formattedIncome, setFormattedIncome] = useState('');
   const [formattedExpenses, setFormattedExpenses] = useState('');
-  const [formattedBalance, setFormattedBalance] = useState('');
+  const [formattedNetIncome, setFormattedNetIncome] = useState('');
+  const [netIncome, setNetIncome] = useState(0);
 
   useEffect(() => {
     let periodStart: Date | null = null;
@@ -59,16 +61,11 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       { income: 0, expenses: 0 }
     );
       
-    const balance = transactions.reduce((acc, t) => {
-        if (t.type === 'income') {
-            return acc + t.amount;
-        }
-        return acc - t.amount;
-    }, 0);
-
+    const currentNetIncome = income - expenses;
+    setNetIncome(currentNetIncome);
     setFormattedIncome(formatCurrency(income));
     setFormattedExpenses(formatCurrency(expenses));
-    setFormattedBalance(formatCurrency(balance));
+    setFormattedNetIncome(formatCurrency(currentNetIncome));
   }, [transactions, selectedPeriod]);
 
 
@@ -96,12 +93,19 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
       <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium">Загальний залишок</CardTitle>
-          <Wallet className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-xs font-medium">Чистий дохід</CardTitle>
+          <Scale className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="text-xl font-bold">{formattedBalance}</div>
-          <p className="text-xs text-muted-foreground">Поточний залишок</p>
+          <div className={cn(
+            "text-xl font-bold",
+            netIncome > 0 && "text-green-600",
+            netIncome < 0 && "text-red-600"
+            )}
+          >
+            {formattedNetIncome}
+          </div>
+          <p className="text-xs text-muted-foreground">за обраний період</p>
         </CardContent>
       </Card>
     </div>
