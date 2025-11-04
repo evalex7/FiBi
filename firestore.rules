@@ -12,44 +12,28 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow get: if isSignedIn();
+      allow read: if isSignedIn();
       allow write: if request.auth.uid == userId;
     }
-    
-    match /users {
-       allow list: if isSignedIn();
-    }
 
-    match /categories/{document=**} {
-      allow read: if isSignedIn();
-    }
-    
     match /categories/{categoryId} {
-        allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
-    }
-
-    match /expenses/{document=**} {
       allow read: if isSignedIn();
+      allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
 
     match /expenses/{expenseId} {
-        allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
-    }
-
-    match /budgets/{document=**} {
       allow read: if isSignedIn();
+      allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
 
     match /budgets/{budgetId} {
-        allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
-    }
-    
-    match /payments/{document=**} {
       allow read: if isSignedIn();
+      allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
 
     match /payments/{paymentId} {
-        allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
   }
 }
