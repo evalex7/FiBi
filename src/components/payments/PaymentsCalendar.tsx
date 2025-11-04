@@ -62,7 +62,7 @@ export default function PaymentsCalendar() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
             <CardContent className="p-4">
-                <Skeleton className="h-[280px] w-full" />
+                <Skeleton className="h-[320px] w-full" />
             </CardContent>
         </Card>
         <Card>
@@ -81,7 +81,7 @@ export default function PaymentsCalendar() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card className="lg:col-span-2">
+      <Card className="lg:col-span-2 overflow-x-auto">
         <Calendar
           mode="single"
           selected={selectedDay}
@@ -89,16 +89,21 @@ export default function PaymentsCalendar() {
           month={currentMonth}
           onMonthChange={setCurrentMonth}
           locale={uk}
-          className="p-0 sm:p-3"
+          className="p-3 w-full"
           classNames={{
+            months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+            month: "space-y-4 w-full",
+            table: "w-full border-collapse space-y-1",
+            head_row: "flex",
+            head_cell: "text-muted-foreground rounded-md w-full font-normal text-[0.8rem]",
+            row: "flex w-full mt-2",
+            cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 w-full",
+            day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md",
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
             day_today: "bg-accent text-accent-foreground",
-            day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md",
-            head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-            cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
           }}
           components={{
-            Day: ({ date }) => <DayWithPayments date={date} />,
+            Day: DayWithPayments,
           }}
         />
       </Card>
