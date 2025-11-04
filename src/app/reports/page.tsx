@@ -586,24 +586,11 @@ export default function ReportsPage() {
 
   return (
     <AppLayout pageTitle="Звіти">
-      {isMobile ? (
-        <Tabs defaultValue="income-expense" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="income-expense">Дохід/Витрати</TabsTrigger>
-            <TabsTrigger value="categories">Категорії</TabsTrigger>
-            <TabsTrigger value="trends">Динаміка</TabsTrigger>
-          </TabsList>
-          <TabsContent value="income-expense">{incomeVsExpenseChart}</TabsContent>
-          <TabsContent value="categories">{categoryChart}</TabsContent>
-          <TabsContent value="trends">{trendChart}</TabsContent>
-        </Tabs>
-      ) : (
-        <div className="w-full space-y-6">
-          {incomeVsExpenseChart}
-          {categoryChart}
-          {trendChart}
-        </div>
-      )}
+      <div className="w-full space-y-6">
+        {incomeVsExpenseChart}
+        {categoryChart}
+        {trendChart}
+      </div>
     </AppLayout>
   );
 }
