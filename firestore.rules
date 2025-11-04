@@ -12,8 +12,12 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow get: if isSignedIn();
       allow write: if request.auth.uid == userId;
+    }
+    
+    match /users {
+       allow list: if isSignedIn();
     }
 
     match /categories/{document=**} {
