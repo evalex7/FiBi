@@ -79,12 +79,6 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     const categoryDocRef = doc(firestore, 'categories', updatedCategory.id);
     const { id, ...categoryData } = updatedCategory;
     
-    // This check is flawed if a user wants to edit a common category they don't own.
-    // Let's rely on security rules to enforce this.
-    // if (updatedCategory.familyMemberId !== user.uid) {
-    //     console.warn("Attempted to update a category by a non-owner.");
-    //     return;
-    // }
     setDocumentNonBlocking(categoryDocRef, categoryData, { merge: true }).catch(error => {
         errorEmitter.emit(
           'permission-error',
