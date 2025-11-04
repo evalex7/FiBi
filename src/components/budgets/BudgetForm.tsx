@@ -114,24 +114,20 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
   };
   
   const availableCategories = useMemo(() => {
-    const expenseCats = expenseCategories.filter(cat => cat.type === 'expense');
+    const allExpenseCats = expenseCategories.filter(cat => cat.type === 'expense');
 
-    if (isEditMode) {
-      // In edit mode, show the current category + categories that don't have a budget yet for the same period.
-      const currentCategoryInList = expenseCats.find(c => c.name === budget?.category);
-      const otherCategories = expenseCats.filter(cat => 
-        !budgets.some(b => b.category === cat.name && b.period === period && b.id !== budget?.id)
-      );
-      if (currentCategoryInList && !otherCategories.some(c => c.id === currentCategoryInList.id)) {
-        return otherCategories; // This logic was wrong.
+    return allExpenseCats.filter(cat => {
+      // Find if a budget already exists for this category and the currently selected period
+      const budgetExists = budgets.some(b => b.category === cat.name && b.period === period);
+      
+      // If we are in edit mode, we should always allow the category of the budget being edited.
+      if (isEditMode && cat.name === budget?.category) {
+        return true;
       }
-      return otherCategories;
-    }
-    
-    // In add mode, only show categories that don't have a budget yet for the same period.
-    return expenseCats.filter(cat => 
-      !budgets.some(b => b.category === cat.name && b.period === period)
-    );
+      
+      // Otherwise, only allow categories for which a budget does not already exist for the selected period.
+      return !budgetExists;
+    });
   }, [expenseCategories, budgets, period, isEditMode, budget]);
 
 
@@ -146,16 +142,10 @@ export default function BudgetForm({ budget, onSave }: BudgetFormProps) {
                         <SelectValue placeholder="Оберіть категорію" />
                     </SelectTrigger>
                     <SelectContent>
-                    {expenseCategories.filter(c => c.type === 'expense').map((cat) => {
-                       // In edit mode, allow current category. For others, check if a budget for that period already exists.
-                      if (isEditMode && budget?.category !== cat.name && budgets.some(b => b.category === cat.name && b.period === period && b.id !== budget.id)) {
-                        return null;
-                      }
-                      // In add mode, check if budget for that period already exists.
-                      if (!isEditMode && budgets.some(b => b.category === cat.name && b.period === period)) {
-                        return null;
-                      }
-                      
+                    {availableCategories.length === 0 && !isEditMode && (
+                      <div className="text-center text-sm text-muted-foreground p-4">Усі категорії для цього періоду вже мають бюджети.</div>
+                    )}
+                    {availableCategories.map((cat) => {
                       const Icon = categoryIcons[cat.icon];
                       return (
                         <SelectItem key={cat.id} value={cat.name}>
