@@ -17,7 +17,7 @@ import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { useTransactions } from '@/contexts/transactions-context';
 import { Button } from '../ui/button';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Copy } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,6 +57,7 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
   const [sortedTransactions, setSortedTransactions] = useState<FormattedTransaction[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [transactionToCopy, setTransactionToCopy] = useState<Transaction | null>(null);
 
   useEffect(() => {
     const formatCurrency = (amount: number) => {
@@ -99,10 +100,18 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
   const canEditOrDelete = (transaction: Transaction) => {
     return transaction.familyMemberId === user?.uid;
   };
+  
+  const handleCopy = (transaction: Transaction) => {
+    setTransactionToCopy(transaction);
+    setEditingTransaction(null); // Ensure edit dialog is closed
+  };
+  
+  const closeForms = () => {
+    setEditingTransaction(null);
+    setTransactionToCopy(null);
+  }
 
   const TransactionActions = ({ transaction }: { transaction: Transaction }) => {
-    if (!canEditOrDelete(transaction)) return <div className="h-8 w-8 p-0" />;
-
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -112,14 +121,22 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setEditingTransaction(transaction)}>
-            <Pencil className="mr-2 h-4 w-4" />
-            <span>Редагувати</span>
+          <DropdownMenuItem onClick={() => handleCopy(transaction)}>
+            <Copy className="mr-2 h-4 w-4" />
+            <span>Копіювати</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTransactionToDelete(transaction)} className="text-destructive">
-            <Trash2 className="mr-2 h-4 w-4" />
-            <span>Видалити</span>
-          </DropdownMenuItem>
+          {canEditOrDelete(transaction) && (
+            <>
+              <DropdownMenuItem onClick={() => setEditingTransaction(transaction)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                <span>Редагувати</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTransactionToDelete(transaction)} className="text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                <span>Видалити</span>
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     );
@@ -242,19 +259,23 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
           </>
         )}
       </CardContent>
-      {editingTransaction && (
-        <Dialog open={!!editingTransaction} onOpenChange={(isOpen) => !isOpen && setEditingTransaction(null)}>
+      
+      <Dialog open={!!editingTransaction || !!transactionToCopy} onOpenChange={(isOpen) => !isOpen && closeForms()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Редагувати транзакцію</DialogTitle>
+                    <DialogTitle>{editingTransaction ? 'Редагувати' : 'Копіювати'} транзакцію</DialogTitle>
                     <DialogDescription>
-                    Оновіть деталі вашої транзакції.
+                    {editingTransaction ? 'Оновіть деталі вашої транзакції.' : 'Створіть нову транзакцію на основі існуючої.'}
                     </DialogDescription>
                 </DialogHeader>
-                <TransactionForm transaction={editingTransaction} onSave={() => setEditingTransaction(null)} />
+                <TransactionForm
+                    transaction={editingTransaction || transactionToCopy || undefined}
+                    onSave={closeForms}
+                    isCopy={!!transactionToCopy}
+                />
             </DialogContent>
-        </Dialog>
-      )}
+      </Dialog>
+      
       <AlertDialog open={!!transactionToDelete} onOpenChange={(isOpen) => !isOpen && setTransactionToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator } from 'lucide-react';
+import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -35,10 +35,11 @@ type TransactionFormProps = {
     transaction?: Transaction;
     onSave?: () => void;
     initialAmount?: number;
+    isCopy?: boolean;
 };
 
 
-export default function TransactionForm({ transaction, onSave, initialAmount }: TransactionFormProps) {
+export default function TransactionForm({ transaction, onSave, initialAmount, isCopy = false }: TransactionFormProps) {
   const { addTransaction, updateTransaction } = useTransactions();
   const { categories: availableCategories } = useCategories();
   const [type, setType] = useState<Transaction['type']>('expense');
@@ -50,15 +51,18 @@ export default function TransactionForm({ transaction, onSave, initialAmount }: 
   const [category, setCategory] = useState('');
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
-  const isEditMode = !!transaction;
+  const isEditMode = !!transaction && !isCopy;
 
   useEffect(() => {
-    if (isEditMode && transaction) {
+    if (transaction) {
         setType(transaction.type);
         setAmount(String(transaction.amount));
         setDescription(transaction.description);
         setCategory(transaction.category);
-        if (transaction.date) {
+        
+        if (isCopy) {
+            setDate(new Date());
+        } else if (transaction.date) {
             const transactionDate = transaction.date instanceof Timestamp 
                 ? transaction.date.toDate() 
                 : new Date(transaction.date);
@@ -68,7 +72,7 @@ export default function TransactionForm({ transaction, onSave, initialAmount }: 
         setAmount(String(initialAmount));
         setType('expense');
     }
-  }, [transaction, isEditMode, initialAmount]);
+  }, [transaction, isEditMode, initialAmount, isCopy]);
 
 
   const categories = availableCategories.filter(c => c.type === type);
@@ -106,7 +110,7 @@ export default function TransactionForm({ transaction, onSave, initialAmount }: 
         addTransaction(transactionData);
         toast({
           title: 'Успіх!',
-          description: 'Вашу транзакцію було додано.',
+          description: `Вашу ${isCopy ? 'скопійовану ' : ''}транзакцію було додано.`,
         });
     }
     
@@ -119,6 +123,17 @@ export default function TransactionForm({ transaction, onSave, initialAmount }: 
         setDate(new Date());
     }
   };
+  
+  const getButtonContent = () => {
+    if (isEditMode) {
+        return <><Pencil className="mr-2 h-4 w-4" />Зберегти зміни</>;
+    }
+    if (isCopy) {
+        return <><Copy className="mr-2 h-4 w-4" />Створити копію</>;
+    }
+    return <><PlusCircle className="mr-2 h-4 w-4" />Додати транзакцію</>;
+  }
+
 
   return (
         <form onSubmit={handleSubmit}>
@@ -219,9 +234,8 @@ export default function TransactionForm({ transaction, onSave, initialAmount }: 
             </div>
           </div>
           <Button type="submit" className="w-full">
-              {isEditMode ? <Pencil className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-              {isEditMode ? 'Зберегти зміни' : 'Додати транзакцію'}
-            </Button>
+            {getButtonContent()}
+          </Button>
         </form>
   );
 }
