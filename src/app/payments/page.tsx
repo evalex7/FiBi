@@ -1,7 +1,6 @@
 'use client';
 
 import AppLayout from '@/components/AppLayout';
-import UpcomingPayments from '@/components/payments/UpcomingPayments';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -13,22 +12,23 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import PaymentForm from '@/components/payments/PaymentForm';
+import PaymentsCalendar from '@/components/payments/PaymentsCalendar';
 
 
 export default function PaymentsPage() {
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
 
   return (
-    <AppLayout pageTitle="Регулярні платежі">
+    <AppLayout pageTitle="Календар платежів">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold tracking-tight">Майбутні платежі</h2>
+            <h2 className="text-2xl font-bold tracking-tight">Календар платежів</h2>
             <Button onClick={() => setIsAddPaymentOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Додати платіж
             </Button>
         </div>
-        <UpcomingPayments />
+        <PaymentsCalendar />
       </div>
 
        <Dialog open={isAddPaymentOpen} onOpenChange={setIsAddPaymentOpen}>
