@@ -10,15 +10,57 @@ service cloud.firestore {
     function isOwner(doc) {
       return request.auth.uid == doc.familyMemberId;
     }
+    
+    function canReadData() {
+      return isSignedIn();
+    }
 
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow read: if canReadData();
       allow write: if request.auth.uid == userId;
     }
 
-    match /{collection}/{docId} 
-      where collection in ['categories', 'expenses', 'budgets', 'payments', 'goals'] {
-      allow read: if isSignedIn();
+    match /categories {
+      allow list: if canReadData();
+    }
+    match /categories/{documentId} {
+      allow get: if canReadData();
+      allow create: if isSignedIn() && isOwner(request.resource.data);
+      allow update, delete: if isSignedIn() && isOwner(resource.data);
+    }
+    
+    match /expenses {
+        allow list: if canReadData();
+    }
+    match /expenses/{documentId} {
+      allow get: if canReadData();
+      allow create: if isSignedIn() && isOwner(request.resource.data);
+      allow update, delete: if isSignedIn() && isOwner(resource.data);
+    }
+
+    match /budgets {
+      allow list: if canReadData();
+    }
+    match /budgets/{documentId} {
+      allow get: if canReadData();
+      allow create: if isSignedIn() && isOwner(request.resource.data);
+      allow update, delete: if isSignedIn() && isOwner(resource.data);
+    }
+    
+    match /payments {
+      allow list: if canReadData();
+    }
+    match /payments/{documentId} {
+      allow get: if canReadData();
+      allow create: if isSignedIn() && isOwner(request.resource.data);
+      allow update, delete: if isSignedIn() && isOwner(resource.data);
+    }
+    
+    match /goals {
+      allow list: if canReadData();
+    }
+    match /goals/{documentId} {
+      allow get: if canReadData();
       allow create: if isSignedIn() && isOwner(request.resource.data);
       allow update, delete: if isSignedIn() && isOwner(resource.data);
     }
