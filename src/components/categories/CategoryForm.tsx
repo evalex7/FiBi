@@ -31,6 +31,7 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
     const [name, setName] = useState('');
     const [type, setType] = useState<Category['type']>('expense');
     const [icon, setIcon] = useState('');
+    const [isCommon, setIsCommon] = useState(false);
   
     const isEditMode = !!category;
   
@@ -39,6 +40,7 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
           setName(category.name);
           setType(category.type);
           setIcon(category.icon);
+          setIsCommon(category.isCommon ?? false);
       }
     }, [category, isEditMode]);
   
@@ -59,6 +61,7 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
           name,
           type,
           icon,
+          isCommon,
       };
   
       if (isEditMode && category) {
@@ -81,6 +84,7 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
           setName('');
           setType('expense');
           setIcon('');
+          setIsCommon(false);
       }
     };
   
@@ -91,16 +95,16 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
             <div className="grid gap-2">
                 <Label>Тип</Label>
                 <RadioGroup
-                    className="flex"
+                    className="flex gap-4"
                     value={type}
                     onValueChange={(value: 'income' | 'expense') => setType(value)}
                 >
                     <Label className="flex items-center space-x-2 cursor-pointer">
-                    <RadioGroupItem value="expense" id="r2" />
+                    <RadioGroupItem value="expense" id="type-expense" />
                     <span>Витрата</span>
                     </Label>
                     <Label className="flex items-center space-x-2 cursor-pointer">
-                    <RadioGroupItem value="income" id="r3" />
+                    <RadioGroupItem value="income" id="type-income" />
                     <span>Дохід</span>
                     </Label>
                 </RadioGroup>
@@ -126,6 +130,23 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
                   ))}
                   </SelectContent>
               </Select>
+            </div>
+            <div className="grid gap-2">
+                <Label>Видимість категорії</Label>
+                 <RadioGroup
+                    className="flex gap-4"
+                    value={isCommon ? 'common' : 'personal'}
+                    onValueChange={(value) => setIsCommon(value === 'common')}
+                >
+                    <Label className="flex items-center space-x-2 cursor-pointer">
+                    <RadioGroupItem value="personal" id="visibility-personal" />
+                    <span>Особиста (видна тільки мені)</span>
+                    </Label>
+                    <Label className="flex items-center space-x-2 cursor-pointer">
+                    <RadioGroupItem value="common" id="visibility-common" />
+                    <span>Спільна (видна всім)</span>
+                    </Label>
+                </RadioGroup>
             </div>
             <Button type="submit" className="w-full">
                 {isEditMode ? <Pencil className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}

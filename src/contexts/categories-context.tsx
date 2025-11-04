@@ -14,7 +14,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 interface CategoriesContextType {
   categories: WithId<Category>[];
-  addCategory: (category: Omit<Category, 'id'>) => void;
+  addCategory: (category: Omit<Category, 'id' | 'familyMemberId'>) => void;
   updateCategory: (category: WithId<Category>) => void;
   deleteCategory: (id: string) => void;
   isLoading: boolean;
@@ -57,10 +57,10 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, isLoading, categories, firestore, categoriesCollectionRef, toast]);
   
-  const addCategory = (categoryData: Omit<Category, 'id'>) => {
+  const addCategory = (categoryData: Omit<Category, 'id' | 'familyMemberId'>) => {
     if (!firestore || !user) return;
     const categoriesCollection = collection(firestore, 'categories');
-    const dataWithUser = { ...categoryData, familyMemberId: user.uid, isCommon: false };
+    const dataWithUser = { ...categoryData, familyMemberId: user.uid };
     const newDocRef = doc(categoriesCollection);
     setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
       errorEmitter.emit(
@@ -79,10 +79,12 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     const categoryDocRef = doc(firestore, 'categories', updatedCategory.id);
     const { id, ...categoryData } = updatedCategory;
     
-    if (updatedCategory.familyMemberId !== user.uid) {
-        console.warn("Attempted to update a category by a non-owner.");
-        return;
-    }
+    // This check is flawed if a user wants to edit a common category they don't own.
+    // Let's rely on security rules to enforce this.
+    // if (updatedCategory.familyMemberId !== user.uid) {
+    //     console.warn("Attempted to update a category by a non-owner.");
+    //     return;
+    // }
     setDocumentNonBlocking(categoryDocRef, categoryData, { merge: true }).catch(error => {
         errorEmitter.emit(
           'permission-error',
