@@ -47,26 +47,13 @@ export default function PaymentsCalendar() {
     return paymentsByDay.get(dayKey) || [];
   }, [selectedDay, paymentsByDay]);
 
-  const DayWithPayments = (props: DayProps) => {
-    const { date, displayMonth } = props;
-    const dayKey = format(date, 'yyyy-MM-dd');
-    const hasPayments = paymentsByDay.has(dayKey);
-
-    // Remove props that shouldn't be passed to the DOM element
-    const { displayMonth: _displayMonth, ...restProps } = props;
-    
-    const isSelected = selectedDay && format(selectedDay, 'yyyy-MM-dd') === dayKey;
-
-    return (
-       <div
-        className={cn("h-9 w-9 p-0 font-normal relative flex items-center justify-center", {
-          "bg-accent text-accent-foreground": hasPayments && !isSelected,
-        })}
-      >
-        {format(date, 'd')}
-      </div>
-    );
-  };
+  const paymentDays = useMemo(() => {
+      const days: Date[] = [];
+      paymentsByDay.forEach((_, dayKey) => {
+          days.push(new Date(dayKey));
+      });
+      return days;
+  }, [paymentsByDay]);
   
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -100,6 +87,10 @@ export default function PaymentsCalendar() {
           onMonthChange={setCurrentMonth}
           locale={uk}
           className="p-3 w-full"
+          modifiers={{ hasPayment: paymentDays }}
+          modifiersClassNames={{
+            hasPayment: 'bg-accent/50 rounded-full',
+          }}
           classNames={{
             months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
             month: "space-y-4 w-full",
@@ -119,9 +110,6 @@ export default function PaymentsCalendar() {
             ),
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
             day_today: "bg-muted text-foreground",
-          }}
-          components={{
-            Day: DayWithPayments,
           }}
         />
       </Card>

@@ -19,7 +19,7 @@ export default function PaymentsPage() {
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
 
   return (
-    <AppLayout pageTitle="Календар платежів">
+    <AppLayout pageTitle="Платежі">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold tracking-tight">Календар платежів</h2>
