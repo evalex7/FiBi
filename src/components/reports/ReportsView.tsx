@@ -41,6 +41,10 @@ import {
 import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths, subDays, eachDayOfInterval, startOfDay } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { Timestamp } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { FamilyMember } from '@/lib/types';
+import TransactionUserAvatar from '../dashboard/TransactionUserAvatar';
 
 const formatCurrency = (amount: number) => {
   if (amount >= 1000) {
@@ -87,13 +91,24 @@ const COLORS = [
 export default function ReportsView() {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const { categories, isLoading: isCategoriesLoading } = useCategories();
+  const firestore = useFirestore();
+
   const [period, setPeriod] = useState('0');
   const [categoryPeriod, setCategoryPeriod] = useState('all');
   const [trendPeriod, setTrendPeriod] = useState('monthly');
+  const [memberFilter, setMemberFilter] = useState('all');
+
   const [periodOptions, setPeriodOptions] = useState<{value: string, label: string}[]>([]);
   const [earliestTransactionDate, setEarliestTransactionDate] = useState<Date | null>(null);
 
-  const isLoading = isTransactionsLoading || isCategoriesLoading;
+  const usersCollectionRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
+  
+  const { data: familyMembers, isLoading: isMembersLoading } = useCollection<FamilyMember>(usersCollectionRef);
+
+  const isLoading = isTransactionsLoading || isCategoriesLoading || isMembersLoading;
 
   useEffect(() => {
     if (transactions.length > 0) {
@@ -122,8 +137,16 @@ export default function ReportsView() {
 
   }, [earliestTransactionDate]);
 
+  const filteredTransactions = useMemo(() => {
+      if (memberFilter === 'all') {
+          return transactions;
+      }
+      return transactions.filter(t => t.familyMemberId === memberFilter);
+  }, [transactions, memberFilter]);
+
+
   const incomeVsExpenseData = useMemo(() => {
-    if (isLoading || transactions.length === 0) return [];
+    if (isLoading || filteredTransactions.length === 0) return [];
 
     const now = new Date();
     let startDate: Date;
@@ -168,7 +191,7 @@ export default function ReportsView() {
 
 
     if (shouldAggregate) {
-      const totals = transactions
+      const totals = filteredTransactions
         .filter(t => {
             if (period === 'all') return true;
             const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
@@ -189,7 +212,7 @@ export default function ReportsView() {
 
     const data: { [key: string]: { month: string, income: number, expenses: number } } = {};
     
-    transactions.forEach(t => {
+    filteredTransactions.forEach(t => {
       const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
       
       if (transactionDate >= startDate && transactionDate <= endDate) {
@@ -212,7 +235,7 @@ export default function ReportsView() {
         return aDate.getTime() - bDate.getTime();
     });
 
-  }, [transactions, period, isLoading, earliestTransactionDate]);
+  }, [filteredTransactions, period, isLoading, earliestTransactionDate]);
   
   const { data: categoryData, config: pieChartConfig } = useMemo(() => {
     if (isLoading) return { data: [], config: {} };
@@ -239,7 +262,7 @@ export default function ReportsView() {
 
 
     const dataMap: { [key: string]: number } = {};
-    transactions
+    filteredTransactions
       .filter((t) => {
         if (t.type !== 'expense') return false;
         if (startDate && endDate) {
@@ -267,10 +290,10 @@ export default function ReportsView() {
     }, {} as ChartConfig);
 
     return { data: chartData, config };
-  }, [transactions, isLoading, categoryPeriod]);
+  }, [filteredTransactions, isLoading, categoryPeriod]);
 
   const monthlyTrendData = useMemo(() => {
-    if (isLoading || transactions.length < 1) return [];
+    if (isLoading || filteredTransactions.length < 1) return [];
 
     if (trendPeriod === 'daily') {
         const now = new Date();
@@ -290,7 +313,7 @@ export default function ReportsView() {
             }
         });
         
-        transactions.forEach(t => {
+        filteredTransactions.forEach(t => {
             const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
             if (transactionDate >= start && transactionDate <= end) {
                 const dayKey = format(transactionDate, 'yyyy-MM-dd');
@@ -309,7 +332,7 @@ export default function ReportsView() {
     } else { // monthly
         const data: { [key: string]: { dateLabel: string, income: number, expenses: number, date: Date } } = {};
 
-        transactions.forEach(t => {
+        filteredTransactions.forEach(t => {
             const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
             const monthKey = format(transactionDate, 'yyyy-MM');
 
@@ -330,7 +353,7 @@ export default function ReportsView() {
         
         return Object.values(data).sort((a, b) => a.date.getTime() - b.date.getTime());
     }
-  }, [transactions, isLoading, trendPeriod]);
+  }, [filteredTransactions, isLoading, trendPeriod]);
 
 
   return (
@@ -341,7 +364,7 @@ export default function ReportsView() {
             <CardDescription>
               Огляд доходів та витрат за обраний період.
             </CardDescription>
-            <div className="pt-2">
+            <div className="pt-2 flex flex-wrap gap-2">
               <Select value={period} onValueChange={setPeriod}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Оберіть період" />
@@ -350,6 +373,26 @@ export default function ReportsView() {
                   {periodOptions.map(option => {
                      return <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                   })}
+                </SelectContent>
+              </Select>
+               <Select value={memberFilter} onValueChange={setMemberFilter}>
+                <SelectTrigger className="w-full sm:w-[220px]">
+                  <SelectValue placeholder="Оберіть члена родини" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                        <span>Всі члени родини</span>
+                    </div>
+                  </SelectItem>
+                  {familyMembers?.map(member => (
+                     <SelectItem key={member.id} value={member.id}>
+                       <div className="flex items-center gap-2">
+                        <TransactionUserAvatar userId={member.id} />
+                        <span>{member.name}</span>
+                       </div>
+                     </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -385,7 +428,7 @@ export default function ReportsView() {
             <CardDescription>
               Розбивка ваших витрат за обраний період.
             </CardDescription>
-             <div className="pt-2">
+             <div className="pt-2 flex flex-wrap gap-2">
               <Select value={categoryPeriod} onValueChange={setCategoryPeriod}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Оберіть період" />
@@ -394,6 +437,26 @@ export default function ReportsView() {
                   <SelectItem value="all">За весь час</SelectItem>
                   <SelectItem value="0">Поточний місяць</SelectItem>
                   <SelectItem value="prev_month">Попередній місяць</SelectItem>
+                </SelectContent>
+              </Select>
+               <Select value={memberFilter} onValueChange={setMemberFilter}>
+                <SelectTrigger className="w-full sm:w-[220px]">
+                  <SelectValue placeholder="Оберіть члена родини" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                        <span>Всі члени родини</span>
+                    </div>
+                  </SelectItem>
+                  {familyMembers?.map(member => (
+                     <SelectItem key={member.id} value={member.id}>
+                       <div className="flex items-center gap-2">
+                        <TransactionUserAvatar userId={member.id} />
+                        <span>{member.name}</span>
+                       </div>
+                     </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -479,7 +542,7 @@ export default function ReportsView() {
                 <CardDescription>
                 Порівняння ваших доходів та витрат.
                 </CardDescription>
-                 <div className="pt-2">
+                 <div className="pt-2 flex flex-wrap gap-2">
                     <Select value={trendPeriod} onValueChange={setTrendPeriod}>
                         <SelectTrigger className="w-full sm:w-[240px]">
                         <SelectValue placeholder="Оберіть деталізацію" />
@@ -487,6 +550,26 @@ export default function ReportsView() {
                         <SelectContent>
                             <SelectItem value="monthly">По місяцях (за весь час)</SelectItem>
                             <SelectItem value="daily">По днях (поточний місяць)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                     <Select value={memberFilter} onValueChange={setMemberFilter}>
+                        <SelectTrigger className="w-full sm:w-[220px]">
+                        <SelectValue placeholder="Оберіть члена родини" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        <SelectItem value="all">
+                            <div className="flex items-center gap-2">
+                                <span>Всі члени родини</span>
+                            </div>
+                        </SelectItem>
+                        {familyMembers?.map(member => (
+                            <SelectItem key={member.id} value={member.id}>
+                            <div className="flex items-center gap-2">
+                                <TransactionUserAvatar userId={member.id} />
+                                <span>{member.name}</span>
+                            </div>
+                            </SelectItem>
+                        ))}
                         </SelectContent>
                     </Select>
                 </div>
