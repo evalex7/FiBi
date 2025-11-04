@@ -38,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths, subDays } from 'date-fns';
+import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths, subDays, eachDayOfInterval, startOfDay } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -89,6 +89,7 @@ export default function ReportsView() {
   const { categories, isLoading: isCategoriesLoading } = useCategories();
   const [period, setPeriod] = useState('0');
   const [categoryPeriod, setCategoryPeriod] = useState('all');
+  const [trendPeriod, setTrendPeriod] = useState('monthly');
   const [periodOptions, setPeriodOptions] = useState<{value: string, label: string}[]>([]);
   const [earliestTransactionDate, setEarliestTransactionDate] = useState<Date | null>(null);
 
@@ -262,35 +263,71 @@ export default function ReportsView() {
         return acc;
     }, {} as ChartConfig);
 
-    return { data: chartData, config: config };
+    return { data: chartData, config };
   }, [transactions, isLoading, categoryPeriod]);
 
   const monthlyTrendData = useMemo(() => {
-    if (isLoading || transactions.length < 2) return [];
+    if (isLoading || transactions.length < 1) return [];
 
-    const data: { [key: string]: { month: string, income: number, expenses: number, date: Date } } = {};
+    if (trendPeriod === 'daily') {
+        const now = new Date();
+        const start = startOfMonth(now);
+        const end = endOfMonth(now);
+        const daysInMonth = eachDayOfInterval({ start, end });
 
-    transactions.forEach(t => {
-      const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
-      const monthKey = format(transactionDate, 'yyyy-MM');
+        const data: { [key: string]: { dateLabel: string, income: number, expenses: number, date: Date } } = {};
+        
+        daysInMonth.forEach(day => {
+            const dayKey = format(day, 'yyyy-MM-dd');
+            data[dayKey] = {
+                dateLabel: format(day, 'd LLL', { locale: uk }),
+                income: 0,
+                expenses: 0,
+                date: day,
+            }
+        });
+        
+        transactions.forEach(t => {
+            const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
+            if (transactionDate >= start && transactionDate <= end) {
+                const dayKey = format(transactionDate, 'yyyy-MM-dd');
+                if (data[dayKey]) {
+                    if (t.type === 'income') {
+                        data[dayKey].income += t.amount;
+                    } else {
+                        data[dayKey].expenses += t.amount;
+                    }
+                }
+            }
+        });
 
-      if (!data[monthKey]) {
-        data[monthKey] = {
-          month: format(transactionDate, 'LLL yy', { locale: uk }),
-          income: 0,
-          expenses: 0,
-          date: startOfMonth(transactionDate),
-        };
-      }
-      if (t.type === 'income') {
-        data[monthKey].income += t.amount;
-      } else {
-        data[monthKey].expenses += t.amount;
-      }
-    });
+        return Object.values(data).sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    return Object.values(data).sort((a, b) => a.date.getTime() - b.date.getTime());
-  }, [transactions, isLoading]);
+    } else { // monthly
+        const data: { [key: string]: { dateLabel: string, income: number, expenses: number, date: Date } } = {};
+
+        transactions.forEach(t => {
+            const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
+            const monthKey = format(transactionDate, 'yyyy-MM');
+
+            if (!data[monthKey]) {
+                data[monthKey] = {
+                dateLabel: format(transactionDate, 'LLL yy', { locale: uk }),
+                income: 0,
+                expenses: 0,
+                date: startOfMonth(transactionDate),
+                };
+            }
+            if (t.type === 'income') {
+                data[monthKey].income += t.amount;
+            } else {
+                data[monthKey].expenses += t.amount;
+            }
+        });
+        
+        return Object.values(data).sort((a, b) => a.date.getTime() - b.date.getTime());
+    }
+  }, [transactions, isLoading, trendPeriod]);
 
 
   return (
@@ -336,9 +373,9 @@ export default function ReportsView() {
                     <XAxis dataKey='month' tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                     <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                     <ChartTooltip
-                      cursor={false}
                       content={({ active, payload, label }) => {
                         if (active && payload && payload.length) {
+                          const activePayload = payload.find(p => p.payload.active);
                           return (
                             <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
                               <div className="font-medium">{label}</div>
@@ -472,8 +509,19 @@ export default function ReportsView() {
             <CardHeader>
                 <CardTitle>Динаміка доходів та витрат</CardTitle>
                 <CardDescription>
-                Порівняння ваших доходів та витрат по місяцях.
+                Порівняння ваших доходів та витрат.
                 </CardDescription>
+                 <div className="pt-2">
+                    <Select value={trendPeriod} onValueChange={setTrendPeriod}>
+                        <SelectTrigger className="w-full sm:w-[240px]">
+                        <SelectValue placeholder="Оберіть деталізацію" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="monthly">По місяцях (за весь час)</SelectItem>
+                            <SelectItem value="daily">По днях (поточний місяць)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </CardHeader>
             <CardContent className="px-2 sm:px-4">
                 {isLoading || monthlyTrendData.length < 2 ? (
@@ -489,11 +537,12 @@ export default function ReportsView() {
                         >
                             <CartesianGrid vertical={false} />
                             <XAxis
-                                dataKey="month"
+                                dataKey="dateLabel"
                                 tickLine={false}
                                 axisLine={false}
                                 tickMargin={8}
                                 fontSize={12}
+                                interval={trendPeriod === 'daily' ? 6 : 'preserveStartEnd'}
                             />
                             <YAxis
                                 tickFormatter={formatCurrency}
