@@ -41,6 +41,7 @@ import {
 import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths, subDays, eachDayOfInterval, startOfDay } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { Timestamp } from 'firebase/firestore';
+import AppLayout from '@/components/AppLayout';
 
 const formatCurrency = (amount: number) => {
   if (amount >= 1000) {
@@ -84,7 +85,7 @@ const COLORS = [
   "hsl(300, 75%, 65%)",
 ];
 
-export default function ReportsView() {
+export default function ReportsPage() {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const { categories, isLoading: isCategoriesLoading } = useCategories();
 
@@ -339,242 +340,244 @@ export default function ReportsView() {
 
 
   return (
-    <div className="w-full space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Дохід vs. Витрати</CardTitle>
-            <CardDescription>
-              Огляд доходів та витрат за обраний період.
-            </CardDescription>
-            <div className="pt-2 flex flex-wrap gap-2">
-              <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Оберіть період" />
-                </SelectTrigger>
-                <SelectContent>
-                  {periodOptions.map(option => {
-                     return <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-4">
-            {isLoading || incomeVsExpenseData.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                Недостатньо даних для відображення графіка.
-              </div>
-            ) : (
-            <ChartContainer config={barChartConfig} className="h-[400px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }}>
-                    <XAxis dataKey='month' tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                    <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
-                    <ChartTooltip
-                      cursor={false}
-                      content={<ChartTooltipContent />}
-                    />
-                    <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
-                    <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={60} />
-                    <ChartLegend content={<ChartLegendContent />} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-            )}
-          </CardContent>
-        </Card>
-      
-        <Card>
-          <CardHeader>
-            <CardTitle>Витрати по категоріях</CardTitle>
-            <CardDescription>
-              Розбивка ваших витрат за обраний період.
-            </CardDescription>
-             <div className="pt-2 flex flex-wrap gap-2">
-              <Select value={categoryPeriod} onValueChange={setCategoryPeriod}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Оберіть період" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">За весь час</SelectItem>
-                  <SelectItem value="0">Поточний місяць</SelectItem>
-                  <SelectItem value="prev_month">Попередній місяць</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center">
-            {isLoading || categoryData.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                Немає даних про витрати для відображення.
-              </div>
-            ) : (
-              <ChartContainer config={pieChartConfig} className="w-full h-[450px] flex flex-col items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <ChartTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
-                              <p className="font-medium">{payload[0].name}</p>
-                              <p className="text-muted-foreground">
-                                {formatCurrencyTooltip(payload[0].value as number)}
-                              </p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Pie
-                      data={categoryData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={120}
-                      innerRadius={80}
-                      paddingAngle={2}
-                      labelLine={false}
-                      label={({
-                        cx,
-                        cy,
-                        midAngle,
-                        innerRadius,
-                        outerRadius,
-                        percent,
-                      }) => {
-                        const RADIAN = Math.PI / 180;
-                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-                        return (
-                          percent > 0.05 ? (
-                          <text
-                            x={x}
-                            y={y}
-                            fill="hsl(var(--card-foreground))"
-                            textAnchor={x > cx ? 'start' : 'end'}
-                            dominantBaseline="central"
-                            className="text-xs fill-foreground font-medium"
-                          >
-                            {`${(percent * 100).toFixed(0)}%`}
-                          </text>
-                          ) : null
-                        );
-                      }}
-                    >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                    </Pie>
-                    <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
+    <AppLayout pageTitle="Звіти">
+      <div className="w-full space-y-6">
+          <Card>
             <CardHeader>
-                <CardTitle>Динаміка доходів та витрат</CardTitle>
-                <CardDescription>
-                Порівняння ваших доходів та витрат.
-                </CardDescription>
-                 <div className="pt-2 flex flex-wrap gap-2">
-                    <Select value={trendPeriod} onValueChange={setTrendPeriod}>
-                        <SelectTrigger className="w-full sm:w-[240px]">
-                        <SelectValue placeholder="Оберіть деталізацію" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="monthly">По місяцях (за весь час)</SelectItem>
-                            <SelectItem value="daily">По днях (поточний місяць)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
+              <CardTitle>Дохід vs. Витрати</CardTitle>
+              <CardDescription>
+                Огляд доходів та витрат за обраний період.
+              </CardDescription>
+              <div className="pt-2 flex flex-wrap gap-2">
+                <Select value={period} onValueChange={setPeriod}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Оберіть період" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {periodOptions.map(option => {
+                      return <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent className="px-2 sm:px-4">
-                {isLoading || monthlyTrendData.length < 2 ? (
-                     <div className="text-center text-muted-foreground py-8">
-                        Потрібно більше даних для відображення динаміки.
-                     </div>
-                ) : (
-                <ChartContainer config={lineChartConfig} className="h-[400px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                            data={monthlyTrendData}
-                            margin={{ left: 0, right: 16 }}
-                        >
-                            <CartesianGrid vertical={false} />
-                            <XAxis
-                                dataKey="dateLabel"
-                                tickLine={false}
-                                axisLine={false}
-                                tickMargin={8}
-                                fontSize={12}
-                                interval={trendPeriod === 'daily' ? 6 : 'preserveStartEnd'}
-                            />
-                            <YAxis
-                                tickFormatter={formatCurrency}
-                                tickLine={false}
-                                axisLine={false}
-                                tickMargin={8}
-                                width={40}
-                                fontSize={12}
-                            />
-                            <ChartTooltip
-                                cursor={false}
-                                content={({ active, payload, label }) => {
-                                if (active && payload && payload.length) {
-                                    return (
-                                    <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
-                                        <div className="font-medium">{label}</div>
-                                        {payload.map(item => (
-                                        <div key={item.dataKey} className="flex w-full items-center gap-2">
-                                            <div
-                                            className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-                                            style={{ backgroundColor: item.color }}
-                                            />
-                                            <div className="flex flex-1 justify-between">
-                                            <span className="text-muted-foreground">
-                                                {lineChartConfig[item.dataKey as keyof typeof lineChartConfig]?.label || item.name}
-                                            </span>
-                                            <span className="font-medium">
-                                                {formatCurrencyTooltip(item.value as number)}
-                                            </span>
-                                            </div>
-                                        </div>
-                                        ))}
-                                    </div>
-                                    );
-                                }
-                                return null;
-                                }}
-                            />
-                            <Line
-                                dataKey="income"
-                                type="monotone"
-                                stroke="var(--color-income)"
-                                strokeWidth={2}
-                                dot={false}
-                            />
-                            <Line
-                                dataKey="expenses"
-                                type="monotone"
-                                stroke="var(--color-expenses)"
-                                strokeWidth={2}
-                                dot={false}
-                            />
-                             <ChartLegend content={<ChartLegendContent />} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </ChartContainer>
-                )}
+              {isLoading || incomeVsExpenseData.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                  Недостатньо даних для відображення графіка.
+                </div>
+              ) : (
+              <ChartContainer config={barChartConfig} className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }}>
+                      <XAxis dataKey='month' tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                      <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
+                      <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent />}
+                      />
+                      <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
+                      <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={60} />
+                      <ChartLegend content={<ChartLegendContent />} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+              )}
             </CardContent>
-        </Card>
-    </div>
+          </Card>
+        
+          <Card>
+            <CardHeader>
+              <CardTitle>Витрати по категоріях</CardTitle>
+              <CardDescription>
+                Розбивка ваших витрат за обраний період.
+              </CardDescription>
+              <div className="pt-2 flex flex-wrap gap-2">
+                <Select value={categoryPeriod} onValueChange={setCategoryPeriod}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Оберіть період" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">За весь час</SelectItem>
+                    <SelectItem value="0">Поточний місяць</SelectItem>
+                    <SelectItem value="prev_month">Попередній місяць</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center">
+              {isLoading || categoryData.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                  Немає даних про витрати для відображення.
+                </div>
+              ) : (
+                <ChartContainer config={pieChartConfig} className="w-full h-[450px] flex flex-col items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <ChartTooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                                <p className="font-medium">{payload[0].name}</p>
+                                <p className="text-muted-foreground">
+                                  {formatCurrencyTooltip(payload[0].value as number)}
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Pie
+                        data={categoryData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={120}
+                        innerRadius={80}
+                        paddingAngle={2}
+                        labelLine={false}
+                        label={({
+                          cx,
+                          cy,
+                          midAngle,
+                          innerRadius,
+                          outerRadius,
+                          percent,
+                        }) => {
+                          const RADIAN = Math.PI / 180;
+                          const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                          return (
+                            percent > 0.05 ? (
+                            <text
+                              x={x}
+                              y={y}
+                              fill="hsl(var(--card-foreground))"
+                              textAnchor={x > cx ? 'start' : 'end'}
+                              dominantBaseline="central"
+                              className="text-xs fill-foreground font-medium"
+                            >
+                              {`${(percent * 100).toFixed(0)}%`}
+                            </text>
+                            ) : null
+                          );
+                        }}
+                      >
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                      </Pie>
+                      <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+              <CardHeader>
+                  <CardTitle>Динаміка доходів та витрат</CardTitle>
+                  <CardDescription>
+                  Порівняння ваших доходів та витрат.
+                  </CardDescription>
+                  <div className="pt-2 flex flex-wrap gap-2">
+                      <Select value={trendPeriod} onValueChange={setTrendPeriod}>
+                          <SelectTrigger className="w-full sm:w-[240px]">
+                          <SelectValue placeholder="Оберіть деталізацію" />
+                          </SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="monthly">По місяцях (за весь час)</SelectItem>
+                              <SelectItem value="daily">По днях (поточний місяць)</SelectItem>
+                          </SelectContent>
+                      </Select>
+                  </div>
+              </CardHeader>
+              <CardContent className="px-2 sm:px-4">
+                  {isLoading || monthlyTrendData.length < 2 ? (
+                      <div className="text-center text-muted-foreground py-8">
+                          Потрібно більше даних для відображення динаміки.
+                      </div>
+                  ) : (
+                  <ChartContainer config={lineChartConfig} className="h-[400px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                          <LineChart
+                              data={monthlyTrendData}
+                              margin={{ left: 0, right: 16 }}
+                          >
+                              <CartesianGrid vertical={false} />
+                              <XAxis
+                                  dataKey="dateLabel"
+                                  tickLine={false}
+                                  axisLine={false}
+                                  tickMargin={8}
+                                  fontSize={12}
+                                  interval={trendPeriod === 'daily' ? 6 : 'preserveStartEnd'}
+                              />
+                              <YAxis
+                                  tickFormatter={formatCurrency}
+                                  tickLine={false}
+                                  axisLine={false}
+                                  tickMargin={8}
+                                  width={40}
+                                  fontSize={12}
+                              />
+                              <ChartTooltip
+                                  cursor={false}
+                                  content={({ active, payload, label }) => {
+                                  if (active && payload && payload.length) {
+                                      return (
+                                      <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                                          <div className="font-medium">{label}</div>
+                                          {payload.map(item => (
+                                          <div key={item.dataKey} className="flex w-full items-center gap-2">
+                                              <div
+                                              className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                                              style={{ backgroundColor: item.color }}
+                                              />
+                                              <div className="flex flex-1 justify-between">
+                                              <span className="text-muted-foreground">
+                                                  {lineChartConfig[item.dataKey as keyof typeof lineChartConfig]?.label || item.name}
+                                              </span>
+                                              <span className="font-medium">
+                                                  {formatCurrencyTooltip(item.value as number)}
+                                              </span>
+                                              </div>
+                                          </div>
+                                          ))}
+                                      </div>
+                                      );
+                                  }
+                                  return null;
+                                  }}
+                              />
+                              <Line
+                                  dataKey="income"
+                                  type="monotone"
+                                  stroke="var(--color-income)"
+                                  strokeWidth={2}
+                                  dot={false}
+                              />
+                              <Line
+                                  dataKey="expenses"
+                                  type="monotone"
+                                  stroke="var(--color-expenses)"
+                                  strokeWidth={2}
+                                  dot={false}
+                              />
+                              <ChartLegend content={<ChartLegendContent />} />
+                          </LineChart>
+                      </ResponsiveContainer>
+                  </ChartContainer>
+                  )}
+              </CardContent>
+          </Card>
+      </div>
+    </AppLayout>
   );
 }
