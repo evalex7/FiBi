@@ -48,13 +48,21 @@ export default function PaymentsCalendar() {
   }, [selectedDay, paymentsByDay]);
 
   const DayWithPayments = (props: DayProps) => {
-    const { date } = props;
+    const { date, displayMonth } = props;
     const dayKey = format(date, 'yyyy-MM-dd');
     const hasPayments = paymentsByDay.has(dayKey);
 
+    // Remove props that shouldn't be passed to the DOM element
+    const { displayMonth: _displayMonth, ...restProps } = props;
+    
+    const isSelected = selectedDay && format(selectedDay, 'yyyy-MM-dd') === dayKey;
+
     return (
-      <div className="relative h-9 w-9 flex items-center justify-center">
-        {hasPayments && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full bg-primary" />}
+       <div
+        className={cn("h-9 w-9 p-0 font-normal relative flex items-center justify-center", {
+          "bg-accent text-accent-foreground": hasPayments && !isSelected,
+        })}
+      >
         {format(date, 'd')}
       </div>
     );
@@ -83,7 +91,7 @@ export default function PaymentsCalendar() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card className="lg:col-span-2 overflow-x-auto">
+      <Card className="lg:col-span-2">
         <Calendar
           mode="single"
           selected={selectedDay}
@@ -91,7 +99,7 @@ export default function PaymentsCalendar() {
           month={currentMonth}
           onMonthChange={setCurrentMonth}
           locale={uk}
-          className="p-0 sm:p-3 w-full"
+          className="p-3 w-full"
           classNames={{
             months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
             month: "space-y-4 w-full",
@@ -110,7 +118,7 @@ export default function PaymentsCalendar() {
               "aria-selected:opacity-100"
             ),
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-            day_today: "bg-accent text-accent-foreground",
+            day_today: "bg-muted text-foreground",
           }}
           components={{
             Day: DayWithPayments,
