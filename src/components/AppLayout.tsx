@@ -12,6 +12,7 @@ import {
   User as UserIcon,
   Settings,
   Menu,
+  PiggyBank,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
