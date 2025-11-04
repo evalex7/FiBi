@@ -29,17 +29,9 @@ export default function DashboardPage() {
             <MonthSelector selectedPeriod={period} onPeriodChange={setPeriod} />
         </div>
         <SummaryCards selectedPeriod={period} />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <div className="lg:col-span-2 order-2 lg:order-1">
              <RecentTransactions selectedPeriod={period} />
-          </div>
-          <div className="lg:col-span-1 order-1 lg:order-2 space-y-6">
-             <div className="sticky top-20">
-                <Button className="w-full" onClick={() => setIsAddTransactionOpen(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Додати транзакцію
-                </Button>
-             </div>
           </div>
         </div>
       </div>

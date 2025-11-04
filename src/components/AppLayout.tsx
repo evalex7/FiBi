@@ -12,7 +12,7 @@ import {
   User as UserIcon,
   Settings,
   Menu,
-  PiggyBank,
+  PlusCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
@@ -33,6 +33,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import TransactionForm from './dashboard/TransactionForm';
 
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
@@ -57,6 +59,7 @@ export default function AppLayout({
 
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
   const lastScrollY = useRef(0);
 
   const userDocRef = useMemoFirebase(() => {
@@ -276,6 +279,10 @@ export default function AppLayout({
             </div>
 
             <div className="flex w-full flex-1 md:w-auto md:flex-initial justify-end items-center gap-2">
+                <Button size="sm" onClick={() => setIsAddTransactionOpen(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Додати транзакцію
+                </Button>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="rounded-full">
@@ -305,6 +312,18 @@ export default function AppLayout({
             {children}
         </main>
         {isMobile && <MobileBottomNav />}
+
+        <Dialog open={isAddTransactionOpen} onOpenChange={setIsAddTransactionOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Додати транзакцію</DialogTitle>
+                    <DialogDescription>
+                    Запишіть новий дохід або витрату до вашого рахунку.
+                    </DialogDescription>
+                </DialogHeader>
+                <TransactionForm onSave={() => setIsAddTransactionOpen(false)} />
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
