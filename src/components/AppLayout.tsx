@@ -12,6 +12,7 @@ import {
   User as UserIcon,
   Settings,
   Menu,
+  Goal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
@@ -36,6 +37,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
   { href: '/budgets', label: 'Бюджети', icon: Target },
+  { href: '/goals', label: 'Цілі', icon: Goal },
   { href: '/payments', label: 'Платежі', icon: Repeat },
   { href: '/reports', label: 'Звіти', icon: AreaChart },
 ];
@@ -223,13 +225,22 @@ export default function AppLayout({
   );
 
   const MobileBottomNav = () => {
+    // Reorder for mobile bottom nav
+    const mobileMenuItems = [
+      menuItems.find(i => i.href === '/dashboard'),
+      menuItems.find(i => i.href === '/budgets'),
+      menuItems.find(i => i.href === '/goals'),
+      menuItems.find(i => i.href === '/reports'),
+    ].filter(Boolean) as typeof menuItems;
+
+
     return (
       <div className={cn(
           "md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t transition-transform duration-300",
           isHeaderVisible ? "translate-y-0" : "translate-y-full"
       )}>
         <div className="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
-          {menuItems.map((item) => (
+          {mobileMenuItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}

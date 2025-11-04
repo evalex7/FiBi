@@ -7,6 +7,7 @@ import { PaymentsProvider } from '@/contexts/payments-context';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { BudgetsProvider } from '@/contexts/budgets-context';
 import { CategoriesProvider } from '@/contexts/categories-context';
+import { GoalsProvider } from '@/contexts/goals-context';
 
 export const metadata: Metadata = {
   title: 'Сімейні фінанси',
@@ -39,7 +40,9 @@ export default function RootLayout({
             <TransactionsProvider>
               <PaymentsProvider>
                 <BudgetsProvider>
-                  {children}
+                  <GoalsProvider>
+                    {children}
+                  </GoalsProvider>
                 </BudgetsProvider>
               </PaymentsProvider>
             </TransactionsProvider>

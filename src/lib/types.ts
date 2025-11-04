@@ -44,3 +44,12 @@ export type FamilyMember = {
     email: string;
     color: string;
 }
+
+export type Goal = {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  createdAt: Date | Timestamp;
+  familyMemberId?: string;
+};
