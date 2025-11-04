@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useTransactions } from '@/contexts/transactions-context';
 import { subMonths, startOfDay } from 'date-fns';
+import { Timestamp } from 'firebase/firestore';
 
 export default function AiSuggestions() {
   const { transactions } = useTransactions();
@@ -36,7 +37,7 @@ export default function AiSuggestions() {
 
     const spendingPatterns = transactions
       .filter((t) => {
-        const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
+        const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
         return t.type === 'expense' && transactionDate >= startDate;
       })
       .reduce((acc, t) => {
@@ -52,7 +53,7 @@ export default function AiSuggestions() {
         toast({
             variant: 'destructive',
             title: 'Немає даних',
-            description: 'Недостатньо даних про витрати для аналізу.',
+            description: 'Недостатньо даних про витрати за останній рік для аналізу.',
         });
         setIsLoading(false);
         return;
