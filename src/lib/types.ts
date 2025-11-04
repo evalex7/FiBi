@@ -25,7 +25,6 @@ export type Category = {
   icon: string;
   type: 'income' | 'expense';
   familyMemberId?: string;
-  isCommon?: boolean;
 };
 
 export type RecurringPayment = {

@@ -47,7 +47,7 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
           const batch = writeBatch(firestore);
           defaultCategories.forEach(category => {
             const newDocRef = doc(categoriesCollectionRef);
-            batch.set(newDocRef, {...category, familyMemberId: user.uid, isCommon: true});
+            batch.set(newDocRef, {...category, familyMemberId: user.uid });
           });
           batch.commit().catch(error => {
             console.error("Batch write for default categories failed:", error);
