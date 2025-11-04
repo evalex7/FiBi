@@ -18,9 +18,7 @@ service cloud.firestore {
 
     match /categories/{categoryId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() && isOwner(request.resource.data);
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn() && isOwner(resource.data);
+      allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
 
     match /expenses/{expenseId} {
