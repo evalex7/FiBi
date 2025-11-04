@@ -148,11 +148,11 @@ export default function TransactionForm({ transaction, onSave, initialAmount }: 
                     <Input id="amount" type="number" placeholder="0.00" required value={amount} onChange={(e) => setAmount(e.target.value)} />
                     <Popover open={isCalculatorOpen} onOpenChange={setIsCalculatorOpen}>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" size="icon">
+                            <Button variant="outline" size="icon" type="button">
                                 <Calculator className="h-4 w-4" />
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
+                        <PopoverContent className="w-auto p-0" align="end">
                             <ReceiptCalculator
                                 initialAmount={parseFloat(amount) || 0}
                                 onDone={(total) => {
@@ -170,6 +170,7 @@ export default function TransactionForm({ transaction, onSave, initialAmount }: 
                   <PopoverTrigger asChild>
                     <Button
                       variant={'outline'}
+                      type="button"
                       className={cn(
                         'w-full justify-start text-left font-normal',
                         !date && 'text-muted-foreground'
