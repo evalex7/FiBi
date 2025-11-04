@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useCategories } from '@/contexts/categories-context';
 import type { Category } from '@/lib/types';
 import { categoryIcons } from '@/lib/category-icons';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import CategoryForm from './CategoryForm';
 import { Badge } from '../ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 export default function CategoryList() {
   const { categories, isLoading, deleteCategory } = useCategories();
@@ -57,7 +58,7 @@ export default function CategoryList() {
   );
 
   return (
-    <>
+    <TooltipProvider>
       {isLoading ? (
         <LoadingSkeleton />
       ) : sortedCategories.length === 0 ? (
@@ -68,11 +69,22 @@ export default function CategoryList() {
         <div className="space-y-2">
           {sortedCategories.map(category => {
             const Icon = categoryIcons[category.icon];
+            const isPersonal = category.isCommon === false;
             return (
               <div key={category.id} className="flex items-center gap-4 p-2 rounded-lg border">
                 {Icon && <div className="h-8 w-8 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}
-                <div className="flex-grow font-medium">
-                  {category.name}
+                <div className="flex-grow font-medium flex items-center gap-2">
+                  <span>{category.name}</span>
+                  {isPersonal && (
+                    <Tooltip>
+                        <TooltipTrigger>
+                           <User className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                           <p>Особиста категорія</p>
+                        </TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
                 <div className="flex items-center gap-4">
                   <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
@@ -127,6 +139,6 @@ export default function CategoryList() {
             {categoryToEdit && <CategoryForm category={categoryToEdit} onSave={() => setCategoryToEdit(null)} />}
         </DialogContent>
       </Dialog>
-    </>
+    </TooltipProvider>
   );
 }
