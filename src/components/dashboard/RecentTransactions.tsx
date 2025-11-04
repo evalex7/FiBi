@@ -65,12 +65,22 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
     return transaction.familyMemberId === user?.uid;
   };
 
-  const getTransactionDescription = (transaction: Transaction) => {
+  const getTransactionInfo = (transaction: Transaction) => {
     const isOwner = transaction.familyMemberId === user?.uid;
     if (transaction.isPrivate && !isOwner) {
-      return 'Особиста витрата';
+      return {
+        description: 'Особиста витрата',
+        category: null,
+        amountDisplay: '***',
+        isMasked: true
+      };
     }
-    return transaction.description;
+    return {
+      description: transaction.description,
+      category: transaction.category,
+      amountDisplay: transaction.formattedAmount,
+      isMasked: false
+    };
   };
 
   useEffect(() => {
@@ -82,7 +92,9 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
     };
 
     if (transactions) {
-      const filteredByPeriod = transactions.filter(t => {
+      const formatted = transactions.map(t => ({ ...t, formattedAmount: formatCurrency(t.amount) }));
+
+      const filteredByPeriod = formatted.filter(t => {
         if (selectedPeriod === 'all') return true;
         
         const periodDate = parseISO(`${selectedPeriod}-01`);
@@ -94,7 +106,7 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
       });
 
       const filteredBySearch = filteredByPeriod.filter(t => {
-        const description = getTransactionDescription(t);
+        const { description } = getTransactionInfo(t);
         return description.toLowerCase().includes(searchTerm.toLowerCase())
       });
 
@@ -103,10 +115,10 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
             const dateA = a.date && (a.date as any).toDate ? (a.date as any).toDate() : new Date(a.date);
             const dateB = b.date && (b.date as any).toDate ? (b.date as any).toDate() : new Date(b.date);
             return dateB.getTime() - dateA.getTime();
-        })
-        .map(t => ({ ...t, formattedAmount: formatCurrency(t.amount) }));
+        });
       setSortedTransactions(newSorted);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions, selectedPeriod, searchTerm, user]);
 
   const handleDelete = () => {
@@ -204,7 +216,7 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
               <div className="space-y-2">
                 {sortedTransactions.map((transaction) => {
                   const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
-                  const description = getTransactionDescription(transaction);
+                  const { description, amountDisplay, isMasked } = getTransactionInfo(transaction);
                   return (
                     <div key={transaction.id} className="flex items-center gap-3 p-2 rounded-lg border">
                       <TransactionUserAvatar userId={transaction.familyMemberId} />
@@ -218,11 +230,12 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
                         <div
                             className={cn(
                                 'font-medium text-base whitespace-nowrap',
-                                transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                                transaction.type === 'income' ? 'text-green-600' : 'text-red-600',
+                                isMasked && 'font-mono'
                             )}
                             >
                             {transaction.type === 'income' ? '+' : '-'}
-                            {transaction.formattedAmount}
+                            {amountDisplay}
                         </div>
                         <TransactionActions transaction={transaction} />
                       </div>
@@ -247,10 +260,11 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
                 </TableHeader>
                 <TableBody>
                   {sortedTransactions.map((transaction) => {
-                     const categoryInfo = categories.find(c => c.name === transaction.category);
+                     const { description, category, amountDisplay, isMasked } = getTransactionInfo(transaction);
+                     const categoryInfo = category ? categories.find(c => c.name === category) : null;
                      const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
                     const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
-                    const description = getTransactionDescription(transaction);
+
                     return (
                       <TableRow key={transaction.id}>
                         <TableCell>
@@ -258,10 +272,13 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
                         </TableCell>
                         <TableCell className="font-medium">{description}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="flex items-center gap-2 w-fit">
-                            {Icon && <Icon className="h-3 w-3" />}
-                            {transaction.category}
-                          </Badge>
+                          {category && Icon && (
+                            <Badge variant="outline" className="flex items-center gap-2 w-fit">
+                              <Icon className="h-3 w-3" />
+                              {category}
+                            </Badge>
+                          )}
+                           {isMasked && <Badge variant="outline">Особиста</Badge>}
                         </TableCell>
                         <TableCell>
                           {format(date, 'd MMM, yyyy', { locale: uk })}
@@ -269,11 +286,12 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
                         <TableCell
                           className={cn(
                             'text-right font-medium',
-                            transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                             transaction.type === 'income' ? 'text-green-600' : 'text-red-600',
+                             isMasked && 'font-mono'
                           )}
                         >
                           {transaction.type === 'income' ? '+' : '-'}
-                          {transaction.formattedAmount}
+                          {amountDisplay}
                         </TableCell>
                         <TableCell>
                           <TransactionActions transaction={transaction} />
@@ -321,5 +339,3 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
     </Card>
   );
 }
-
-    
