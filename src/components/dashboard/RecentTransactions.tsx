@@ -61,6 +61,18 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
   const [transactionToCopy, setTransactionToCopy] = useState<Transaction | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const canEditOrDelete = (transaction: Transaction) => {
+    return transaction.familyMemberId === user?.uid;
+  };
+
+  const getTransactionDescription = (transaction: Transaction) => {
+    const isOwner = transaction.familyMemberId === user?.uid;
+    if (transaction.isPrivate && !isOwner) {
+      return 'Особиста витрата';
+    }
+    return transaction.description;
+  };
+
   useEffect(() => {
     const formatCurrency = (amount: number) => {
       return new Intl.NumberFormat('uk-UA', {
@@ -81,9 +93,10 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
         return transactionDate >= periodStart && transactionDate <= periodEnd;
       });
 
-      const filteredBySearch = filteredByPeriod.filter(t => 
-        t.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const filteredBySearch = filteredByPeriod.filter(t => {
+        const description = getTransactionDescription(t);
+        return description.toLowerCase().includes(searchTerm.toLowerCase())
+      });
 
       const newSorted = [...filteredBySearch]
         .sort((a, b) => {
@@ -94,17 +107,13 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
         .map(t => ({ ...t, formattedAmount: formatCurrency(t.amount) }));
       setSortedTransactions(newSorted);
     }
-  }, [transactions, selectedPeriod, searchTerm]);
+  }, [transactions, selectedPeriod, searchTerm, user]);
 
   const handleDelete = () => {
     if (transactionToDelete) {
       deleteTransaction(transactionToDelete.id);
       setTransactionToDelete(null);
     }
-  };
-
-  const canEditOrDelete = (transaction: Transaction) => {
-    return transaction.familyMemberId === user?.uid;
   };
   
   const handleCopy = (transaction: Transaction) => {
@@ -195,11 +204,12 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
               <div className="space-y-2">
                 {sortedTransactions.map((transaction) => {
                   const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
+                  const description = getTransactionDescription(transaction);
                   return (
                     <div key={transaction.id} className="flex items-center gap-3 p-2 rounded-lg border">
                       <TransactionUserAvatar userId={transaction.familyMemberId} />
                       <div className="flex-grow space-y-1 min-w-0">
-                          <p className="font-medium truncate">{transaction.description}</p>
+                          <p className="font-medium truncate">{description}</p>
                           <p className="text-xs text-muted-foreground">
                           {format(date, 'dd.MM.yy', { locale: uk })}
                           </p>
@@ -240,13 +250,13 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
                      const categoryInfo = categories.find(c => c.name === transaction.category);
                      const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
                     const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
-
+                    const description = getTransactionDescription(transaction);
                     return (
                       <TableRow key={transaction.id}>
                         <TableCell>
                           <TransactionUserAvatar userId={transaction.familyMemberId} />
                         </TableCell>
-                        <TableCell className="font-medium">{transaction.description}</TableCell>
+                        <TableCell className="font-medium">{description}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="flex items-center gap-2 w-fit">
                             {Icon && <Icon className="h-3 w-3" />}
