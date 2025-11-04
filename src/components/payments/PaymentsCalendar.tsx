@@ -10,6 +10,8 @@ import { uk } from 'date-fns/locale';
 import { categoryIcons } from '@/lib/category-icons';
 import { useCategories } from '@/contexts/categories-context';
 import { Timestamp } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
+import { Skeleton } from '../ui/skeleton';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('uk-UA', {
@@ -44,20 +46,37 @@ export default function PaymentsCalendar() {
     return paymentsByDay.get(dayKey) || [];
   }, [selectedDay, paymentsByDay]);
 
-  const DayWithPayments = ({ date }: { date: Date }) => {
+  const DayWithPayments = ({ date, ...props }: { date: Date } & React.HTMLAttributes<HTMLDivElement>) => {
     const dayKey = format(date, 'yyyy-MM-dd');
     const hasPayments = paymentsByDay.has(dayKey);
 
     return (
-      <div className="relative h-full w-full flex items-center justify-center">
-        {format(date, 'd')}
+      <div {...props}>
         {hasPayments && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full bg-primary" />}
+        {format(date, 'd')}
       </div>
     );
   };
   
+  const LoadingSkeleton = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+            <CardContent className="p-4">
+                <Skeleton className="h-[280px] w-full" />
+            </CardContent>
+        </Card>
+        <Card>
+            <CardContent className="pt-6 space-y-4">
+                <Skeleton className="h-6 w-1/2" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+            </CardContent>
+        </Card>
+    </div>
+  );
+
   if (isLoading) {
-    return <Card><CardContent className="pt-6">Завантаження календаря...</CardContent></Card>
+    return <LoadingSkeleton />;
   }
 
   return (
@@ -73,9 +92,10 @@ export default function PaymentsCalendar() {
           className="p-0 sm:p-3"
           classNames={{
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-            day: "h-10 w-10 sm:h-12 sm:w-12 text-base rounded-md",
-            head_cell: "text-muted-foreground rounded-md w-10 sm:w-12 font-normal text-[0.8rem]",
-            cell: 'w-full',
+            day_today: "bg-accent text-accent-foreground",
+            day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md",
+            head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
+            cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
           }}
           components={{
             Day: ({ date }) => <DayWithPayments date={date} />,
