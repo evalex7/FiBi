@@ -5,9 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { usePayments } from '@/contexts/payments-context';
 import type { RecurringPayment } from '@/lib/types';
-import { addMonths, format, startOfMonth, isSameDay } from 'date-fns';
+import { format, startOfMonth } from 'date-fns';
 import { uk } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
 import { categoryIcons } from '@/lib/category-icons';
 import { useCategories } from '@/contexts/categories-context';
 import { Timestamp } from 'firebase/firestore';
@@ -50,9 +49,9 @@ export default function PaymentsCalendar() {
     const hasPayments = paymentsByDay.has(dayKey);
 
     return (
-      <div className="relative h-full w-full">
+      <div className="relative h-full w-full flex items-center justify-center">
         {format(date, 'd')}
-        {hasPayments && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full bg-primary" />}
+        {hasPayments && <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full bg-primary" />}
       </div>
     );
   };
@@ -74,8 +73,9 @@ export default function PaymentsCalendar() {
           className="p-3"
           classNames={{
             day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-            day: "h-14 w-14 text-base",
-            head_cell: "text-muted-foreground rounded-md w-14 font-normal text-sm",
+            day: "h-12 w-12 text-base rounded-md",
+            head_cell: "text-muted-foreground rounded-md w-12 font-normal text-sm",
+            cell: 'w-full',
           }}
           components={{
             Day: ({ date }) => <DayWithPayments date={date} />,
