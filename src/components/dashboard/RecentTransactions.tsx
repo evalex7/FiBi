@@ -42,6 +42,7 @@ import { Skeleton } from '../ui/skeleton';
 import { useUser } from '@/firebase';
 import { useCategories } from '@/contexts/categories-context';
 import TransactionUserAvatar from './TransactionUserAvatar';
+import { Input } from '../ui/input';
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
 
@@ -58,6 +59,7 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [transactionToCopy, setTransactionToCopy] = useState<Transaction | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const formatCurrency = (amount: number) => {
@@ -68,7 +70,7 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
     };
 
     if (transactions) {
-      const filtered = transactions.filter(t => {
+      const filteredByPeriod = transactions.filter(t => {
         if (selectedPeriod === 'all') return true;
         
         const periodDate = parseISO(`${selectedPeriod}-01`);
@@ -79,7 +81,11 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
         return transactionDate >= periodStart && transactionDate <= periodEnd;
       });
 
-      const newSorted = [...filtered]
+      const filteredBySearch = filteredByPeriod.filter(t => 
+        t.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      const newSorted = [...filteredBySearch]
         .sort((a, b) => {
             const dateA = a.date && (a.date as any).toDate ? (a.date as any).toDate() : new Date(a.date);
             const dateB = b.date && (b.date as any).toDate ? (b.date as any).toDate() : new Date(b.date);
@@ -88,7 +94,7 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
         .map(t => ({ ...t, formattedAmount: formatCurrency(t.amount) }));
       setSortedTransactions(newSorted);
     }
-  }, [transactions, selectedPeriod]);
+  }, [transactions, selectedPeriod, searchTerm]);
 
   const handleDelete = () => {
     if (transactionToDelete) {
@@ -103,8 +109,13 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
   
   const handleCopy = (transaction: Transaction) => {
     setTransactionToCopy(transaction);
-    setEditingTransaction(null); // Ensure edit dialog is closed
+    setEditingTransaction(null);
   };
+  
+  const handleEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setTransactionToCopy(null);
+  }
   
   const closeForms = () => {
     setEditingTransaction(null);
@@ -127,7 +138,7 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
           </DropdownMenuItem>
           {canEditOrDelete(transaction) && (
             <>
-              <DropdownMenuItem onClick={() => setEditingTransaction(transaction)}>
+              <DropdownMenuItem onClick={() => handleEdit(transaction)}>
                 <Pencil className="mr-2 h-4 w-4" />
                 <span>Редагувати</span>
               </DropdownMenuItem>
@@ -162,13 +173,20 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
       <CardHeader>
         <CardTitle>Транзакції</CardTitle>
         <CardDescription>Огляд ваших доходів та витрат.</CardDescription>
+        <div className="pt-2">
+            <Input 
+                placeholder="Пошук за описом..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <LoadingSkeleton />
         ) : sortedTransactions.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
-            За цей період транзакцій немає.
+            {searchTerm ? `Нічого не знайдено за запитом "${searchTerm}"` : 'За цей період транзакцій немає.'}
           </div>
         ) : (
           <>
@@ -293,3 +311,5 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
     </Card>
   );
 }
+
+    
