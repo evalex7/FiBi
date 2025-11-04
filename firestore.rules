@@ -10,59 +10,50 @@ service cloud.firestore {
     function isOwner(doc) {
       return request.auth.uid == doc.familyMemberId;
     }
-    
-    function canReadData() {
-      return isSignedIn();
-    }
 
     match /users/{userId} {
-      allow read: if canReadData();
+      allow read: if isSignedIn();
       allow write: if request.auth.uid == userId;
     }
 
-    match /categories {
-      allow list: if canReadData();
-    }
-    match /categories/{documentId} {
-      allow get: if canReadData();
-      allow create: if isSignedIn() && isOwner(request.resource.data);
-      allow update, delete: if isSignedIn() && isOwner(resource.data);
+    match /categories/{document=**} {
+      allow read: if isSignedIn();
     }
     
-    match /expenses {
-        allow list: if canReadData();
-    }
-    match /expenses/{documentId} {
-      allow get: if canReadData();
-      allow create: if isSignedIn() && isOwner(request.resource.data);
-      allow update, delete: if isSignedIn() && isOwner(resource.data);
+    match /categories/{categoryId} {
+        allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
 
-    match /budgets {
-      allow list: if canReadData();
+    match /expenses/{document=**} {
+      allow read: if isSignedIn();
     }
-    match /budgets/{documentId} {
-      allow get: if canReadData();
-      allow create: if isSignedIn() && isOwner(request.resource.data);
-      allow update, delete: if isSignedIn() && isOwner(resource.data);
+
+    match /expenses/{expenseId} {
+        allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
-    
-    match /payments {
-      allow list: if canReadData();
+
+    match /budgets/{document=**} {
+      allow read: if isSignedIn();
     }
-    match /payments/{documentId} {
-      allow get: if canReadData();
-      allow create: if isSignedIn() && isOwner(request.resource.data);
-      allow update, delete: if isSignedIn() && isOwner(resource.data);
+
+    match /budgets/{budgetId} {
+        allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
     
-    match /goals {
-      allow list: if canReadData();
+    match /payments/{document=**} {
+      allow read: if isSignedIn();
     }
-    match /goals/{documentId} {
-      allow get: if canReadData();
-      allow create: if isSignedIn() && isOwner(request.resource.data);
-      allow update, delete: if isSignedIn() && isOwner(resource.data);
+
+    match /payments/{paymentId} {
+        allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
+    }
+    
+    match /goals/{document=**} {
+      allow read: if isSignedIn();
+    }
+    
+    match /goals/{goalId} {
+        allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
   }
 }
