@@ -124,7 +124,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
                 e.preventDefault();
                 onPayClick(payment);
             }}>
-                Сплатити
+                Сплачено
             </Button>
         </div>
       </DropdownMenuItem>
