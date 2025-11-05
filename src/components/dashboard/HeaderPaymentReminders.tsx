@@ -176,7 +176,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative rounded-full h-10 w-10 focus-visible:ring-0 focus-visible:ring-offset-0">
+        <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full focus-visible:ring-0 focus-visible:ring-offset-0">
           {totalReminders > 0 && (
             <>
                 <span className="absolute inline-flex h-full w-full rounded-full bg-destructive animate-ping" />
@@ -186,7 +186,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
           <Bell className="relative h-5 w-5 text-white" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-screen max-w-[calc(100vw-2rem)] sm:w-80 sm:max-w-none shadow-lg border-0 sm:border" align="end">
+      <DropdownMenuContent className="w-[calc(100vw-2rem)] sm:w-80 shadow-lg border-0 sm:border" align="end">
         <DropdownMenuLabel>Нагадування про рахунки</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {isLoading ? (
