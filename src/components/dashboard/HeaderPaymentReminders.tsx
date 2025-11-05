@@ -185,7 +185,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
         <Button variant="ghost" size="icon" className="relative flex items-center justify-center rounded-full focus-visible:ring-0 focus-visible:ring-offset-0">
             {totalReminders > 0 ? (
                 <>
-                    <span className="animate-ping absolute inline-flex h-3/4 w-3/4 rounded-full bg-red-400 opacity-75"></span>
+                    <span className="animate-ping absolute inline-flex h-2/3 w-2/3 rounded-full bg-red-400 opacity-75"></span>
                     <Bell className="h-5 w-5 text-white relative" />
                 </>
             ) : (
