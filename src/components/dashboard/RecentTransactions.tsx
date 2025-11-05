@@ -147,7 +147,7 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
+          <Button variant="ghost" className="h-8 w-8 p-0 focus-visible:ring-0 focus-visible:ring-offset-0">
             <span className="sr-only">Відкрити меню</span>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
