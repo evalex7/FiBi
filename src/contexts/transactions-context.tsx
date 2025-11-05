@@ -1,13 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useMemo, ReactNode, useState, useEffect } from 'react';
-import type { Transaction } from '@/lib/types';
+import type { RecurringPayment, Transaction } from '@/lib/types';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { usePayments } from './payments-context';
 
 interface TransactionsContextType {
   transactions: WithId<Transaction>[];
@@ -22,6 +23,7 @@ const TransactionsContext = createContext<TransactionsContextType | undefined>(u
 export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
   const { user } = useUser();
+  const { payments, markPaymentAsPaid } = usePayments();
 
   const transactionsCollectionRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -45,6 +47,17 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
           })
         );
       });
+    
+    // Check if this transaction corresponds to a recurring payment
+    const correspondingPayment = payments.find(p => 
+        p.category === transactionData.category && 
+        p.amount === transactionData.amount &&
+        p.description === transactionData.description
+    );
+
+    if (correspondingPayment) {
+        markPaymentAsPaid(correspondingPayment);
+    }
   };
 
   const updateTransaction = (updatedTransaction: WithId<Transaction>) => {
@@ -93,7 +106,7 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
     updateTransaction,
     deleteTransaction,
     isLoading
-  }), [transactions, isLoading, user]);
+  }), [transactions, isLoading, user, payments]);
 
 
   return (

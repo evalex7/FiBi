@@ -43,13 +43,13 @@ export default function RootLayout({
         >
           <FirebaseClientProvider>
             <CategoriesProvider>
-              <TransactionsProvider>
-                <PaymentsProvider>
+              <PaymentsProvider>
+                <TransactionsProvider>
                   <BudgetsProvider>
                     {children}
                   </BudgetsProvider>
-                </PaymentsProvider>
-              </TransactionsProvider>
+                </TransactionsProvider>
+              </PaymentsProvider>
             </CategoriesProvider>
           </FirebaseClientProvider>
           <Toaster />

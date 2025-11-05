@@ -35,22 +35,22 @@ import { Switch } from '../ui/switch';
 type TransactionFormProps = {
     transaction?: Transaction;
     onSave?: () => void;
-    initialAmount?: number;
+    initialValues?: Partial<Transaction>;
     isCopy?: boolean;
 };
 
 
-export default function TransactionForm({ transaction, onSave, initialAmount, isCopy = false }: TransactionFormProps) {
+export default function TransactionForm({ transaction, onSave, initialValues, isCopy = false }: TransactionFormProps) {
   const { addTransaction, updateTransaction } = useTransactions();
   const { categories: availableCategories } = useCategories();
-  const [type, setType] = useState<Transaction['type']>('expense');
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [type, setType] = useState<Transaction['type']>(initialValues?.type || 'expense');
+  const [date, setDate] = useState<Date | undefined>(initialValues?.date ? (initialValues.date as Date) : new Date());
   const { toast } = useToast();
   
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [amount, setAmount] = useState(String(initialValues?.amount || ''));
+  const [description, setDescription] = useState(initialValues?.description || '');
+  const [category, setCategory] = useState(initialValues?.category || '');
+  const [isPrivate, setIsPrivate] = useState(initialValues?.isPrivate || false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
   const isEditMode = !!transaction && !isCopy;
@@ -71,11 +71,16 @@ export default function TransactionForm({ transaction, onSave, initialAmount, is
                 : new Date(transaction.date);
             setDate(transactionDate);
         }
-    } else if (initialAmount) {
-        setAmount(String(initialAmount));
-        setType('expense');
+    } else if (initialValues) {
+        setType(initialValues.type || 'expense');
+        setAmount(String(initialValues.amount || ''));
+        setDescription(initialValues.description || '');
+        setCategory(initialValues.category || '');
+        setIsPrivate(initialValues.isPrivate || false);
+        setDate(initialValues.date ? (initialValues.date as Date) : new Date());
     }
-  }, [transaction, isEditMode, initialAmount, isCopy]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transaction, initialValues, isCopy]);
 
 
   const categories = availableCategories.filter(c => c.type === type);

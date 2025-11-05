@@ -22,7 +22,7 @@ import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/fireb
 import { useEffect, useState, useRef } from 'react';
 import { Button } from './ui/button';
 import { doc } from 'firebase/firestore';
-import type { FamilyMember } from '@/lib/types';
+import type { FamilyMember, RecurringPayment, Transaction } from '@/lib/types';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import {
   DropdownMenu,
@@ -35,6 +35,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import TransactionForm from './dashboard/TransactionForm';
+import HeaderPaymentReminders from './dashboard/HeaderPaymentReminders';
 
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
@@ -60,6 +61,7 @@ export default function AppLayout({
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
+  const [prefilledTransaction, setPrefilledTransaction] = useState<Partial<Transaction> | undefined>(undefined);
   const lastScrollY = useRef(0);
 
   const userDocRef = useMemoFirebase(() => {
@@ -104,6 +106,20 @@ export default function AppLayout({
       return pathname === '/dashboard';
     }
     return pathname.startsWith(href);
+  };
+
+  const handleOpenTransactionForm = (payment?: RecurringPayment) => {
+    if (payment) {
+        setPrefilledTransaction({
+            amount: payment.amount,
+            description: payment.description,
+            category: payment.category,
+            type: 'expense'
+        });
+    } else {
+        setPrefilledTransaction(undefined);
+    }
+    setIsAddTransactionOpen(true);
   };
   
   if (isMobile === null) {
@@ -279,10 +295,11 @@ export default function AppLayout({
             </div>
 
             <div className="flex w-full flex-1 md:w-auto md:flex-initial justify-end items-center gap-2">
-                <Button size="sm" onClick={() => setIsAddTransactionOpen(true)}>
+                <Button size="sm" onClick={() => handleOpenTransactionForm()}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Додати транзакцію
                 </Button>
+                <HeaderPaymentReminders onPayClick={handleOpenTransactionForm} />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="rounded-full">
@@ -321,7 +338,10 @@ export default function AppLayout({
                     Запишіть новий дохід або витрату до вашого рахунку.
                     </DialogDescription>
                 </DialogHeader>
-                <TransactionForm onSave={() => setIsAddTransactionOpen(false)} />
+                <TransactionForm
+                    onSave={() => setIsAddTransactionOpen(false)}
+                    initialValues={prefilledTransaction}
+                />
             </DialogContent>
         </Dialog>
     </div>
