@@ -69,7 +69,7 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
     const isOwner = transaction.familyMemberId === user?.uid;
     if (transaction.isPrivate && !isOwner) {
       return {
-        description: 'Особиста витрата',
+        description: '***',
         category: null,
         amountDisplay: '***',
         isMasked: true
@@ -278,7 +278,7 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
                               {category}
                             </Badge>
                           )}
-                           {isMasked && <Badge variant="outline">Особиста</Badge>}
+                           {isMasked && <Badge variant="outline">***</Badge>}
                         </TableCell>
                         <TableCell>
                           {format(date, 'd MMM, yyyy', { locale: uk })}
@@ -339,3 +339,5 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
     </Card>
   );
 }
+
+    
