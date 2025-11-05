@@ -24,6 +24,9 @@ import {
 import { cn } from '@/lib/utils';
 import { useTransactions } from '@/contexts/transactions-context';
 import { Progress } from '../ui/progress';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('uk-UA', {
@@ -36,8 +39,9 @@ type HeaderPaymentRemindersProps = {
 }
 
 export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemindersProps) {
-  const { payments, isLoading: isPaymentsLoading } = usePayments();
+  const { payments, isLoading: isPaymentsLoading, updatePayment } = usePayments();
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
+  const firestore = useFirestore();
   const isLoading = isPaymentsLoading || isTransactionsLoading;
 
   const { overdue, upcoming, totalReminders } = useMemo(() => {
@@ -66,7 +70,27 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
         
       const remaining = payment.amount - spent;
 
-      if (remaining <= 0) return; // Skip paid bills
+      if (remaining <= 0) { // If fully paid, check if we need to update the due date
+          const dueDate = payment.nextDueDate instanceof Timestamp ? payment.nextDueDate.toDate() : new Date(payment.nextDueDate);
+          if (firestore && isBefore(startOfDay(dueDate), today)) {
+             let nextDueDate: Date;
+             switch(payment.frequency) {
+                case 'quarterly':
+                    nextDueDate = addDays(addQuarters(dueDate, 1), 1);
+                    break;
+                case 'yearly':
+                    nextDueDate = addDays(addYears(dueDate, 1), 1);
+                    break;
+                case 'monthly':
+                default:
+                    nextDueDate = addDays(addMonths(dueDate, 1), 1);
+                    break;
+             }
+             const paymentDocRef = doc(firestore, 'payments', payment.id);
+             updateDocumentNonBlocking(paymentDocRef, { nextDueDate: Timestamp.fromDate(nextDueDate) });
+          }
+          return;
+      };
 
       const dueDate =
         payment.nextDueDate instanceof Timestamp
@@ -100,7 +124,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
     const totalReminders = overdue.length + upcoming.length;
 
     return { overdue, upcoming, totalReminders };
-  }, [payments, transactions, isLoading]);
+  }, [payments, transactions, isLoading, firestore]);
 
   const getDaysLabel = (dueDate: Date) => {
     const today = startOfDay(new Date());
@@ -158,14 +182,14 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative flex items-center justify-center focus-visible:ring-0 focus-visible:ring-offset-0">
+        <Button variant="ghost" size="icon" className="relative h-10 w-10 flex items-center justify-center rounded-full focus-visible:ring-0 focus-visible:ring-offset-0">
             {totalReminders > 0 ? (
                 <>
-                    <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-red-400 opacity-75"></span>
-                    <Bell className="h-5 w-5 text-white relative" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <Bell className="h-6 w-6 text-white relative" />
                 </>
             ) : (
-                <Bell className="h-5 w-5" />
+                <Bell className="h-6 w-6" />
             )}
         </Button>
       </DropdownMenuTrigger>

@@ -303,7 +303,7 @@ export default function AppLayout({
                 <HeaderPaymentReminders onPayClick={handleOpenTransactionForm} />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="rounded-full">
+                        <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
                            <UserAvatar />
                         </Button>
                     </DropdownMenuTrigger>
