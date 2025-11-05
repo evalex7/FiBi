@@ -2,7 +2,7 @@
 
 import { usePayments } from '@/contexts/payments-context';
 import { useMemo } from 'react';
-import { startOfDay, isBefore, isToday, addDays, format, differenceInDays } from 'date-fns';
+import { startOfDay, isBefore, isToday, addDays, format, differenceInDays, startOfMonth, endOfMonth } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { RecurringPayment } from '@/lib/types';
 import { Timestamp } from 'firebase/firestore';
@@ -23,6 +23,7 @@ import {
 } from '../ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useTransactions } from '@/contexts/transactions-context';
+import { Progress } from '../ui/progress';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('uk-UA', {
@@ -31,37 +32,57 @@ const formatCurrency = (amount: number) =>
   }).format(amount);
 
 type HeaderPaymentRemindersProps = {
-    onPayClick: (payment: RecurringPayment) => void;
+    onPayClick: (payment: Partial<RecurringPayment & { remainingAmount: number }>) => void;
 }
 
 export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemindersProps) {
-  const { payments, isLoading } = usePayments();
+  const { payments, isLoading: isPaymentsLoading } = usePayments();
+  const { transactions, isLoading: isTransactionsLoading } = useTransactions();
+  const isLoading = isPaymentsLoading || isTransactionsLoading;
 
   const { overdue, upcoming, totalReminders } = useMemo(() => {
-    const overdue: RecurringPayment[] = [];
-    const upcoming: RecurringPayment[] = [];
+    let overdue: (RecurringPayment & { spent: number; remaining: number })[] = [];
+    let upcoming: (RecurringPayment & { spent: number; remaining: number })[] = [];
 
     if (isLoading || !payments) {
       return { overdue, upcoming, totalReminders: 0 };
     }
-
+    
     const today = startOfDay(new Date());
     const upcomingLimit = addDays(today, 7);
+    const monthStart = startOfMonth(today);
+    const monthEnd = endOfMonth(today);
 
     payments.forEach(payment => {
+      const spent = transactions
+        .filter(t => {
+            const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+            return t.category === payment.category &&
+                   t.type === 'expense' &&
+                   transactionDate >= monthStart &&
+                   transactionDate <= monthEnd;
+        })
+        .reduce((sum, t) => sum + t.amount, 0);
+        
+      const remaining = payment.amount - spent;
+
+      if (remaining <= 0) return; // Skip paid bills
+
       const dueDate =
         payment.nextDueDate instanceof Timestamp
           ? payment.nextDueDate.toDate()
           : new Date(payment.nextDueDate);
       const dueDateStartOfDay = startOfDay(dueDate);
+      
+      const paymentWithInfo = { ...payment, spent, remaining };
 
       if (isBefore(dueDateStartOfDay, today)) {
-        overdue.push(payment);
+        overdue.push(paymentWithInfo);
       } else if (
         isBefore(dueDateStartOfDay, upcomingLimit) ||
         isToday(dueDateStartOfDay)
       ) {
-        upcoming.push(payment);
+        upcoming.push(paymentWithInfo);
       }
     });
 
@@ -79,7 +100,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
     const totalReminders = overdue.length + upcoming.length;
 
     return { overdue, upcoming, totalReminders };
-  }, [payments, isLoading]);
+  }, [payments, transactions, isLoading]);
 
   const getDaysLabel = (dueDate: Date) => {
     const today = startOfDay(new Date());
@@ -101,30 +122,34 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
     payment,
     isOverdue = false,
   }: {
-    payment: RecurringPayment;
+    payment: RecurringPayment & { spent: number; remaining: number };
     isOverdue?: boolean;
   }) => {
     const dueDate =
       payment.nextDueDate instanceof Timestamp
         ? payment.nextDueDate.toDate()
         : new Date(payment.nextDueDate);
+        
+    const progress = (payment.spent / payment.amount) * 100;
 
     return (
-      <DropdownMenuItem className="flex flex-col items-start gap-2 focus:bg-transparent">
-        <div className="flex w-full justify-between items-start">
-            <div className="space-y-1">
-                <p className="font-semibold">{payment.description}</p>
-                <p className={cn("text-sm", isOverdue ? "text-destructive" : "text-amber-600")}>
-                    {getDaysLabel(dueDate)}
-                </p>
-                <p className="text-xs text-muted-foreground">{formatCurrency(payment.amount)}</p>
+      <DropdownMenuItem className="flex flex-col items-start gap-2 focus:bg-transparent" onSelect={(e) => e.preventDefault()}>
+        <div className="w-full space-y-2">
+            <div className="flex w-full justify-between items-start">
+                <div className="space-y-0.5">
+                    <p className="font-semibold">{payment.description}</p>
+                    <p className={cn("text-sm", isOverdue ? "text-destructive" : "text-amber-600")}>
+                        {getDaysLabel(dueDate)}
+                    </p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => onPayClick({ ...payment, remainingAmount: payment.remaining })}>
+                    Додати
+                </Button>
             </div>
-            <Button size="sm" variant="outline" onClick={(e) => {
-                e.preventDefault();
-                onPayClick(payment);
-            }}>
-                Сплачено
-            </Button>
+             <div className="text-xs text-muted-foreground">
+                <p>Залишилось: <span className="font-medium text-foreground">{formatCurrency(payment.remaining)}</span> з {formatCurrency(payment.amount)}</p>
+             </div>
+             <Progress value={progress} className="h-2" />
         </div>
       </DropdownMenuItem>
     );

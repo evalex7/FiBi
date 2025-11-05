@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { usePayments } from '@/contexts/payments-context';
 import type { RecurringPayment } from '@/lib/types';
 import { categoryIcons } from '@/lib/category-icons';
@@ -18,9 +18,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import PaymentForm from './PaymentForm';
 import { useCategories } from '@/contexts/categories-context';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
+import { useTransactions } from '@/contexts/transactions-context';
+import { Progress } from '../ui/progress';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('uk-UA', {
@@ -37,11 +39,38 @@ const getFrequencyLabel = (frequency: RecurringPayment['frequency']) => {
 }
 
 export default function PaymentsList() {
-  const { payments, isLoading, deletePayment } = usePayments();
+  const { payments, isLoading: isPaymentsLoading, deletePayment } = usePayments();
   const { categories } = useCategories();
+  const { transactions, isLoading: isTransactionsLoading } = useTransactions();
+  const isLoading = isPaymentsLoading || isTransactionsLoading;
 
   const [paymentToDelete, setPaymentToDelete] = useState<RecurringPayment | null>(null);
   const [paymentToEdit, setPaymentToEdit] = useState<RecurringPayment | null>(null);
+  
+  const paymentsWithSpent = useMemo(() => {
+    if (!payments || !transactions) return [];
+    
+    const today = new Date();
+    const monthStart = startOfMonth(today);
+    const monthEnd = endOfMonth(today);
+
+    return payments.map(payment => {
+       const spent = transactions
+        .filter(t => {
+            const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+            return t.category === payment.category &&
+                   t.type === 'expense' &&
+                   transactionDate >= monthStart &&
+                   transactionDate <= monthEnd;
+        })
+        .reduce((sum, t) => sum + t.amount, 0);
+        
+      const remaining = payment.amount - spent;
+      const progress = (spent / payment.amount) * 100;
+      
+      return { ...payment, spent, remaining, progress };
+    }).sort((a, b) => a.description.localeCompare(b.description, 'uk'));
+  }, [payments, transactions]);
 
   const handleDelete = () => {
     if (paymentToDelete) {
@@ -72,46 +101,54 @@ export default function PaymentsList() {
       <CardContent>
         {isLoading ? (
           <LoadingSkeleton />
-        ) : payments.length === 0 ? (
+        ) : paymentsWithSpent.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
             Ще немає регулярних рахунків.
           </div>
         ) : (
-          <div className="space-y-2">
-            {payments.map(payment => {
+          <div className="space-y-4">
+            {paymentsWithSpent.map(payment => {
               const categoryInfo = categories.find(c => c.name === payment.category);
               const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
               const dueDate = payment.nextDueDate instanceof Timestamp ? payment.nextDueDate.toDate() : new Date(payment.nextDueDate);
 
               return (
-                <div key={payment.id} className="flex items-center gap-4 p-2 rounded-lg border">
-                  {Icon && <div className="h-8 w-8 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}
-                  <div className="flex-grow font-medium">
-                    <p>{payment.description}</p>
-                    <p className="text-xs text-muted-foreground">{getFrequencyLabel(payment.frequency)}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">{formatCurrency(payment.amount)}</p>
-                    <p className="text-xs text-muted-foreground">Наст. дата: {format(dueDate, 'dd.MM.yyyy', { locale: uk })}</p>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Відкрити меню</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setPaymentToEdit(payment)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        <span>Редагувати</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setPaymentToDelete(payment)} className="text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Видалити</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <div key={payment.id} className="p-3 rounded-lg border">
+                    <div className="flex items-start gap-4">
+                        {Icon && <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}
+                        <div className="flex-grow font-medium min-w-0">
+                            <p className="truncate">{payment.description}</p>
+                            <p className="text-xs text-muted-foreground">{getFrequencyLabel(payment.frequency)}</p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                            <p className="font-medium">{formatCurrency(payment.amount)}</p>
+                            <p className="text-xs text-muted-foreground">Наст. дата: {format(dueDate, 'dd.MM.yyyy', { locale: uk })}</p>
+                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 flex-shrink-0">
+                                <span className="sr-only">Відкрити меню</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setPaymentToEdit(payment)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                <span>Редагувати</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPaymentToDelete(payment)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Видалити</span>
+                            </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    <div className="mt-2">
+                        <div className="text-xs text-muted-foreground mb-1">
+                            <p>Сплачено: <span className="font-medium text-foreground">{formatCurrency(payment.spent)}</span> / {formatCurrency(payment.amount)}</p>
+                        </div>
+                        <Progress value={payment.progress} />
+                    </div>
                 </div>
               );
             })}

@@ -8,7 +8,6 @@ import { WithId } from '@/firebase/firestore/use-collection';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { usePayments } from './payments-context';
 
 interface TransactionsContextType {
   transactions: WithId<Transaction>[];

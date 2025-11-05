@@ -109,10 +109,10 @@ export default function AppLayout({
     return pathname.startsWith(href);
   };
 
-  const handleOpenTransactionForm = (payment?: RecurringPayment) => {
+  const handleOpenTransactionForm = (payment?: Partial<RecurringPayment & { remainingAmount: number }>) => {
     if (payment) {
         setPrefilledTransaction({
-            amount: payment.amount,
+            amount: payment.remainingAmount,
             description: payment.description,
             category: payment.category,
             type: 'expense'

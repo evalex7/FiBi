@@ -77,7 +77,7 @@ export default function TransactionForm({ transaction, onSave, initialValues, is
         setDescription(initialValues.description || '');
         setCategory(initialValues.category || '');
         setIsPrivate(initialValues.isPrivate || false);
-        setDate(initialValues.date ? (initialValues.date as Date) : new Date());
+        setDate(initialValues.date ? new Date(initialValues.date.toString()) : new Date());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transaction, initialValues, isCopy]);
