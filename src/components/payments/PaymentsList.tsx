@@ -114,15 +114,17 @@ export default function PaymentsList() {
 
               return (
                 <div key={payment.id} className="p-3 rounded-lg border">
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-3">
                         {Icon && <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}
-                        <div className="flex-grow font-medium min-w-0">
-                            <p className="truncate">{payment.description}</p>
-                            <p className="text-xs text-muted-foreground">{getFrequencyLabel(payment.frequency)}</p>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                            <p className="font-medium">{formatCurrency(payment.amount)}</p>
-                            <p className="text-xs text-muted-foreground">Наст. дата: {format(dueDate, 'dd.MM.yyyy', { locale: uk })}</p>
+                        <div className="flex-grow min-w-0 space-y-1">
+                           <div className="flex justify-between items-center">
+                                <p className="font-medium truncate pr-2">{payment.description}</p>
+                                <p className="font-medium flex-shrink-0">{formatCurrency(payment.amount)}</p>
+                           </div>
+                           <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>{getFrequencyLabel(payment.frequency)}</span>
+                                <span>Наст. дата: {format(dueDate, 'dd.MM.yyyy', { locale: uk })}</span>
+                           </div>
                         </div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -145,7 +147,7 @@ export default function PaymentsList() {
                     </div>
                     <div className="mt-2">
                         <div className="text-xs text-muted-foreground mb-1">
-                            <p>Сплачено: <span className="font-medium text-foreground">{formatCurrency(payment.spent)}</span> / {formatCurrency(payment.amount)}</p>
+                            <p>Сплачено в цьому місяці: <span className="font-medium text-foreground">{formatCurrency(payment.spent)}</span> / {formatCurrency(payment.amount)}</p>
                         </div>
                         <Progress value={payment.progress} />
                     </div>
