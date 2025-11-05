@@ -186,7 +186,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
             {totalReminders > 0 && (
                 <span className="animate-ping absolute inline-flex h-2/3 w-2/3 rounded-full bg-destructive"></span>
             )}
-            <Bell className={cn("h-5 w-5", totalReminders > 0 && "text-white")} />
+            <Bell className={cn("relative h-5 w-5", totalReminders > 0 && "text-white")} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80" align="end">
