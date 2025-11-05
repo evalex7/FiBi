@@ -39,7 +39,7 @@ type HeaderPaymentRemindersProps = {
 }
 
 export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemindersProps) {
-  const { payments, isLoading: isPaymentsLoading, updatePayment } = usePayments();
+  const { payments, isLoading: isPaymentsLoading } = usePayments();
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const firestore = useFirestore();
   const isLoading = isPaymentsLoading || isTransactionsLoading;
@@ -70,9 +70,8 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
         
       const remaining = payment.amount - spent;
 
-      if (remaining <= 0) { // If fully paid, check if we need to update the due date
-          const dueDate = payment.nextDueDate instanceof Timestamp ? payment.nextDueDate.toDate() : new Date(payment.nextDueDate);
-          if (firestore && isBefore(startOfDay(dueDate), today)) {
+      const dueDate = payment.nextDueDate instanceof Timestamp ? payment.nextDueDate.toDate() : new Date(payment.nextDueDate);
+      if (remaining <= 0 && firestore && isBefore(startOfDay(dueDate), today)) { // If fully paid, check if we need to update the due date
              let nextDueDate: Date;
              switch(payment.frequency) {
                 case 'quarterly':
@@ -88,14 +87,9 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
              }
              const paymentDocRef = doc(firestore, 'payments', payment.id);
              updateDocumentNonBlocking(paymentDocRef, { nextDueDate: Timestamp.fromDate(nextDueDate) });
-          }
           return;
       };
 
-      const dueDate =
-        payment.nextDueDate instanceof Timestamp
-          ? payment.nextDueDate.toDate()
-          : new Date(payment.nextDueDate);
       const dueDateStartOfDay = startOfDay(dueDate);
       
       const paymentWithInfo = { ...payment, spent, remaining };
@@ -103,8 +97,8 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
       if (isBefore(dueDateStartOfDay, today)) {
         overdue.push(paymentWithInfo);
       } else if (
-        isBefore(dueDateStartOfDay, upcomingLimit) ||
-        isToday(dueDateStartOfDay)
+        (isBefore(dueDateStartOfDay, upcomingLimit) ||
+        isToday(dueDateStartOfDay)) && remaining > 0
       ) {
         upcoming.push(paymentWithInfo);
       }
@@ -124,7 +118,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
     const totalReminders = overdue.length + upcoming.length;
 
     return { overdue, upcoming, totalReminders };
-  }, [payments, transactions, isLoading, firestore, updatePayment]);
+  }, [payments, transactions, isLoading, firestore]);
 
   const getDaysLabel = (dueDate: Date) => {
     const today = startOfDay(new Date());
@@ -182,11 +176,14 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative rounded-full focus-visible:ring-0 focus-visible:ring-offset-2">
+        <Button variant="ghost" size="icon" className="relative rounded-full h-10 w-10 focus-visible:ring-0 focus-visible:ring-offset-0">
           {totalReminders > 0 && (
-            <span className="absolute inline-flex h-2/3 w-2/3 rounded-full bg-destructive animate-pulse" />
+            <>
+                <span className="absolute inline-flex h-full w-full rounded-full bg-destructive animate-ping" />
+                <span className="absolute inline-flex rounded-full h-full w-full bg-destructive" />
+            </>
           )}
-          <Bell className="relative h-5 w-5 text-foreground" />
+          <Bell className="relative h-5 w-5 text-white" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80" align="end">
