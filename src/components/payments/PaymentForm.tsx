@@ -58,10 +58,7 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
     }
   }, [payment, isEditMode]);
 
-  const expenseCategories = categories.filter(c => {
-    const isBill = ['Житло', 'Комунальні послуги', 'Моб. зв\'язок', 'Інтернет', 'Підписки'].includes(c.name);
-    return c.type === 'expense' && (isBill || c.name.startsWith('Інше'));
-  });
+  const expenseCategories = categories.filter(c => c.type === 'expense');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,13 +84,13 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
         updatePayment({ ...payment, ...paymentData });
         toast({
           title: 'Успіх!',
-          description: 'Ваш платіж було оновлено.',
+          description: 'Ваш рахунок було оновлено.',
         });
     } else {
         addPayment(paymentData);
         toast({
           title: 'Успіх!',
-          description: 'Ваш платіж було додано.',
+          description: 'Ваш рахунок було додано.',
         });
     }
     
@@ -153,7 +150,7 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="date">Наступна дата платежу</Label>
+                <Label htmlFor="date">Наступна дата рахунку</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -187,14 +184,14 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
                         <SelectContent>
                             <SelectItem value="monthly">Щомісяця</SelectItem>
                             <SelectItem value="quarterly">Щокварталу</SelectItem>
-                            <SelectItem value="yearly">Щорічно</SelectItem>
+                            <SelectItem value="yearly">Щороку</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
             </div>
           <Button type="submit" className="w-full">
               {isEditMode ? <Pencil className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-              {isEditMode ? 'Зберегти зміни' : 'Додати платіж'}
+              {isEditMode ? 'Зберегти зміни' : 'Додати рахунок'}
             </Button>
         </form>
   );

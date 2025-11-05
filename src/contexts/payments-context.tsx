@@ -17,7 +17,6 @@ interface PaymentsContextType {
   addPayment: (payment: Omit<RecurringPayment, 'id' | 'familyMemberId'>) => void;
   updatePayment: (payment: WithId<RecurringPayment>) => void;
   deletePayment: (id: string) => void;
-  markPaymentAsPaid: (payment: WithId<RecurringPayment>) => void;
   isLoading: boolean;
 }
 
@@ -71,27 +70,6 @@ export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
       });
   };
 
-  const markPaymentAsPaid = (payment: WithId<RecurringPayment>) => {
-    const dueDate = payment.nextDueDate instanceof Timestamp ? payment.nextDueDate.toDate() : new Date(payment.nextDueDate);
-    let nextDueDate: Date;
-    
-    switch (payment.frequency) {
-        case 'monthly':
-            nextDueDate = addMonths(dueDate, 1);
-            break;
-        case 'quarterly':
-            nextDueDate = addQuarters(dueDate, 1);
-            break;
-        case 'yearly':
-            nextDueDate = addYears(dueDate, 1);
-            break;
-        default:
-            nextDueDate = addMonths(dueDate, 1);
-    }
-    
-    updatePayment({ ...payment, nextDueDate: startOfDay(nextDueDate) });
-  };
-
   const deletePayment = (id: string) => {
     if (!firestore || !user) return;
     const paymentDocRef = doc(firestore, 'payments', id);
@@ -111,7 +89,6 @@ export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
     addPayment,
     updatePayment,
     deletePayment,
-    markPaymentAsPaid,
     isLoading
   }), [payments, isLoading, user]);
 

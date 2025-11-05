@@ -13,6 +13,7 @@ import {
   Settings,
   Menu,
   PlusCircle,
+  Receipt,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
@@ -40,7 +41,7 @@ import HeaderPaymentReminders from './dashboard/HeaderPaymentReminders';
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
   { href: '/budgets', label: 'Бюджети', icon: Target },
-  { href: '/payments', label: 'Платежі', icon: Repeat },
+  { href: '/payments', label: 'Рахунки', icon: Receipt },
   { href: '/reports', label: 'Звіти', icon: AreaChart },
 ];
 
@@ -249,7 +250,7 @@ export default function AppLayout({
       menuItems.find(i => i.href === '/budgets'),
       menuItems.find(i => i.href === '/payments'),
       menuItems.find(i => i.href === '/reports'),
-    ].filter(Boolean) as typeof menuItems;
+    ].filter(Boolean) as (typeof menuItems[0])[];
 
 
     return (

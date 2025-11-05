@@ -20,13 +20,13 @@ export default function PaymentsPage() {
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
 
   return (
-    <AppLayout pageTitle="Платежі">
+    <AppLayout pageTitle="Рахунки">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold tracking-tight">Календар платежів</h2>
+            <h2 className="text-2xl font-bold tracking-tight">Календар рахунків</h2>
             <Button onClick={() => setIsAddPaymentOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Додати платіж
+                Додати рахунок
             </Button>
         </div>
         <PaymentsCalendar />
@@ -36,9 +36,9 @@ export default function PaymentsPage() {
        <Dialog open={isAddPaymentOpen} onOpenChange={setIsAddPaymentOpen}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Додати регулярний платіж</DialogTitle>
+                <DialogTitle>Додати регулярний рахунок</DialogTitle>
                 <DialogDescription>
-                    Створіть новий повторюваний платіж, щоб відстежувати його.
+                    Створіть новий повторюваний рахунок, щоб відстежувати його.
                 </DialogDescription>
             </DialogHeader>
             <PaymentForm onSave={() => setIsAddPaymentOpen(false)} />

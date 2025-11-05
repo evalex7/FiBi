@@ -23,7 +23,6 @@ const TransactionsContext = createContext<TransactionsContextType | undefined>(u
 export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
   const { user } = useUser();
-  const { payments, markPaymentAsPaid } = usePayments();
 
   const transactionsCollectionRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -47,17 +46,6 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
           })
         );
       });
-    
-    // Check if this transaction corresponds to a recurring payment
-    const correspondingPayment = payments.find(p => 
-        p.category === transactionData.category && 
-        p.amount === transactionData.amount &&
-        p.description === transactionData.description
-    );
-
-    if (correspondingPayment) {
-        markPaymentAsPaid(correspondingPayment);
-    }
   };
 
   const updateTransaction = (updatedTransaction: WithId<Transaction>) => {
@@ -106,7 +94,7 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
     updateTransaction,
     deleteTransaction,
     isLoading
-  }), [transactions, isLoading, user, payments]);
+  }), [transactions, isLoading, user]);
 
 
   return (

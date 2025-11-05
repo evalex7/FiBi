@@ -36,7 +36,6 @@ type HeaderPaymentRemindersProps = {
 
 export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemindersProps) {
   const { payments, isLoading } = usePayments();
-  const { addTransaction } = useTransactions();
 
   const { overdue, upcoming, totalReminders } = useMemo(() => {
     const overdue: RecurringPayment[] = [];
@@ -145,7 +144,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80" align="end">
-        <DropdownMenuLabel>Нагадування про платежі</DropdownMenuLabel>
+        <DropdownMenuLabel>Нагадування про рахунки</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {isLoading ? (
           <DropdownMenuItem>Завантаження...</DropdownMenuItem>
@@ -153,7 +152,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
           <div className="px-2 py-4 text-center text-sm text-muted-foreground">
             <CalendarCheck2 className="mx-auto h-8 w-8 text-green-500 mb-2" />
             <p>Все сплачено!</p>
-            <p>Немає найближчих платежів.</p>
+            <p>Немає найближчих рахунків.</p>
           </div>
         ) : (
           <>

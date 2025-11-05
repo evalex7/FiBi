@@ -67,14 +67,14 @@ export default function PaymentsList() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Усі регулярні платежі</CardTitle>
+        <CardTitle>Усі регулярні рахунки</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <LoadingSkeleton />
         ) : payments.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
-            Ще немає регулярних платежів.
+            Ще немає регулярних рахунків.
           </div>
         ) : (
           <div className="space-y-2">
@@ -124,7 +124,7 @@ export default function PaymentsList() {
           <AlertDialogHeader>
             <AlertDialogTitle>Ви впевнені?</AlertDialogTitle>
             <AlertDialogDescription>
-              Цю дію неможливо скасувати. Це назавжди видалить ваш регулярний платіж.
+              Цю дію неможливо скасувати. Це назавжди видалить ваш регулярний рахунок.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -137,8 +137,8 @@ export default function PaymentsList() {
       <Dialog open={!!paymentToEdit} onOpenChange={(isOpen) => !isOpen && setPaymentToEdit(null)}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Редагувати платіж</DialogTitle>
-                <DialogDescription>Оновіть деталі вашого регулярного платежу.</DialogDescription>
+                <DialogTitle>Редагувати рахунок</DialogTitle>
+                <DialogDescription>Оновіть деталі вашого регулярного рахунку.</DialogDescription>
             </DialogHeader>
             {paymentToEdit && <PaymentForm payment={paymentToEdit} onSave={() => setPaymentToEdit(null)} />}
         </DialogContent>
