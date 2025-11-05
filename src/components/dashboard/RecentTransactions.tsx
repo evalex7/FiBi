@@ -218,7 +218,7 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
                   const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
                   const { description, amountDisplay, isMasked } = getTransactionInfo(transaction);
                   return (
-                    <div key={transaction.id} className="flex items-center gap-3 p-2 rounded-lg border">
+                    <div key={transaction.id} className="flex items-center gap-3 p-3 rounded-lg border">
                       <TransactionUserAvatar userId={transaction.familyMemberId} />
                       <div className="flex-grow space-y-1 min-w-0">
                           <p className="font-medium truncate">{description}</p>
