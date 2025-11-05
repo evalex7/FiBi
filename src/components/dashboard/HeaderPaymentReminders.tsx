@@ -2,7 +2,7 @@
 
 import { usePayments } from '@/contexts/payments-context';
 import { useMemo } from 'react';
-import { startOfDay, isBefore, isToday, addDays, format, differenceInDays, startOfMonth, endOfMonth } from 'date-fns';
+import { startOfDay, isBefore, isToday, addDays, format, differenceInDays, startOfMonth, endOfMonth, addMonths, addQuarters, addYears } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import type { RecurringPayment } from '@/lib/types';
 import { Timestamp } from 'firebase/firestore';
