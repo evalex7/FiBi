@@ -46,7 +46,7 @@ export const categoryIcons: { [key: string]: LucideIcon } = {
   'HeartPulse': HeartPulse,
 };
 
-export const defaultCategories: Omit<Category, 'id'>[] = [
+export const defaultCategories: Omit<Category, 'id'| 'familyMemberId'>[] = [
   { name: 'Продукти', icon: 'ShoppingCart', type: 'expense' },
   { name: 'Транспорт', icon: 'Car', type: 'expense' },
   { name: 'Житло', icon: 'Home', type: 'expense' },

@@ -6,22 +6,28 @@ import { PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import BudgetForm from '@/components/budgets/BudgetForm';
+import AiSuggestions from '@/components/budgets/AiSuggestions';
 
 export default function BudgetsPage() {
   const [isAddBudgetOpen, setIsAddBudgetOpen] = useState(false);
 
   return (
     <AppLayout pageTitle="Бюджети">
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold tracking-tight">Місячні бюджети</h2>
-          <Button onClick={() => setIsAddBudgetOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Додати бюджет
-          </Button>
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="md:col-span-2 space-y-6">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold tracking-tight">Місячні бюджети</h2>
+              <Button onClick={() => setIsAddBudgetOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Додати бюджет
+              </Button>
+            </div>
+            <BudgetList />
+          </div>
+          <div className="space-y-6">
+            <AiSuggestions />
+          </div>
         </div>
-        <BudgetList />
-      </div>
       <Dialog open={isAddBudgetOpen} onOpenChange={setIsAddBudgetOpen}>
         <DialogContent>
             <DialogHeader>

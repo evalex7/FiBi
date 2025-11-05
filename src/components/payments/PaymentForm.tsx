@@ -58,7 +58,10 @@ export default function PaymentForm({ payment, onSave }: PaymentFormProps) {
     }
   }, [payment, isEditMode]);
 
-  const expenseCategories = categories.filter(c => c.type === 'expense');
+  const expenseCategories = categories.filter(c => {
+    const isBill = ['Житло', 'Комунальні послуги', 'Моб. зв\'язок', 'Інтернет', 'Підписки'].includes(c.name);
+    return c.type === 'expense' && (isBill || c.name.startsWith('Інше'));
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
