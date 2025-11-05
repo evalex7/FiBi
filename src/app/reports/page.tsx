@@ -19,6 +19,8 @@ import {
   LineChart,
   Line,
   CartesianGrid,
+  AreaChart,
+  Area,
 } from 'recharts';
 import {
   ChartContainer,
@@ -278,68 +280,76 @@ export default function ReportsPage() {
     return { data: chartData, config };
   }, [filteredTransactions, isLoading, categoryPeriod]);
 
-  const monthlyTrendData = useMemo(() => {
-    if (isLoading || filteredTransactions.length < 1) return [];
+  const trendData = useMemo(() => {
+    if (isLoading || transactions.length < 1) return [];
+
+    let startDate: Date;
+    let endDate: Date;
+    let intervalDays: Date[];
 
     if (trendPeriod === 'daily') {
-        const now = new Date();
-        const start = startOfMonth(now);
-        const end = endOfMonth(now);
-        const daysInMonth = eachDayOfInterval({ start, end });
-
-        const data: { [key: string]: { dateLabel: string, income: number, expenses: number, date: Date } } = {};
-        
-        daysInMonth.forEach(day => {
-            const dayKey = format(day, 'yyyy-MM-dd');
-            data[dayKey] = {
-                dateLabel: format(day, 'd LLL', { locale: uk }),
-                income: 0,
-                expenses: 0,
-                date: day,
-            }
-        });
-        
-        filteredTransactions.forEach(t => {
-            const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
-            if (transactionDate >= start && transactionDate <= end) {
-                const dayKey = format(transactionDate, 'yyyy-MM-dd');
-                if (data[dayKey]) {
-                    if (t.type === 'income') {
-                        data[dayKey].income += t.amount;
-                    } else {
-                        data[dayKey].expenses += t.amount;
-                    }
-                }
-            }
-        });
-
-        return Object.values(data).sort((a, b) => a.date.getTime() - b.date.getTime());
-
+      const now = new Date();
+      startDate = startOfMonth(now);
+      endDate = endOfMonth(now);
+      intervalDays = eachDayOfInterval({ start: startDate, end: endDate });
     } else { // monthly
-        const data: { [key: string]: { dateLabel: string, income: number, expenses: number, date: Date } } = {};
-
-        filteredTransactions.forEach(t => {
-            const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
-            const monthKey = format(transactionDate, 'yyyy-MM');
-
-            if (!data[monthKey]) {
-                data[monthKey] = {
-                dateLabel: format(transactionDate, 'LLL yy', { locale: uk }),
-                income: 0,
-                expenses: 0,
-                date: startOfMonth(transactionDate),
-                };
-            }
-            if (t.type === 'income') {
-                data[monthKey].income += t.amount;
-            } else {
-                data[monthKey].expenses += t.amount;
-            }
-        });
-        
-        return Object.values(data).sort((a, b) => a.date.getTime() - b.date.getTime());
+      startDate = earliestTransactionDate ? startOfMonth(earliestTransactionDate) : startOfMonth(new Date());
+      endDate = endOfMonth(new Date());
+       intervalDays = eachDayOfInterval({ start: startDate, end: endDate });
     }
-  }, [filteredTransactions, isLoading, trendPeriod]);
+
+    const dailyTotals: { [key: string]: { income: number, expenses: number } } = {};
+    
+    transactions.forEach(t => {
+      const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+      const dayKey = format(transactionDate, 'yyyy-MM-dd');
+
+      if (!dailyTotals[dayKey]) {
+        dailyTotals[dayKey] = { income: 0, expenses: 0 };
+      }
+      if (t.type === 'income') {
+        dailyTotals[dayKey].income += t.amount;
+      } else {
+        dailyTotals[dayKey].expenses += t.amount;
+      }
+    });
+
+    let cumulativeIncome = 0;
+    let cumulativeExpenses = 0;
+    
+    const chartData = intervalDays.map(day => {
+        const dayKey = format(day, 'yyyy-MM-dd');
+        if (dailyTotals[dayKey]) {
+            cumulativeIncome += dailyTotals[dayKey].income;
+            cumulativeExpenses += dailyTotals[dayKey].expenses;
+        }
+
+        let dateLabel: string;
+         if (trendPeriod === 'daily') {
+            dateLabel = format(day, 'd LLL', { locale: uk });
+        } else {
+             dateLabel = format(day, 'LLL yy', { locale: uk });
+        }
+
+        return {
+            date: day,
+            dateLabel,
+            income: cumulativeIncome,
+            expenses: cumulativeExpenses,
+        };
+    });
+
+    if (trendPeriod === 'monthly') {
+        const monthlyData: { [key: string]: (typeof chartData[0]) } = {};
+        chartData.forEach(data => {
+            const monthKey = format(data.date, 'yyyy-MM');
+            monthlyData[monthKey] = data; // Keep only the last entry for each month
+        });
+        return Object.values(monthlyData).sort((a,b) => a.date.getTime() - b.date.getTime());
+    }
+
+    return chartData;
+}, [transactions, isLoading, trendPeriod, earliestTransactionDate]);
 
   const incomeVsExpenseChart = (
     <Card>
@@ -503,15 +513,15 @@ export default function ReportsPage() {
             </div>
         </CardHeader>
         <CardContent className="px-2 sm:px-4">
-            {isLoading || monthlyTrendData.length < 2 ? (
+            {isLoading || trendData.length < 2 ? (
                 <div className="text-center text-muted-foreground py-8">
                     Потрібно більше даних для відображення динаміки.
                 </div>
             ) : (
             <ChartContainer config={lineChartConfig} className="h-[400px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                        data={monthlyTrendData}
+                    <AreaChart
+                        data={trendData}
                         margin={{ left: 0, right: 16 }}
                     >
                         <CartesianGrid vertical={false} />
@@ -560,22 +570,32 @@ export default function ReportsPage() {
                             return null;
                             }}
                         />
-                        <Line
+                         <defs>
+                            <linearGradient id="fillIncome" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="var(--color-income)" stopOpacity={0.8} />
+                                <stop offset="95%" stopColor="var(--color-income)" stopOpacity={0.1} />
+                            </linearGradient>
+                            <linearGradient id="fillExpenses" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="var(--color-expenses)" stopOpacity={0.8} />
+                                <stop offset="95%" stopColor="var(--color-expenses)" stopOpacity={0.1} />
+                            </linearGradient>
+                        </defs>
+                        <Area
                             dataKey="income"
                             type="monotone"
+                            fill="url(#fillIncome)"
                             stroke="var(--color-income)"
-                            strokeWidth={2}
-                            dot={false}
+                            stackId="1"
                         />
-                        <Line
+                         <Area
                             dataKey="expenses"
                             type="monotone"
-                            stroke="var(--color-expenses)"
-                            strokeWidth={2}
-                            dot={false}
+                            fill="url(#fillExpenses)"
+                             stroke="var(--color-expenses)"
+                            stackId="2"
                         />
                         <ChartLegend content={<ChartLegendContent />} />
-                    </LineChart>
+                    </AreaChart>
                 </ResponsiveContainer>
             </ChartContainer>
             )}
