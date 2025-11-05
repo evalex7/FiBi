@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import PaymentForm from '@/components/payments/PaymentForm';
 import PaymentsCalendar from '@/components/payments/PaymentsCalendar';
+import PaymentsList from '@/components/payments/PaymentsList';
 
 
 export default function PaymentsPage() {
@@ -29,6 +30,7 @@ export default function PaymentsPage() {
             </Button>
         </div>
         <PaymentsCalendar />
+        <PaymentsList />
       </div>
 
        <Dialog open={isAddPaymentOpen} onOpenChange={setIsAddPaymentOpen}>
