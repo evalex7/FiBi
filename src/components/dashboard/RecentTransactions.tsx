@@ -230,11 +230,11 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
                         <div
                             className={cn(
                                 'font-medium text-base whitespace-nowrap',
-                                transaction.type === 'income' ? 'text-green-600' : 'text-red-600',
+                                !isMasked && (transaction.type === 'income' ? 'text-green-600' : 'text-red-600'),
                                 isMasked && 'font-mono'
                             )}
                             >
-                            {transaction.type === 'income' ? '+' : '-'}
+                            {!isMasked && (transaction.type === 'income' ? '+' : '-')}
                             {amountDisplay}
                         </div>
                         <TransactionActions transaction={transaction} />
@@ -286,11 +286,11 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
                         <TableCell
                           className={cn(
                             'text-right font-medium',
-                             transaction.type === 'income' ? 'text-green-600' : 'text-red-600',
-                             isMasked && 'font-mono'
+                            !isMasked && (transaction.type === 'income' ? 'text-green-600' : 'text-red-600'),
+                            isMasked && 'font-mono'
                           )}
                         >
-                          {transaction.type === 'income' ? '+' : '-'}
+                          {!isMasked && (transaction.type === 'income' ? '+' : '-')}
                           {amountDisplay}
                         </TableCell>
                         <TableCell>
