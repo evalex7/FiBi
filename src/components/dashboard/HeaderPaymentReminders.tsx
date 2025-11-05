@@ -176,11 +176,15 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full focus-visible:ring-0 focus-visible:ring-offset-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative h-10 w-10 rounded-full focus-visible:ring-0 focus-visible:ring-offset-0"
+        >
           {totalReminders > 0 && (
             <>
-                <span className="absolute inline-flex h-full w-full rounded-full bg-destructive animate-ping" />
-                <span className="absolute inline-flex rounded-full h-full w-full bg-destructive" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-destructive animate-ping" />
+              <span className="absolute inline-flex rounded-full h-full w-full bg-destructive" />
             </>
           )}
           <Bell className="relative h-5 w-5 text-white" />
