@@ -183,14 +183,10 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative flex items-center justify-center rounded-full focus-visible:ring-0 focus-visible:ring-offset-0">
-            {totalReminders > 0 ? (
-                <>
-                    <span className="animate-ping absolute inline-flex h-2/3 w-2/3 rounded-full bg-destructive opacity-100"></span>
-                    <Bell className="h-5 w-5 text-white relative" />
-                </>
-            ) : (
-                <Bell className="h-5 w-5" />
+            {totalReminders > 0 && (
+                <span className="animate-ping absolute inline-flex h-2/3 w-2/3 rounded-full bg-destructive"></span>
             )}
+            <Bell className={cn("h-5 w-5", totalReminders > 0 && "text-white")} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80" align="end">
