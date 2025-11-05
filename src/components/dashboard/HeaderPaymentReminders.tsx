@@ -124,7 +124,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
     const totalReminders = overdue.length + upcoming.length;
 
     return { overdue, upcoming, totalReminders };
-  }, [payments, transactions, isLoading, firestore]);
+  }, [payments, transactions, isLoading, firestore, updatePayment]);
 
   const getDaysLabel = (dueDate: Date) => {
     const today = startOfDay(new Date());
@@ -185,7 +185,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
         <Button variant="ghost" size="icon" className="relative flex items-center justify-center rounded-full focus-visible:ring-0 focus-visible:ring-offset-0">
             {totalReminders > 0 ? (
                 <>
-                    <span className="animate-ping absolute inline-flex h-2/3 w-2/3 rounded-full bg-red-400 opacity-75"></span>
+                    <span className="animate-ping absolute inline-flex h-2/3 w-2/3 rounded-full bg-destructive opacity-100"></span>
                     <Bell className="h-5 w-5 text-white relative" />
                 </>
             ) : (
