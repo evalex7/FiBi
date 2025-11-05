@@ -75,14 +75,14 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
              let nextDueDate: Date;
              switch(payment.frequency) {
                 case 'quarterly':
-                    nextDueDate = addDays(addQuarters(dueDate, 1), 1);
+                    nextDueDate = addQuarters(dueDate, 1);
                     break;
                 case 'yearly':
-                    nextDueDate = addDays(addYears(dueDate, 1), 1);
+                    nextDueDate = addYears(dueDate, 1);
                     break;
                 case 'monthly':
                 default:
-                    nextDueDate = addDays(addMonths(dueDate, 1), 1);
+                    nextDueDate = addMonths(dueDate, 1);
                     break;
              }
              const paymentDocRef = doc(firestore, 'payments', payment.id);
@@ -94,7 +94,7 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
       
       const paymentWithInfo = { ...payment, spent, remaining };
 
-      if (isBefore(dueDateStartOfDay, today)) {
+      if (isBefore(dueDateStartOfDay, today) && remaining > 0) {
         overdue.push(paymentWithInfo);
       } else if (
         (isBefore(dueDateStartOfDay, upcomingLimit) ||
@@ -176,17 +176,17 @@ export default function HeaderPaymentReminders({ onPayClick }: HeaderPaymentRemi
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative rounded-full focus-visible:ring-0 focus-visible:ring-offset-0">
+        <Button variant="ghost" size="icon" className="relative rounded-full h-10 w-10 focus-visible:ring-0 focus-visible:ring-offset-0">
           {totalReminders > 0 && (
             <>
-                <span className="animate-ping absolute inline-flex h-2/3 w-2/3 rounded-full bg-destructive" />
-                <span className="absolute inline-flex rounded-full h-2/3 w-2/3 bg-destructive" />
+                <span className="absolute inline-flex h-full w-full rounded-full bg-destructive animate-ping" />
+                <span className="absolute inline-flex rounded-full h-full w-full bg-destructive" />
             </>
           )}
           <Bell className="relative h-5 w-5 text-white" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80" align="end">
+      <DropdownMenuContent className="w-screen max-w-[calc(100vw-2rem)] sm:w-80 sm:max-w-none shadow-lg border-0 sm:border" align="end">
         <DropdownMenuLabel>Нагадування про рахунки</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {isLoading ? (
