@@ -792,7 +792,7 @@ const dailyVaseExpenseChart = (
                 <div className="text-center text-muted-foreground py-8">Немає даних про витрати цього місяця.</div>
             ) : (
                 <ScrollArea className="h-96 w-full pr-4">
-                    <div className="space-y-1">
+                    <div className="flex flex-col">
                         {dailyVaseData.map((day, index) => (
                             <div key={index} className="flex items-center gap-4">
                                 <div className="flex flex-col items-center w-10">
