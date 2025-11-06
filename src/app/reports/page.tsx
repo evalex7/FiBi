@@ -823,13 +823,13 @@ const dailyVaseExpenseChart = (
                   />
                   <div className="relative">
                     {dailyVaseData.map(dayData => (
-                        <div key={dayData.date.toISOString()} className="flex items-center">
+                        <div key={dayData.date.toISOString()} className="flex items-center h-2">
                             <div className="w-8 text-xs text-right text-muted-foreground pr-2">
                                 {format(dayData.date, 'd')}
                             </div>
-                            <div className="flex-1 h-8 flex items-center justify-center">
+                            <div className="flex-1 h-full flex items-center justify-center">
                                 {dayData.total > 0 && (
-                                <div className="flex h-2" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
+                                <div className="flex h-full" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
                                     {dayData.segments.map(segment => (
                                     <Tooltip key={segment.category}>
                                         <TooltipTrigger asChild>
