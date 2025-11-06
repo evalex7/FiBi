@@ -40,12 +40,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths, subDays, eachDayOfInterval, startOfDay } from 'date-fns';
+import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths, subDays, eachDayOfInterval, startOfDay, endOfDay, eachMonthOfInterval } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
 import AppLayout from '@/components/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
 const formatCurrency = (amount: number) => {
   if (amount >= 1000) {
@@ -74,19 +75,24 @@ const lineChartConfig = {
   expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
 
+const dailyVaseChartConfig = {
+  expense: { label: "Витрати" },
+} satisfies ChartConfig;
+
+
 const COLORS = [
   "hsl(var(--chart-1))",
   "hsl(var(--chart-2))",
   "hsl(var(--chart-3))",
   "hsl(var(--chart-4))",
   "hsl(var(--chart-5))",
-  "hsl(260, 80%, 70%)", // A nice purple
-  "hsl(340, 80%, 70%)", // A nice pink
-  "hsl(190, 70%, 50%)", // A nice teal
-  "hsl(220, 80%, 70%)", // A lighter blue
-  "hsl(30, 90%, 60%)",  // A deep orange
-  "hsl(100, 60%, 50%)", // A lime green
-  "hsl(300, 75%, 65%)", // A magenta
+  "hsl(260, 80%, 70%)",
+  "hsl(340, 80%, 70%)",
+  "hsl(190, 70%, 50%)",
+  "hsl(220, 80%, 70%)",
+  "hsl(30, 90%, 60%)",
+  "hsl(100, 60%, 50%)",
+  "hsl(300, 75%, 65%)",
 ];
 
 export default function ReportsPage() {
@@ -353,60 +359,92 @@ export default function ReportsPage() {
 }, [transactions, isLoading, trendPeriod, earliestTransactionDate]);
 
 const { data: categoryTrendData, config: categoryTrendConfig, categories: categoryTrendCategories } = useMemo(() => {
-  if (isLoading) return { data: [], config: {}, categories: [] };
+    if (isLoading) return { data: [], config: {}, categories: [] };
+    
+    const now = new Date();
+    let startDate: Date;
+    switch (categoryTrendPeriod) {
+        case 'last_12_months':
+            startDate = startOfMonth(subMonths(now, 11));
+            break;
+        case 'last_3_months':
+            startDate = startOfMonth(subMonths(now, 2));
+            break;
+        case 'last_6_months':
+        default:
+            startDate = startOfMonth(subMonths(now, 5));
+            break;
+    }
+    const endDate = endOfMonth(now);
   
-  const now = new Date();
-  let startDate: Date;
-  switch (categoryTrendPeriod) {
-      case 'last_12_months':
-          startDate = startOfMonth(subMonths(now, 11));
-          break;
-      case 'last_3_months':
-          startDate = startOfMonth(subMonths(now, 2));
-          break;
-      case 'last_6_months':
-      default:
-          startDate = startOfMonth(subMonths(now, 5));
-          break;
-  }
-  const endDate = endOfMonth(now);
+    const monthlyData: { [month: string]: { monthDate: Date, values: { [category: string]: number } } } = {};
+    const allCategories = new Set<string>();
+  
+    filteredTransactions.forEach(t => {
+        if (t.type === 'expense') {
+            const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+            if (transactionDate >= startDate && transactionDate <= endDate) {
+                const monthKey = format(transactionDate, 'yyyy-MM');
+                if (!monthlyData[monthKey]) {
+                    monthlyData[monthKey] = { monthDate: startOfMonth(transactionDate), values: {} };
+                }
+                monthlyData[monthKey].values[t.category] = (monthlyData[monthKey].values[t.category] || 0) + t.amount;
+                allCategories.add(t.category);
+            }
+        }
+    });
+  
+    const chartData = Object.values(monthlyData)
+      .sort((a, b) => a.monthDate.getTime() - b.monthDate.getTime())
+      .map(({ monthDate, values }) => ({
+          month: format(monthDate, 'LLL yy', { locale: uk }),
+          ...values
+      }));
+  
+    const sortedCategories = Array.from(allCategories).sort((a,b) => a.localeCompare(b));
+  
+    const config: ChartConfig = {};
+    sortedCategories.forEach((category, index) => {
+        config[category] = {
+            label: category,
+            color: COLORS[index % COLORS.length]
+        };
+    });
+  
+    return { data: chartData, config, categories: sortedCategories };
+  }, [filteredTransactions, isLoading, categoryTrendPeriod]);
 
-  const monthlyData: { [month: string]: { monthDate: Date, values: { [category: string]: number } } } = {};
-  const allCategories = new Set<string>();
+const dailyVaseData = useMemo(() => {
+    if (isLoading) return [];
 
-  filteredTransactions.forEach(t => {
-      if (t.type === 'expense') {
-          const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
-          if (transactionDate >= startDate && transactionDate <= endDate) {
-              const monthKey = format(transactionDate, 'yyyy-MM');
-              if (!monthlyData[monthKey]) {
-                  monthlyData[monthKey] = { monthDate: startOfMonth(transactionDate), values: {} };
-              }
-              monthlyData[monthKey].values[t.category] = (monthlyData[monthKey].values[t.category] || 0) + t.amount;
-              allCategories.add(t.category);
-          }
-      }
-  });
+    const now = new Date();
+    const startDate = startOfMonth(now);
+    const endDate = endOfMonth(now);
+    const daysInMonth = eachDayOfInterval({ start: startDate, end: endDate });
 
-  const chartData = Object.values(monthlyData)
-    .sort((a, b) => a.monthDate.getTime() - b.monthDate.getTime())
-    .map(({ monthDate, values }) => ({
-        month: format(monthDate, 'LLL yy', { locale: uk }),
-        ...values
-    }));
+    const dailyExpenses: { [key: string]: number } = {};
 
-  const sortedCategories = Array.from(allCategories).sort((a,b) => a.localeCompare(b));
+    transactions
+        .filter(t => t.type === 'expense')
+        .forEach(t => {
+            const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+            if (transactionDate >= startDate && transactionDate <= endDate) {
+                const dayKey = format(transactionDate, 'yyyy-MM-dd');
+                dailyExpenses[dayKey] = (dailyExpenses[dayKey] || 0) + t.amount;
+            }
+        });
 
-  const config: ChartConfig = sortedCategories.reduce((acc, category, index) => {
-      acc[category] = {
-          label: category,
-          color: COLORS[index % COLORS.length]
-      };
-      return acc;
-  }, {} as ChartConfig);
-
-  return { data: chartData, config, categories: sortedCategories };
-}, [filteredTransactions, isLoading, categoryTrendPeriod]);
+    return daysInMonth.map(day => {
+        const dayKey = format(day, 'yyyy-MM-dd');
+        const expense = dailyExpenses[dayKey] || 0;
+        return {
+            date: format(day, 'd', { locale: uk }),
+            weekday: format(day, 'E', { locale: uk }),
+            expense: expense,
+            negativeExpense: -expense,
+        };
+    });
+}, [transactions, isLoading]);
 
 
   const incomeVsExpenseChart = (
@@ -709,12 +747,12 @@ const categoryTrendChart = (
                   )} />}
                 />
                  <ChartLegend content={<ChartLegendContent className="flex-wrap justify-center" />} />
-                {categoryTrendCategories.map((category, index) => (
+                {categoryTrendCategories.map((category) => (
                   <Bar
                     key={category}
                     dataKey={category}
                     stackId="a"
-                    fill={COLORS[index % COLORS.length]}
+                    fill={categoryTrendConfig[category]?.color}
                     radius={[4, 4, 0, 0]}
                   />
                 ))}
@@ -725,12 +763,82 @@ const categoryTrendChart = (
       </CardContent>
     </Card>
   );
+  
+const dailyVaseExpenseChart = (
+    <Card>
+        <CardHeader>
+            <CardTitle>Ваза витрат</CardTitle>
+            <CardDescription>Щоденні витрати за поточний місяць у вигляді каруселі.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            {isLoading ? (
+                <div className="text-center text-muted-foreground py-8">Завантаження даних...</div>
+            ) : dailyVaseData.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">Немає даних про витрати цього місяця.</div>
+            ) : (
+                <Carousel
+                    opts={{
+                        align: "start",
+                        dragFree: true,
+                    }}
+                    className="w-full"
+                >
+                    <CarouselContent>
+                        {dailyVaseData.map((day, index) => (
+                            <CarouselItem key={index} className="basis-20">
+                                <div className="flex flex-col items-center justify-end h-64">
+                                    <div className="h-48 w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart
+                                                data={[day]}
+                                                margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
+                                            >
+                                                <defs>
+                                                    <linearGradient id="colorExpenseVase" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.8}/>
+                                                        <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0.2}/>
+                                                    </linearGradient>
+                                                </defs>
+                                                <ChartTooltip
+                                                    cursor={false}
+                                                    content={({ active, payload }) => {
+                                                        if (active && payload && payload.length) {
+                                                            return (
+                                                                <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                                                                    <p className="text-muted-foreground">Витрати:</p>
+                                                                    <p className="font-bold">{formatCurrencyTooltip(day.expense)}</p>
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    }}
+                                                />
+                                                <Area type="monotone" dataKey="expense" stroke="hsl(var(--destructive))" fill="url(#colorExpenseVase)" />
+                                                <Area type="monotone" dataKey="negativeExpense" stroke="hsl(var(--destructive))" fill="url(#colorExpenseVase)" />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div className="text-center mt-2">
+                                        <p className="text-sm font-medium">{day.date}</p>
+                                        <p className="text-xs text-muted-foreground">{day.weekday}</p>
+                                    </div>
+                                </div>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                </Carousel>
+            )}
+        </CardContent>
+    </Card>
+);
+
 
 
   return (
     <AppLayout pageTitle="Звіти">
       <div className="w-full space-y-6">
         {incomeVsExpenseChart}
+        {dailyVaseExpenseChart}
         {categoryChart}
         {trendChart}
         {categoryTrendChart}
