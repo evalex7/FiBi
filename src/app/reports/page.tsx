@@ -80,13 +80,13 @@ const COLORS = [
   "hsl(var(--chart-3))",
   "hsl(var(--chart-4))",
   "hsl(var(--chart-5))",
-  "hsl(220, 80%, 70%)",
-  "hsl(340, 80%, 70%)",
-  "hsl(100, 60%, 50%)",
-  "hsl(280, 70%, 60%)",
-  "hsl(40, 90%, 60%)",
-  "hsl(150, 70%, 50%)",
-  "hsl(300, 75%, 65%)",
+  "hsl(260, 80%, 70%)", // A nice purple
+  "hsl(340, 80%, 70%)", // A nice pink
+  "hsl(190, 70%, 50%)", // A nice teal
+  "hsl(220, 80%, 70%)", // A lighter blue
+  "hsl(30, 90%, 60%)",  // A deep orange
+  "hsl(100, 60%, 50%)", // A lime green
+  "hsl(300, 75%, 65%)", // A magenta
 ];
 
 export default function ReportsPage() {
