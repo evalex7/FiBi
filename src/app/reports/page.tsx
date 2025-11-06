@@ -46,7 +46,8 @@ import { Timestamp } from 'firebase/firestore';
 import AppLayout from '@/components/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 const formatCurrency = (amount: number) => {
   if (amount >= 1000) {
@@ -74,11 +75,6 @@ const lineChartConfig = {
   income: { label: "Дохід", color: "hsl(var(--chart-2))" },
   expenses: { label: "Витрати", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
-
-const dailyVaseChartConfig = {
-  expense: { label: "Витрати" },
-} satisfies ChartConfig;
-
 
 const COLORS = [
   "hsl(var(--chart-1))",
@@ -359,7 +355,7 @@ export default function ReportsPage() {
 }, [transactions, isLoading, trendPeriod, earliestTransactionDate]);
 
 const { data: categoryTrendData, config: categoryTrendConfig, categories: categoryTrendCategories } = useMemo(() => {
-    if (isLoading) return { data: [], config: {}, categories: [] };
+    if (isLoading || isCategoriesLoading) return { data: [], config: {}, categories: [] };
     
     const now = new Date();
     let startDate: Date;
@@ -378,7 +374,7 @@ const { data: categoryTrendData, config: categoryTrendConfig, categories: catego
     const endDate = endOfMonth(now);
   
     const monthlyData: { [month: string]: { monthDate: Date, values: { [category: string]: number } } } = {};
-    const allCategories = new Set<string>();
+    const allCategoriesInPeriod = new Set<string>();
   
     filteredTransactions.forEach(t => {
         if (t.type === 'expense') {
@@ -389,7 +385,7 @@ const { data: categoryTrendData, config: categoryTrendConfig, categories: catego
                     monthlyData[monthKey] = { monthDate: startOfMonth(transactionDate), values: {} };
                 }
                 monthlyData[monthKey].values[t.category] = (monthlyData[monthKey].values[t.category] || 0) + t.amount;
-                allCategories.add(t.category);
+                allCategoriesInPeriod.add(t.category);
             }
         }
     });
@@ -401,50 +397,61 @@ const { data: categoryTrendData, config: categoryTrendConfig, categories: catego
           ...values
       }));
   
-    const sortedCategories = Array.from(allCategories).sort((a,b) => a.localeCompare(b));
+    const sortedCategories = Array.from(allCategoriesInPeriod).sort((a,b) => a.localeCompare(b));
   
     const config: ChartConfig = {};
-    sortedCategories.forEach((category, index) => {
-        config[category] = {
-            label: category,
-            color: COLORS[index % COLORS.length]
-        };
+    categories.forEach((category, index) => {
+      const color = COLORS[index % COLORS.length];
+      config[category.name] = {
+        label: category.name,
+        color: color,
+      };
     });
   
     return { data: chartData, config, categories: sortedCategories };
-  }, [filteredTransactions, isLoading, categoryTrendPeriod]);
+}, [filteredTransactions, isLoading, isCategoriesLoading, categories, categoryTrendPeriod]);
 
-const dailyVaseData = useMemo(() => {
-    if (isLoading) return [];
+const { dailyVaseData, dailyVaseConfig } = useMemo(() => {
+    if (isLoading || isCategoriesLoading) return { dailyVaseData: [], dailyVaseConfig: {} };
 
     const now = new Date();
     const startDate = startOfMonth(now);
     const endDate = endOfMonth(now);
     const daysInMonth = eachDayOfInterval({ start: startDate, end: endDate });
 
-    const dailyExpenses: { [key: string]: number } = {};
+    const config: ChartConfig = {};
+    categories.forEach((category, index) => {
+        const color = COLORS[index % COLORS.length];
+        config[category.name] = {
+            label: category.name,
+            color: color,
+        };
+    });
 
-    transactions
-        .filter(t => t.type === 'expense')
-        .forEach(t => {
-            const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
-            if (transactionDate >= startDate && transactionDate <= endDate) {
-                const dayKey = format(transactionDate, 'yyyy-MM-dd');
-                dailyExpenses[dayKey] = (dailyExpenses[dayKey] || 0) + t.amount;
-            }
-        });
-
-    return daysInMonth.map(day => {
-        const dayKey = format(day, 'yyyy-MM-dd');
-        const expense = dailyExpenses[dayKey] || 0;
+    const data = daysInMonth.map(day => {
+        const dailyExpensesByCategory: { [category: string]: number } = {};
+        let total = 0;
+        
+        transactions
+            .filter(t => t.type === 'expense')
+            .forEach(t => {
+                const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+                if (startOfDay(transactionDate).getTime() === startOfDay(day).getTime()) {
+                    dailyExpensesByCategory[t.category] = (dailyExpensesByCategory[t.category] || 0) + t.amount;
+                    total += t.amount;
+                }
+            });
+        
         return {
             date: format(day, 'd', { locale: uk }),
             weekday: format(day, 'E', { locale: uk }),
-            expense: expense,
-            negativeExpense: -expense,
+            total,
+            ...dailyExpensesByCategory
         };
     });
-}, [transactions, isLoading]);
+    
+    return { dailyVaseData: data, dailyVaseConfig: config };
+}, [transactions, isLoading, categories, isCategoriesLoading]);
 
 
   const incomeVsExpenseChart = (
@@ -577,7 +584,7 @@ const dailyVaseData = useMemo(() => {
                   }}
                 >
                 {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${entry.name}`} fill={pieChartConfig[entry.name]?.color || COLORS[index % COLORS.length]} />
                 ))}
                 </Pie>
                 <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
@@ -748,7 +755,7 @@ const categoryTrendChart = (
                 />
                  <ChartLegend content={<ChartLegendContent className="flex-wrap justify-center" />} />
                 {categoryTrendCategories.map((category) => (
-                  <Bar
+                   <Bar
                     key={category}
                     dataKey={category}
                     stackId="a"
@@ -767,8 +774,8 @@ const categoryTrendChart = (
 const dailyVaseExpenseChart = (
     <Card>
         <CardHeader>
-            <CardTitle>Ваза витрат</CardTitle>
-            <CardDescription>Щоденні витрати за поточний місяць у вигляді каруселі.</CardDescription>
+            <CardTitle>Щоденні витрати</CardTitle>
+            <CardDescription>Розбивка витрат по днях за поточний місяць.</CardDescription>
         </CardHeader>
         <CardContent>
             {isLoading ? (
@@ -776,57 +783,65 @@ const dailyVaseExpenseChart = (
             ) : dailyVaseData.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">Немає даних про витрати цього місяця.</div>
             ) : (
-                <Carousel
-                    opts={{
-                        align: "start",
-                        dragFree: true,
-                    }}
-                    className="w-full"
-                >
-                    <CarouselContent>
+                <ScrollArea className="h-96 w-full pr-4">
+                    <div className="space-y-1">
                         {dailyVaseData.map((day, index) => (
-                            <CarouselItem key={index} className="basis-20">
-                                <div className="flex flex-col items-center justify-end h-64">
-                                    <div className="h-48 w-full">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <AreaChart
-                                                data={[day]}
-                                                margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
-                                            >
-                                                <defs>
-                                                    <linearGradient id="colorExpenseVase" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.8}/>
-                                                        <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0.2}/>
-                                                    </linearGradient>
-                                                </defs>
+                            <div key={index} className="flex items-center gap-4">
+                                <div className="flex flex-col items-center w-10">
+                                    <p className="text-sm font-medium">{day.date}</p>
+                                    <p className="text-xs text-muted-foreground">{day.weekday}</p>
+                                </div>
+                                <div className="flex-1">
+                                  {day.total > 0 ? (
+                                    <ChartContainer config={dailyVaseConfig} className="h-8 w-full">
+                                        <ResponsiveContainer>
+                                            <BarChart layout="vertical" data={[day]} stackOffset="expand">
                                                 <ChartTooltip
                                                     cursor={false}
-                                                    content={({ active, payload }) => {
-                                                        if (active && payload && payload.length) {
-                                                            return (
-                                                                <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
-                                                                    <p className="text-muted-foreground">Витрати:</p>
-                                                                    <p className="font-bold">{formatCurrencyTooltip(day.expense)}</p>
-                                                                </div>
-                                                            );
-                                                        }
-                                                        return null;
-                                                    }}
+                                                    content={<ChartTooltipContent 
+                                                      hideIndicator 
+                                                      formatter={(value, name) => (
+                                                        <div className="flex items-center gap-2">
+                                                          <div
+                                                            className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                                                            style={{ backgroundColor: dailyVaseConfig[name as keyof typeof dailyVaseConfig]?.color }}
+                                                          />
+                                                          <div className="flex flex-1 justify-between">
+                                                            <span className="text-muted-foreground">{dailyVaseConfig[name as keyof typeof dailyVaseConfig]?.label}</span>
+                                                            <span className="font-bold">{formatCurrencyTooltip(value as number)}</span>
+                                                          </div>
+                                                        </div>
+                                                      )}
+                                                      labelFormatter={() => `Всього: ${formatCurrencyTooltip(day.total)}`}
+                                                    />}
                                                 />
-                                                <Area type="monotone" dataKey="expense" stroke="hsl(var(--destructive))" fill="url(#colorExpenseVase)" />
-                                                <Area type="monotone" dataKey="negativeExpense" stroke="hsl(var(--destructive))" fill="url(#colorExpenseVase)" />
-                                            </AreaChart>
+                                                {Object.keys(day)
+                                                  .filter(key => key !== 'date' && key !== 'weekday' && key !== 'total')
+                                                  .map((category) => (
+                                                    <Bar
+                                                        key={category}
+                                                        dataKey={category}
+                                                        stackId="a"
+                                                        fill={dailyVaseConfig[category]?.color}
+                                                        radius={0}
+                                                    />
+                                                ))}
+                                            </BarChart>
                                         </ResponsiveContainer>
+                                    </ChartContainer>
+                                  ) : (
+                                    <div className="h-8 w-full flex items-center">
+                                      <div className="h-px w-full bg-border"></div>
                                     </div>
-                                    <div className="text-center mt-2">
-                                        <p className="text-sm font-medium">{day.date}</p>
-                                        <p className="text-xs text-muted-foreground">{day.weekday}</p>
-                                    </div>
+                                  )}
                                 </div>
-                            </CarouselItem>
+                                <div className={cn("w-20 text-right text-sm", day.total === 0 && 'text-muted-foreground')}>
+                                  {formatCurrencyTooltip(day.total)}
+                                </div>
+                            </div>
                         ))}
-                    </CarouselContent>
-                </Carousel>
+                    </div>
+                </ScrollArea>
             )}
         </CardContent>
     </Card>
