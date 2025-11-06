@@ -797,45 +797,35 @@ const dailyVaseExpenseChart = (
                             <div key={index} className="flex items-center gap-4">
                                 <div className="flex flex-col items-center w-10">
                                     <p className="text-sm font-medium">{day.date}</p>
-                                    <p className="text-xs text-muted-foreground">{day.weekday}</p>
                                 </div>
                                 <div className="flex-1">
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <div className="w-full flex justify-center">
-                                                {day.total > 0 ? (
-                                                    <div className="flex h-6 rounded-md overflow-hidden" style={{ width: `${(day.total / maxDailyTotal) * 100}%` }}>
-                                                        {Object.entries(day.categories).map(([category, amount]) => (
+                                    <div className="w-full flex justify-center">
+                                        {day.total > 0 ? (
+                                            <div className="flex h-6 rounded-md overflow-hidden" style={{ width: `${(day.total / maxDailyTotal) * 100}%` }}>
+                                                {Object.entries(day.categories).map(([category, amount]) => (
+                                                    <Tooltip key={category}>
+                                                        <TooltipTrigger asChild>
                                                             <div
-                                                                key={category}
                                                                 className="h-full"
                                                                 style={{
                                                                     width: `${(amount / day.total) * 100}%`,
                                                                     backgroundColor: dailyVaseConfig[category]?.color || '#8884d8',
                                                                 }}
                                                             />
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <div className="h-px w-full bg-border"></div>
-                                                )}
-                                            </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <div className="grid gap-1.5 p-1">
-                                                <p className="font-semibold">Всього: {formatCurrencyTooltip(day.total)}</p>
-                                                {Object.entries(day.categories).map(([category, amount]) => (
-                                                    <div key={category} className="flex items-center gap-2">
-                                                        <div className="h-2.5 w-2.5 rounded-[2px]" style={{ backgroundColor: dailyVaseConfig[category]?.color }} />
-                                                        <div className="flex flex-1 justify-between text-xs">
-                                                            <span className="text-muted-foreground">{dailyVaseConfig[category]?.label}</span>
-                                                            <span className="font-medium">{formatCurrencyTooltip(amount)}</span>
-                                                        </div>
-                                                    </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <div className="grid gap-1.5 p-1">
+                                                                <p className="font-semibold">{dailyVaseConfig[category]?.label}</p>
+                                                                <p>{formatCurrencyTooltip(amount)}</p>
+                                                            </div>
+                                                        </TooltipContent>
+                                                    </Tooltip>
                                                 ))}
                                             </div>
-                                        </TooltipContent>
-                                    </Tooltip>
+                                        ) : (
+                                            <div className="h-px w-full bg-border"></div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className={cn("w-20 text-right text-sm", day.total === 0 && 'text-muted-foreground')}>
                                   {formatCurrencyTooltip(day.total)}
