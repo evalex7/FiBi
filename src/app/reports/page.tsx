@@ -353,58 +353,61 @@ export default function ReportsPage() {
 }, [transactions, isLoading, trendPeriod, earliestTransactionDate]);
 
 const { data: categoryTrendData, config: categoryTrendConfig, categories: categoryTrendCategories } = useMemo(() => {
-    if (isLoading) return { data: [], config: {}, categories: [] };
-    
-    const now = new Date();
-    let startDate: Date;
-    switch (categoryTrendPeriod) {
-        case 'last_12_months':
-            startDate = startOfMonth(subMonths(now, 11));
-            break;
-        case 'last_3_months':
-            startDate = startOfMonth(subMonths(now, 2));
-            break;
-        case 'last_6_months':
-        default:
-            startDate = startOfMonth(subMonths(now, 5));
-            break;
-    }
-    const endDate = endOfMonth(now);
+  if (isLoading) return { data: [], config: {}, categories: [] };
+  
+  const now = new Date();
+  let startDate: Date;
+  switch (categoryTrendPeriod) {
+      case 'last_12_months':
+          startDate = startOfMonth(subMonths(now, 11));
+          break;
+      case 'last_3_months':
+          startDate = startOfMonth(subMonths(now, 2));
+          break;
+      case 'last_6_months':
+      default:
+          startDate = startOfMonth(subMonths(now, 5));
+          break;
+  }
+  const endDate = endOfMonth(now);
 
-    const monthlyData: { [month: string]: { [category: string]: number } } = {};
-    const allCategories = new Set<string>();
+  const monthlyData: { [month: string]: { monthDate: Date, values: { [category: string]: number } } } = {};
+  const allCategories = new Set<string>();
 
-    filteredTransactions.forEach(t => {
-        if (t.type === 'expense') {
-            const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
-            if (transactionDate >= startDate && transactionDate <= endDate) {
-                const monthKey = format(transactionDate, 'yyyy-MM');
-                if (!monthlyData[monthKey]) {
-                    monthlyData[monthKey] = {};
-                }
-                monthlyData[monthKey][t.category] = (monthlyData[monthKey][t.category] || 0) + t.amount;
-                allCategories.add(t.category);
-            }
-        }
-    });
+  filteredTransactions.forEach(t => {
+      if (t.type === 'expense') {
+          const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+          if (transactionDate >= startDate && transactionDate <= endDate) {
+              const monthKey = format(transactionDate, 'yyyy-MM');
+              if (!monthlyData[monthKey]) {
+                  monthlyData[monthKey] = { monthDate: startOfMonth(transactionDate), values: {} };
+              }
+              monthlyData[monthKey].values[t.category] = (monthlyData[monthKey].values[t.category] || 0) + t.amount;
+              allCategories.add(t.category);
+          }
+      }
+  });
 
-    const chartData = Object.entries(monthlyData).map(([monthKey, values]) => ({
-        month: format(new Date(monthKey + '-02'), 'LLL yy', { locale: uk }),
+  const chartData = Object.values(monthlyData)
+    .sort((a, b) => a.monthDate.getTime() - b.monthDate.getTime())
+    .map(({ monthDate, values }) => ({
+        month: format(monthDate, 'LLL yy', { locale: uk }),
         ...values
-    })).sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
+    }));
 
-    const sortedCategories = Array.from(allCategories).sort((a,b) => a.localeCompare(b));
+  const sortedCategories = Array.from(allCategories).sort((a,b) => a.localeCompare(b));
 
-    const config: ChartConfig = sortedCategories.reduce((acc, category, index) => {
-        acc[category] = {
-            label: category,
-            color: COLORS[index % COLORS.length]
-        };
-        return acc;
-    }, {} as ChartConfig);
+  const config: ChartConfig = sortedCategories.reduce((acc, category, index) => {
+      acc[category] = {
+          label: category,
+          color: COLORS[index % COLORS.length]
+      };
+      return acc;
+  }, {} as ChartConfig);
 
-    return { data: chartData, config, categories: sortedCategories };
+  return { data: chartData, config, categories: sortedCategories };
 }, [filteredTransactions, isLoading, categoryTrendPeriod]);
+
 
   const incomeVsExpenseChart = (
     <Card>
@@ -696,7 +699,7 @@ const categoryTrendChart = (
                     <div className="flex items-center gap-2">
                       <div
                         className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-                        style={{ backgroundColor: `var(--color-${name})` }}
+                        style={{ backgroundColor: categoryTrendConfig[name as keyof typeof categoryTrendConfig]?.color }}
                       />
                       <div className="flex flex-1 justify-between">
                         <span className="text-muted-foreground">{categoryTrendConfig[name as keyof typeof categoryTrendConfig]?.label}</span>
@@ -706,12 +709,12 @@ const categoryTrendChart = (
                   )} />}
                 />
                  <ChartLegend content={<ChartLegendContent className="flex-wrap justify-center" />} />
-                {categoryTrendCategories.map((category) => (
+                {categoryTrendCategories.map((category, index) => (
                   <Bar
                     key={category}
                     dataKey={category}
                     stackId="a"
-                    fill={`var(--color-${category})`}
+                    fill={COLORS[index % COLORS.length]}
                     radius={[4, 4, 0, 0]}
                   />
                 ))}
