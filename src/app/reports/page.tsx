@@ -829,12 +829,12 @@ const dailyVaseExpenseChart = (
                             </div>
                             <div className="flex-1 h-8 flex items-center justify-center">
                                 {dayData.total > 0 && (
-                                <div className="flex" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
+                                <div className="flex h-2" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
                                     {dayData.segments.map(segment => (
                                     <Tooltip key={segment.category}>
                                         <TooltipTrigger asChild>
                                             <div
-                                                className="h-2"
+                                                className="h-full"
                                                 style={{
                                                 width: `${(segment.amount / dayData.total) * 100}%`,
                                                 backgroundColor: segment.color,
