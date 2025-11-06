@@ -97,6 +97,7 @@ export default function ReportsPage() {
   const [period, setPeriod] = useState('0');
   const [categoryPeriod, setCategoryPeriod] = useState('all');
   const [trendPeriod, setTrendPeriod] = useState('monthly');
+  const [categoryTrendPeriod, setCategoryTrendPeriod] = useState('last_6_months');
 
   const [periodOptions, setPeriodOptions] = useState<{value: string, label: string}[]>([]);
   const [earliestTransactionDate, setEarliestTransactionDate] = useState<Date | null>(null);
@@ -351,6 +352,60 @@ export default function ReportsPage() {
     return chartData;
 }, [transactions, isLoading, trendPeriod, earliestTransactionDate]);
 
+const { data: categoryTrendData, config: categoryTrendConfig, categories: categoryTrendCategories } = useMemo(() => {
+    if (isLoading) return { data: [], config: {}, categories: [] };
+    
+    const now = new Date();
+    let startDate: Date;
+    switch (categoryTrendPeriod) {
+        case 'last_12_months':
+            startDate = startOfMonth(subMonths(now, 11));
+            break;
+        case 'last_3_months':
+            startDate = startOfMonth(subMonths(now, 2));
+            break;
+        case 'last_6_months':
+        default:
+            startDate = startOfMonth(subMonths(now, 5));
+            break;
+    }
+    const endDate = endOfMonth(now);
+
+    const monthlyData: { [month: string]: { [category: string]: number } } = {};
+    const allCategories = new Set<string>();
+
+    filteredTransactions.forEach(t => {
+        if (t.type === 'expense') {
+            const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+            if (transactionDate >= startDate && transactionDate <= endDate) {
+                const monthKey = format(transactionDate, 'yyyy-MM');
+                if (!monthlyData[monthKey]) {
+                    monthlyData[monthKey] = {};
+                }
+                monthlyData[monthKey][t.category] = (monthlyData[monthKey][t.category] || 0) + t.amount;
+                allCategories.add(t.category);
+            }
+        }
+    });
+
+    const chartData = Object.entries(monthlyData).map(([monthKey, values]) => ({
+        month: format(new Date(monthKey + '-02'), 'LLL yy', { locale: uk }),
+        ...values
+    })).sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
+
+    const sortedCategories = Array.from(allCategories).sort((a,b) => a.localeCompare(b));
+
+    const config: ChartConfig = sortedCategories.reduce((acc, category, index) => {
+        acc[category] = {
+            label: category,
+            color: COLORS[index % COLORS.length]
+        };
+        return acc;
+    }, {} as ChartConfig);
+
+    return { data: chartData, config, categories: sortedCategories };
+}, [filteredTransactions, isLoading, categoryTrendPeriod]);
+
   const incomeVsExpenseChart = (
     <Card>
       <CardHeader>
@@ -602,6 +657,71 @@ export default function ReportsPage() {
         </CardContent>
     </Card>
   );
+  
+const categoryTrendChart = (
+    <Card>
+      <CardHeader>
+        <CardTitle>Динаміка витрат по категоріях</CardTitle>
+        <CardDescription>
+          Порівняння витрат по категоріях за останні місяці.
+        </CardDescription>
+        <div className="pt-2 flex flex-wrap gap-2">
+          <Select value={categoryTrendPeriod} onValueChange={setCategoryTrendPeriod}>
+            <SelectTrigger className="w-full sm:w-[220px]">
+              <SelectValue placeholder="Оберіть період" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="last_3_months">Останні 3 місяці</SelectItem>
+              <SelectItem value="last_6_months">Останні 6 місяців</SelectItem>
+              <SelectItem value="last_12_months">Останні 12 місяців</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+      <CardContent className="px-2 sm:px-4">
+        {isLoading || categoryTrendData.length === 0 ? (
+          <div className="text-center text-muted-foreground py-8">
+            Недостатньо даних для відображення графіка.
+          </div>
+        ) : (
+          <ChartContainer config={categoryTrendConfig} className="h-[400px] w-full">
+            <ResponsiveContainer>
+              <BarChart data={categoryTrendData} margin={{ left: 0, right: 16 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey='month' tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12}/>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent formatter={(value, name) => (
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                        style={{ backgroundColor: `var(--color-${name})` }}
+                      />
+                      <div className="flex flex-1 justify-between">
+                        <span className="text-muted-foreground">{categoryTrendConfig[name as keyof typeof categoryTrendConfig]?.label}</span>
+                        <span className="font-bold">{formatCurrencyTooltip(value as number)}</span>
+                      </div>
+                    </div>
+                  )} />}
+                />
+                 <ChartLegend content={<ChartLegendContent className="flex-wrap justify-center" />} />
+                {categoryTrendCategories.map((category) => (
+                  <Bar
+                    key={category}
+                    dataKey={category}
+                    stackId="a"
+                    fill={`var(--color-${category})`}
+                    radius={[4, 4, 0, 0]}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        )}
+      </CardContent>
+    </Card>
+  );
 
 
   return (
@@ -610,6 +730,7 @@ export default function ReportsPage() {
         {incomeVsExpenseChart}
         {categoryChart}
         {trendChart}
+        {categoryTrendChart}
       </div>
     </AppLayout>
   );
