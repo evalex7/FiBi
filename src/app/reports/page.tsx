@@ -21,6 +21,7 @@ import {
   CartesianGrid,
   AreaChart,
   Area,
+  ReferenceArea,
 } from 'recharts';
 import {
   ChartContainer,
@@ -40,7 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths, subDays, eachDayOfInterval, startOfDay, endOfDay, eachMonthOfInterval } from 'date-fns';
+import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths, subDays, eachDayOfInterval, startOfDay, endOfDay, eachMonthOfInterval, getDaysInMonth } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
 import AppLayout from '@/components/AppLayout';
@@ -412,19 +413,34 @@ const { data: categoryTrendData, config: categoryTrendConfig, categories: catego
     return { data: chartData, config, categories: sortedCategories };
 }, [filteredTransactions, isLoading, isCategoriesLoading, categories, categoryTrendPeriod]);
 
-const { dailyVaseData, dailyVaseConfig, maxDailyTotal } = useMemo(() => {
-    if (isLoading || isCategoriesLoading) return { dailyVaseData: [], dailyVaseConfig: {}, maxDailyTotal: 0 };
+const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo(() => {
+    if (isLoading || isCategoriesLoading) return { dailyVaseData: [], dailyVaseConfig: {}, dailyBudget: 0, maxDailyValue: 0 };
 
     const now = new Date();
     const startDate = startOfMonth(now);
     const endDate = endOfMonth(now);
     const daysInMonth = eachDayOfInterval({ start: startDate, end: endDate });
+    const numDaysInMonth = getDaysInMonth(now);
+
+    const totalIncomeThisMonth = transactions
+        .filter(t => {
+            const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+            return t.type === 'income' && transactionDate >= startDate && transactionDate <= endDate;
+        })
+        .reduce((sum, t) => sum + t.amount, 0);
+    
+    const dailyBudget = totalIncomeThisMonth > 0 ? totalIncomeThisMonth / numDaysInMonth : 0;
 
     const config: ChartConfig = {};
-    categories.forEach((category, index) => {
+    const categoryNames = new Set<string>();
+    categories.forEach(category => {
+        categoryNames.add(category.name);
+    });
+
+    Array.from(categoryNames).sort().forEach((name, index) => {
         const color = COLORS[index % COLORS.length];
-        config[category.name] = {
-            label: category.name,
+        config[name] = {
+            label: name,
             color: color,
         };
     });
@@ -451,13 +467,14 @@ const { dailyVaseData, dailyVaseConfig, maxDailyTotal } = useMemo(() => {
         
         return {
             date: format(day, 'd', { locale: uk }),
-            weekday: format(day, 'E', { locale: uk }),
             total,
-            categories: dailyExpensesByCategory
+            ...dailyExpensesByCategory
         };
     });
+
+    const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; // Add 10% buffer for visual appeal
     
-    return { dailyVaseData: data, dailyVaseConfig: config, maxDailyTotal: maxTotal };
+    return { dailyVaseData: data, dailyVaseConfig: config, dailyBudget, maxDailyValue };
 }, [transactions, isLoading, categories, isCategoriesLoading]);
 
 
@@ -782,60 +799,91 @@ const dailyVaseExpenseChart = (
     <Card>
         <CardHeader>
             <CardTitle>Щоденні витрати</CardTitle>
-            <CardDescription>Розбивка витрат по днях за поточний місяць.</CardDescription>
+            <CardDescription>Аналіз витрат по днях за поточний місяць відносно середнього бюджету.</CardDescription>
         </CardHeader>
         <CardContent>
-          <TooltipProvider>
             {isLoading ? (
                 <div className="text-center text-muted-foreground py-8">Завантаження даних...</div>
             ) : dailyVaseData.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">Немає даних про витрати цього місяця.</div>
             ) : (
-                <ScrollArea className="h-96 w-full pr-4">
-                    <div className="flex flex-col">
-                        {dailyVaseData.map((day, index) => (
-                            <div key={index} className="flex items-center gap-4">
-                                <div className="flex flex-col items-center w-10">
-                                    <p className="text-sm font-medium">{day.date}</p>
-                                </div>
-                                <div className="flex-1">
-                                    <div className="w-full flex justify-center">
-                                        {day.total > 0 ? (
-                                            <div className="flex h-6 rounded-md overflow-hidden" style={{ width: `${(day.total / maxDailyTotal) * 100}%` }}>
-                                                {Object.entries(day.categories).map(([category, amount]) => (
-                                                    <Tooltip key={category}>
-                                                        <TooltipTrigger asChild>
-                                                            <div
-                                                                className="h-full"
-                                                                style={{
-                                                                    width: `${(amount / day.total) * 100}%`,
-                                                                    backgroundColor: dailyVaseConfig[category]?.color || '#8884d8',
-                                                                }}
-                                                            />
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <div className="grid gap-1.5 p-1">
-                                                                <p className="font-semibold">{dailyVaseConfig[category]?.label}</p>
-                                                                <p>{formatCurrencyTooltip(amount)}</p>
-                                                            </div>
-                                                        </TooltipContent>
-                                                    </Tooltip>
+                <ChartContainer config={dailyVaseConfig} className="h-96 w-full">
+                    <ResponsiveContainer>
+                        <AreaChart
+                            layout="vertical"
+                            data={dailyVaseData}
+                            margin={{ left: 0, right: 20, top: 10, bottom: 10 }}
+                        >
+                            <CartesianGrid horizontal={false} vertical={true} strokeDasharray="3 3" />
+                            <YAxis
+                                type="category"
+                                dataKey="date"
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={10}
+                                width={30}
+                                fontSize={12}
+                                reversed={true}
+                            />
+                            <XAxis type="number" hide={true} domain={[-maxDailyValue, maxDailyValue]} />
+                            <ChartTooltip
+                                cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }}
+                                content={({ active, payload, label }) => {
+                                if (active && payload && payload.length) {
+                                    const totalForDay = payload.reduce((sum, item) => sum + (typeof item.value === 'number' ? Math.abs(item.value) : 0), 0) / 2;
+                                    return (
+                                        <div className="grid min-w-[12rem] gap-1.5 rounded-lg border bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                                            <div className="font-bold">День: {label}</div>
+                                            <div className="font-medium text-lg text-center my-1">{formatCurrencyTooltip(totalForDay)}</div>
+                                            <div className="grid gap-1">
+                                                {payload.slice(0, payload.length / 2).map((item) => (
+                                                    <div key={item.dataKey} className="flex items-center gap-2">
+                                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                                                        <span className="text-muted-foreground flex-1">{dailyVaseConfig[item.dataKey as string]?.label}</span>
+                                                        <span className="font-medium">{formatCurrencyTooltip(Math.abs(item.value as number))}</span>
+                                                    </div>
                                                 ))}
                                             </div>
-                                        ) : (
-                                            <div className="h-px w-full bg-border"></div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className={cn("w-20 text-right text-sm", day.total === 0 && 'text-muted-foreground')}>
-                                  {formatCurrencyTooltip(day.total)}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </ScrollArea>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                                }}
+                            />
+
+                            <ReferenceArea
+                                x1={-dailyBudget}
+                                x2={dailyBudget}
+                                stroke="none"
+                                fill="hsl(var(--primary))"
+                                fillOpacity={0.1}
+                                ifOverflow="visible"
+                            />
+                            
+                            {Object.keys(dailyVaseConfig).map((categoryKey) => (
+                                <Area
+                                    key={categoryKey}
+                                    type="step"
+                                    dataKey={categoryKey}
+                                    stackId="1"
+                                    stroke="0"
+                                    fill={dailyVaseConfig[categoryKey]?.color}
+                                />
+                            ))}
+                            {Object.keys(dailyVaseConfig).map((categoryKey) => (
+                                 <Area
+                                    key={`${categoryKey}-negative`}
+                                    type="step"
+                                    dataKey={(data) => (data[categoryKey] ? -data[categoryKey] : null)}
+                                    stackId="2"
+                                    stroke="0"
+                                    fill={dailyVaseConfig[categoryKey]?.color}
+                                />
+                            ))}
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </ChartContainer>
             )}
-            </TooltipProvider>
         </CardContent>
     </Card>
 );
