@@ -464,17 +464,25 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
         if (total > maxTotal) {
             maxTotal = total;
         }
+
+        const segments = Object.entries(dailyExpensesByCategory)
+            .sort(([, a], [, b]) => b - a)
+            .map(([category, amount]) => ({
+                category,
+                amount,
+                color: config[category]?.color || '#8884d8'
+            }));
         
         return {
-            date: format(day, 'd', { locale: uk }),
+            date: day,
             total,
-            ...dailyExpensesByCategory
+            segments,
         };
     });
 
-    const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; // Add 10% buffer for visual appeal
+    const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; 
     
-    return { dailyVaseData: data, dailyVaseConfig: config, dailyBudget, maxDailyValue };
+    return { dailyVaseData: data.reverse(), dailyVaseConfig: config, dailyBudget, maxDailyValue };
 }, [transactions, isLoading, categories, isCategoriesLoading]);
 
 
@@ -778,12 +786,12 @@ const categoryTrendChart = (
                   )} />}
                 />
                  <ChartLegend content={<ChartLegendContent className="flex-wrap justify-center" />} />
-                {categoryTrendCategories.map((category) => (
+                {categoryTrendCategories.map((category, index) => (
                    <Bar
                     key={category}
                     dataKey={category}
                     stackId="a"
-                    fill={categoryTrendConfig[category]?.color}
+                    fill={categoryTrendConfig[category]?.color || COLORS[index % COLORS.length]}
                     radius={[4, 4, 0, 0]}
                   />
                 ))}
@@ -801,88 +809,52 @@ const dailyVaseExpenseChart = (
             <CardTitle>Щоденні витрати</CardTitle>
             <CardDescription>Аналіз витрат по днях за поточний місяць відносно середнього бюджету.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pr-0">
             {isLoading ? (
                 <div className="text-center text-muted-foreground py-8">Завантаження даних...</div>
             ) : dailyVaseData.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">Немає даних про витрати цього місяця.</div>
             ) : (
-                <ChartContainer config={dailyVaseConfig} className="h-96 w-full">
-                    <ResponsiveContainer>
-                        <AreaChart
-                            layout="vertical"
-                            data={dailyVaseData}
-                            margin={{ left: 0, right: 20, top: 10, bottom: 10 }}
-                        >
-                            <CartesianGrid horizontal={false} vertical={true} strokeDasharray="3 3" />
-                            <YAxis
-                                type="category"
-                                dataKey="date"
-                                tickLine={false}
-                                axisLine={false}
-                                tickMargin={10}
-                                width={30}
-                                fontSize={12}
-                                reversed={true}
-                            />
-                            <XAxis type="number" hide={true} domain={[-maxDailyValue, maxDailyValue]} />
-                            <ChartTooltip
-                                cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }}
-                                content={({ active, payload, label }) => {
-                                if (active && payload && payload.length) {
-                                    const totalForDay = payload.reduce((sum, item) => sum + (typeof item.value === 'number' ? Math.abs(item.value) : 0), 0) / 2;
-                                    return (
-                                        <div className="grid min-w-[12rem] gap-1.5 rounded-lg border bg-background px-2.5 py-1.5 text-xs shadow-xl">
-                                            <div className="font-bold">День: {label}</div>
-                                            <div className="font-medium text-lg text-center my-1">{formatCurrencyTooltip(totalForDay)}</div>
-                                            <div className="grid gap-1">
-                                                {payload.slice(0, payload.length / 2).map((item) => (
-                                                    <div key={item.dataKey} className="flex items-center gap-2">
-                                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                                                        <span className="text-muted-foreground flex-1">{dailyVaseConfig[item.dataKey as string]?.label}</span>
-                                                        <span className="font-medium">{formatCurrencyTooltip(Math.abs(item.value as number))}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                }
-                                return null;
-                                }}
-                            />
-
-                            <ReferenceArea
-                                x1={-dailyBudget}
-                                x2={dailyBudget}
-                                stroke="none"
-                                fill="hsl(var(--primary))"
-                                fillOpacity={0.1}
-                                ifOverflow="visible"
-                            />
-                            
-                            {Object.keys(dailyVaseConfig).map((categoryKey) => (
-                                <Area
-                                    key={categoryKey}
-                                    type="step"
-                                    dataKey={categoryKey}
-                                    stackId="1"
-                                    stroke="0"
-                                    fill={dailyVaseConfig[categoryKey]?.color}
-                                />
-                            ))}
-                            {Object.keys(dailyVaseConfig).map((categoryKey) => (
-                                 <Area
-                                    key={`${categoryKey}-negative`}
-                                    type="step"
-                                    dataKey={(data) => (data[categoryKey] ? -data[categoryKey] : null)}
-                                    stackId="2"
-                                    stroke="0"
-                                    fill={dailyVaseConfig[categoryKey]?.color}
-                                />
-                            ))}
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </ChartContainer>
+              <TooltipProvider>
+                <div className="relative">
+                  <div 
+                    className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 bg-primary/10"
+                    style={{ width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`}}
+                  />
+                  <div className="relative">
+                    {dailyVaseData.map(dayData => (
+                        <div key={dayData.date.toISOString()} className="flex items-center">
+                            <div className="w-8 text-xs text-right text-muted-foreground pr-2">
+                                {format(dayData.date, 'd')}
+                            </div>
+                            <div className="flex-1 h-8 flex items-center justify-center">
+                                {dayData.total > 0 && (
+                                <div className="flex" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
+                                    {dayData.segments.map(segment => (
+                                    <Tooltip key={segment.category}>
+                                        <TooltipTrigger asChild>
+                                            <div
+                                                className="h-2"
+                                                style={{
+                                                width: `${(segment.amount / dayData.total) * 100}%`,
+                                                backgroundColor: segment.color,
+                                                }}
+                                            />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="font-bold">{segment.category}</p>
+                                            <p>{formatCurrencyTooltip(segment.amount)}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                    ))}
+                                </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                  </div>
+                </div>
+              </TooltipProvider>
             )}
         </CardContent>
     </Card>
@@ -892,13 +864,15 @@ const dailyVaseExpenseChart = (
 
   return (
     <AppLayout pageTitle="Звіти">
-      <div className="w-full space-y-6">
-        {incomeVsExpenseChart}
-        {dailyVaseExpenseChart}
-        {categoryChart}
-        {trendChart}
-        {categoryTrendChart}
-      </div>
+       <TooltipProvider>
+        <div className="w-full space-y-6">
+          {incomeVsExpenseChart}
+          {dailyVaseExpenseChart}
+          {categoryChart}
+          {trendChart}
+          {categoryTrendChart}
+        </div>
+      </TooltipProvider>
     </AppLayout>
   );
 }
