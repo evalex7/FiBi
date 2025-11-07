@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -863,7 +864,7 @@ const dailyVaseExpenseChart = (
             {dailyVaseOrientation === 'vertical' ? (
                 <div className="grid grid-cols-[2rem_1fr] items-center">
                     <div className="flex flex-col">
-                        {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
+                        {[...dailyVaseData].sort((a,b) => b.date.getTime() - a.date.getTime()).map((dayData) => (
                         <div
                             key={dayData.date.toISOString()}
                             className="h-4 flex items-center justify-end pr-2 py-px"
@@ -899,7 +900,7 @@ const dailyVaseExpenseChart = (
                         </div>
 
                         <div className="relative flex flex-col w-full">
-                        {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
+                        {[...dailyVaseData].sort((a,b) => b.date.getTime() - a.date.getTime()).map((dayData) => (
                             <div
                             key={dayData.date.toISOString()}
                             className="h-4 flex justify-center py-px"
