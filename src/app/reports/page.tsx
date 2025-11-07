@@ -499,7 +499,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
             total,
             segments,
         };
-    }).sort((a,b) => a.date.getTime() - b.date.getTime());
+    }).sort((a,b) => b.date.getTime() - a.date.getTime());
 
     const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; 
     
@@ -829,7 +829,7 @@ const dailyVaseExpenseChart = (
       <CardHeader>
         <CardTitle>Щоденні витрати</CardTitle>
         <CardDescription>
-          Аналіз витрат по днях за поточний місяць. Ваш денний бюджет на цей місяць: <span className="font-bold">{formatCurrencyTooltip(dailyBudget)}</span>
+          Аналіз витрат по днях за поточний місяць відносно середнього бюджету.
         </CardDescription>
       </CardHeader>
       <CardContent className="pr-0" ref={chartContainerRef}>
@@ -851,7 +851,7 @@ const dailyVaseExpenseChart = (
                 {dailyVaseData.map((dayData) => (
                   <div
                     key={dayData.date.toISOString()}
-                    className="h-4 flex items-center justify-end pr-2 py-px"
+                    className="h-4 flex items-center justify-end pr-2"
                   >
                     <span className="text-xs text-muted-foreground">
                       {format(dayData.date, 'd')}
@@ -875,7 +875,7 @@ const dailyVaseExpenseChart = (
                   {dailyVaseData.map((dayData) => (
                     <div
                       key={dayData.date.toISOString()}
-                      className="h-4 flex justify-center py-px"
+                      className="h-4 flex justify-end"
                     >
                       {dayData.total > 0 && (
                         <div
