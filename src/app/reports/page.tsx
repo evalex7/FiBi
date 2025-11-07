@@ -490,7 +490,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
             total,
             segments,
         };
-    });
+    }).sort((a,b) => a.date.getTime() - b.date.getTime());
 
     const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; 
     
@@ -829,7 +829,6 @@ const dailyVaseExpenseChart = (
             ) : (
               <TooltipProvider>
                 <div className="grid grid-cols-[auto_1fr] items-center">
-                    {/* Dates Column */}
                     <div className="flex flex-col">
                         {dailyVaseData.map(dayData => (
                             <div key={dayData.date.toISOString()} className="h-4 flex items-center justify-end pr-2">
@@ -838,16 +837,23 @@ const dailyVaseExpenseChart = (
                         ))}
                     </div>
 
-                    {/* Chart Column */}
                     <div className="relative">
-                        <div
-                            className="absolute inset-y-0 bg-primary/10"
-                            style={{
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`
-                            }}
-                        />
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div
+                                    className="absolute inset-y-0 bg-primary/10 cursor-pointer"
+                                    style={{
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`
+                                    }}
+                                />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Денний бюджет: {formatCurrencyTooltip(dailyBudget)}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                        
                         <div className="relative flex flex-col">
                             {dailyVaseData.map(dayData => (
                                 <div key={dayData.date.toISOString()} className="relative h-4 flex items-center justify-center">
@@ -857,7 +863,7 @@ const dailyVaseExpenseChart = (
                                         <Tooltip key={segment.category}>
                                             <TooltipTrigger asChild>
                                                 <div
-                                                    className="h-full"
+                                                    className="h-full cursor-pointer"
                                                     style={{
                                                     width: `${(segment.amount / dayData.total) * 100}%`,
                                                     backgroundColor: segment.color,
