@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/chart';
 import { useTransactions } from '@/contexts/transactions-context';
 import { useCategories } from '@/contexts/categories-context';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import {
   Select,
   SelectContent,
@@ -97,15 +97,24 @@ const COLORS = [
   "hsl(280, 70%, 60%)",
 ];
 
+type CustomTooltipPayload = {
+  category: string;
+  amount: number;
+  top: number;
+  left: number;
+};
+
 export default function ReportsPage() {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const { categories, isLoading: isCategoriesLoading } = useCategories();
   const isMobile = useIsMobile();
+  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   const [period, setPeriod] = useState('0');
   const [categoryPeriod, setCategoryPeriod] = useState('all');
   const [trendPeriod, setTrendPeriod] = useState('monthly');
   const [categoryTrendPeriod, setCategoryTrendPeriod] = useState('last_6_months');
+  const [activeTooltip, setActiveTooltip] = useState<CustomTooltipPayload | null>(null);
 
   const [periodOptions, setPeriodOptions] = useState<{value: string, label: string}[]>([]);
   const [earliestTransactionDate, setEarliestTransactionDate] = useState<Date | null>(null);
@@ -490,7 +499,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
             total,
             segments,
         };
-    }).sort((a,b) => a.date.getTime() - b.date.getTime());
+    }).sort((a,b) => b.date.getTime() - a.date.getTime());
 
     const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; 
     
@@ -821,67 +830,88 @@ const dailyVaseExpenseChart = (
             <CardTitle>Щоденні витрати</CardTitle>
             <CardDescription>Аналіз витрат по днях за поточний місяць відносно середнього бюджету.</CardDescription>
         </CardHeader>
-        <CardContent className="pr-0">
+        <CardContent className="pr-0" ref={chartContainerRef}>
             {isLoading ? (
                 <div className="text-center text-muted-foreground py-8">Завантаження даних...</div>
             ) : dailyVaseData.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">Немає даних про витрати цього місяця.</div>
             ) : (
-              <TooltipProvider>
-                <div className="grid grid-cols-[2rem_1fr] items-center">
-                    <div className="flex flex-col-reverse">
-                        {dailyVaseData.map(dayData => (
-                            <div key={dayData.date.toISOString()} className="h-4 flex items-center justify-end pr-2">
-                                <span className="text-xs text-muted-foreground">{format(dayData.date, 'd')}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="relative h-full">
-                         <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div
-                                    className="absolute inset-y-0 bg-primary/10 cursor-pointer left-1/2 -translate-x-1/2"
-                                    style={{
-                                        width: dailyBudget > 0 ? `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%` : '0%'
-                                    }}
-                                />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Денний бюджет: {formatCurrencyTooltip(dailyBudget)}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                        
-                        <div className="relative flex flex-col-reverse w-full">
+                <div className="relative" onMouseLeave={() => setActiveTooltip(null)}>
+                    {activeTooltip && (
+                        <div
+                            className="absolute z-10 min-w-[8rem] rounded-lg border bg-popover p-2.5 text-popover-foreground text-xs shadow-xl"
+                            style={{
+                                top: activeTooltip.top,
+                                left: activeTooltip.left,
+                                transform: 'translateY(-100%)',
+                            }}
+                        >
+                            <p className="font-bold">{activeTooltip.category}</p>
+                            <p>{formatCurrencyTooltip(activeTooltip.amount)}</p>
+                        </div>
+                    )}
+                    <div className="grid grid-cols-[2rem_1fr]">
+                        <div className="flex flex-col">
                             {dailyVaseData.map(dayData => (
-                                <div key={dayData.date.toISOString()} className="h-4 flex justify-center">
-                                    {dayData.total > 0 && (
-                                    <div className="flex h-full" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
-                                        {dayData.segments.map(segment => (
-                                        <Tooltip key={segment.category}>
-                                            <TooltipTrigger asChild>
-                                                <div
-                                                    className="h-full cursor-pointer"
-                                                    style={{
-                                                    width: `${(segment.amount / dayData.total) * 100}%`,
-                                                    backgroundColor: segment.color,
-                                                    }}
-                                                />
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p className="font-bold">{segment.category}</p>
-                                                <p>{formatCurrencyTooltip(segment.amount)}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                        ))}
-                                    </div>
-                                    )}
+                                <div key={dayData.date.toISOString()} className="h-4 flex items-center justify-end pr-2">
+                                    <span className="text-xs text-muted-foreground">{format(dayData.date, 'd')}</span>
                                 </div>
                             ))}
                         </div>
+
+                        <div
+                            className="relative h-full"
+                            onMouseMove={(e) => {
+                                if (e.target === e.currentTarget) {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  setActiveTooltip({
+                                      category: 'Денний бюджет',
+                                      amount: dailyBudget,
+                                      top: e.clientY - rect.top,
+                                      left: e.clientX - rect.left,
+                                  });
+                                }
+                            }}
+                        >
+                            <div
+                                className="absolute inset-y-0 bg-primary/10 left-1/2 -translate-x-1/2"
+                                style={{ width: dailyBudget > 0 ? `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%` : '0%'}}
+                            />
+                            
+                            <div className="relative flex flex-col w-full">
+                                {dailyVaseData.map(dayData => (
+                                    <div key={dayData.date.toISOString()} className="h-4 flex justify-center">
+                                        {dayData.total > 0 && (
+                                            <div className="flex h-full" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
+                                                {dayData.segments.map(segment => (
+                                                    <div
+                                                        key={segment.category}
+                                                        className="h-full cursor-pointer"
+                                                        style={{
+                                                            width: `${(segment.amount / dayData.total) * 100}%`,
+                                                            backgroundColor: segment.color,
+                                                        }}
+                                                        onMouseMove={(e) => {
+                                                            const rect = chartContainerRef.current?.getBoundingClientRect();
+                                                            if (rect) {
+                                                                setActiveTooltip({
+                                                                    category: segment.category,
+                                                                    amount: segment.amount,
+                                                                    top: e.clientY - rect.top,
+                                                                    left: e.clientX - rect.left,
+                                                                });
+                                                            }
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
-              </TooltipProvider>
             )}
         </CardContent>
     </Card>
@@ -891,15 +921,13 @@ const dailyVaseExpenseChart = (
 
   return (
     <AppLayout pageTitle="Звіти">
-       <TooltipProvider>
-        <div className="w-full space-y-6">
-          {incomeVsExpenseChart}
-          {dailyVaseExpenseChart}
-          {categoryChart}
-          {trendChart}
-          {categoryTrendChart}
-        </div>
-      </TooltipProvider>
+      <div className="w-full space-y-6">
+        {incomeVsExpenseChart}
+        {dailyVaseExpenseChart}
+        {categoryChart}
+        {trendChart}
+        {categoryTrendChart}
+      </div>
     </AppLayout>
   );
 }
