@@ -861,32 +861,38 @@ const dailyVaseExpenseChart = (
 
                         <div
                             className="relative h-full"
+                            onMouseMove={(e) => {
+                                const target = e.target as HTMLElement;
+                                if (target.getAttribute('data-role') !== 'budget-bar') {
+                                    setActiveTooltip(null);
+                                    return;
+                                }
+                                const rect = chartContainerRef.current?.getBoundingClientRect();
+                                if (rect) {
+                                    setActiveTooltip({
+                                        category: 'Денний бюджет',
+                                        amount: dailyBudget,
+                                        top: e.clientY - rect.top,
+                                        left: e.clientX - rect.left,
+                                    });
+                                }
+                            }}
                         >
                             <div
-                                className="absolute inset-y-0 bg-primary/10 left-1/2 -translate-x-1/2 cursor-pointer"
+                                data-role="budget-bar"
+                                className="absolute inset-y-0 bg-primary/10 left-1/2 -translate-x-1/2 pointer-events-auto"
                                 style={{ width: dailyBudget > 0 ? `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%` : '0%'}}
-                                onMouseMove={(e) => {
-                                  const rect = chartContainerRef.current?.getBoundingClientRect();
-                                  if (rect) {
-                                      setActiveTooltip({
-                                          category: 'Денний бюджет',
-                                          amount: dailyBudget,
-                                          top: e.clientY - rect.top,
-                                          left: e.clientX - rect.left,
-                                      });
-                                  }
-                                }}
                             />
                             
                             <div className="relative flex flex-col w-full">
                                 {dailyVaseData.map(dayData => (
                                     <div key={dayData.date.toISOString()} className="h-4 flex justify-center">
                                         {dayData.total > 0 && (
-                                            <div className="flex h-full" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
+                                            <div className="flex h-full pointer-events-none" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
                                                 {dayData.segments.map(segment => (
                                                     <div
                                                         key={segment.category}
-                                                        className="h-full cursor-pointer"
+                                                        className="h-full pointer-events-auto"
                                                         style={{
                                                             width: `${(segment.amount / dayData.total) * 100}%`,
                                                             backgroundColor: segment.color,
@@ -901,6 +907,7 @@ const dailyVaseExpenseChart = (
                                                                     left: e.clientX - rect.left,
                                                                 });
                                                             }
+                                                            e.stopPropagation();
                                                         }}
                                                     />
                                                 ))}
