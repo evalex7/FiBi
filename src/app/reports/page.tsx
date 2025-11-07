@@ -499,7 +499,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
             total,
             segments,
         };
-    }).sort((a,b) => b.date.getTime() - a.date.getTime());
+    }).sort((a,b) => a.date.getTime() - b.date.getTime());
 
     const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; 
     
@@ -829,7 +829,8 @@ const dailyVaseExpenseChart = (
       <CardHeader>
         <CardTitle>Щоденні витрати</CardTitle>
         <CardDescription>
-          Аналіз витрат по днях за поточний місяць відносно середнього бюджету.
+          Аналіз витрат по днях за поточний місяць відносно середнього бюджету. 
+          {dailyBudget > 0 && <span> Ваш денний бюджет на цей місяць: <b>{formatCurrencyTooltip(dailyBudget)}</b></span>}
         </CardDescription>
       </CardHeader>
       <CardContent className="pr-0" ref={chartContainerRef}>
@@ -848,7 +849,7 @@ const dailyVaseExpenseChart = (
           >
             <div className="grid grid-cols-[2rem_1fr] items-center">
               <div className="flex flex-col">
-                {dailyVaseData.map((dayData) => (
+                {dailyVaseData.slice().sort((a,b) => b.date.getTime() - a.date.getTime()).map((dayData) => (
                   <div
                     key={dayData.date.toISOString()}
                     className="h-4 flex items-center justify-end pr-2"
@@ -866,16 +867,29 @@ const dailyVaseExpenseChart = (
                   <div
                     className="absolute top-0 h-full w-24 bg-destructive/20"
                     style={{
-                      left: `calc(${Math.min(100, (dailyBudget / maxDailyValue) * 100)}% - 3rem)`,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100 * 2)}%`
+                    }}
+                     onMouseMove={(e) => {
+                        const rect = chartContainerRef.current?.getBoundingClientRect();
+                        if (rect) {
+                            setActiveTooltip({
+                                category: 'Денний бюджет',
+                                amount: dailyBudget,
+                                top: e.clientY - rect.top,
+                                left: e.clientX - rect.left,
+                            });
+                        }
                     }}
                   />
                 )}
 
                 <div className="relative flex flex-col w-full">
-                  {dailyVaseData.map((dayData) => (
+                  {dailyVaseData.slice().sort((a,b) => b.date.getTime() - a.date.getTime()).map((dayData) => (
                     <div
                       key={dayData.date.toISOString()}
-                      className="h-4 flex justify-end"
+                      className="h-4 flex justify-center py-px"
                     >
                       {dayData.total > 0 && (
                         <div
@@ -883,8 +897,10 @@ const dailyVaseExpenseChart = (
                           style={{
                             width: `${Math.min(
                               100,
-                              (dayData.total / maxDailyValue) * 100
+                              (dayData.total / maxDailyValue) * 100 * 2
                             )}%`,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
                           }}
                         >
                           {dayData.segments.map((segment, index) => (
