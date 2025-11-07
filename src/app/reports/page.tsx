@@ -561,7 +561,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
           Розбивка ваших витрат за обраний період.
         </CardDescription>
         <div className="pt-2 flex flex-wrap gap-2">
-          <Select value={categoryPeriod} onValuechange={setCategoryPeriod}>
+          <Select value={categoryPeriod} onValueChange={setCategoryPeriod}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Оберіть період" />
             </SelectTrigger>
@@ -867,9 +867,7 @@ const dailyVaseExpenseChart = (
                   <div
                     className="absolute top-0 h-full w-24 bg-destructive/20"
                     style={{
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100 * 2)}%`
+                      width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`
                     }}
                      onMouseMove={(e) => {
                         const rect = chartContainerRef.current?.getBoundingClientRect();
@@ -897,10 +895,8 @@ const dailyVaseExpenseChart = (
                           style={{
                             width: `${Math.min(
                               100,
-                              (dayData.total / maxDailyValue) * 100 * 2
+                              (dayData.total / maxDailyValue) * 100
                             )}%`,
-                            left: '50%',
-                            transform: 'translateX(-50%)',
                           }}
                         >
                           {dayData.segments.map((segment, index) => (
