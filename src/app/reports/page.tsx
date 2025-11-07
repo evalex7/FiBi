@@ -499,7 +499,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
             total,
             segments,
         };
-    }).sort((a,b) => b.date.getTime() - a.date.getTime());
+    }).sort((a,b) => a.date.getTime() - b.date.getTime());
 
     const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; 
     
@@ -862,8 +862,8 @@ const dailyVaseExpenseChart = (
               </div>
 
               <div className="relative h-full">
-                {dailyBudget > 0 && (
-                  <div className="absolute inset-0 flex justify-center">
+                <div className="absolute inset-0 flex justify-center">
+                  {dailyBudget > 0 && (
                     <div
                       className="h-full bg-destructive/20"
                       style={{
@@ -881,8 +881,8 @@ const dailyVaseExpenseChart = (
                           }
                       }}
                     />
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <div className="relative flex flex-col-reverse w-full">
                   {dailyVaseData.map((dayData) => (
@@ -892,7 +892,7 @@ const dailyVaseExpenseChart = (
                     >
                       {dayData.total > 0 && (
                         <div
-                          className="flex h-full relative"
+                          className="flex h-full relative z-10"
                           style={{
                             width: `${Math.min(
                               100,
@@ -943,7 +943,7 @@ const dailyVaseExpenseChart = (
             </div>
             {activeTooltip && (
               <div
-                className="absolute z-10 pointer-events-none transform -translate-y-1/2 -translate-x-1/2"
+                className="absolute z-20 pointer-events-none transform -translate-y-1/2 -translate-x-1/2"
                 style={{
                   top: activeTooltip.top,
                   left: activeTooltip.left,
