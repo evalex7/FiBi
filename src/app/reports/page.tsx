@@ -115,6 +115,7 @@ export default function ReportsPage() {
   const [trendPeriod, setTrendPeriod] = useState('monthly');
   const [categoryTrendPeriod, setCategoryTrendPeriod] = useState('last_6_months');
   const [activeTooltip, setActiveTooltip] = useState<CustomTooltipPayload | null>(null);
+  const [dailyVaseOrientation, setDailyVaseOrientation] = useState<'vertical' | 'horizontal'>('vertical');
 
   const [periodOptions, setPeriodOptions] = useState<{value: string, label: string}[]>([]);
   const [earliestTransactionDate, setEarliestTransactionDate] = useState<Date | null>(null);
@@ -499,7 +500,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
             total,
             segments,
         };
-    }).sort((a,b) => a.date.getTime() - b.date.getTime());
+    }).sort((a,b) => b.date.getTime() - a.date.getTime());
 
     const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; 
     
@@ -827,11 +828,21 @@ const categoryTrendChart = (
 const dailyVaseExpenseChart = (
     <Card>
       <CardHeader>
-        <CardTitle>Щоденні витрати</CardTitle>
-        <CardDescription>
-          Аналіз витрат по днях за поточний місяць відносно середнього бюджету. 
-          {dailyBudget > 0 && <span> Ваш денний бюджет на цей місяць: <b>{formatCurrencyTooltip(dailyBudget)}</b></span>}
-        </CardDescription>
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+            <div>
+                <CardTitle>Щоденні витрати</CardTitle>
+                <CardDescription>
+                    Аналіз витрат по днях за поточний місяць.
+                    {dailyBudget > 0 && <span> Ваш денний бюджет: <b>{formatCurrencyTooltip(dailyBudget)}</b></span>}
+                </CardDescription>
+            </div>
+             <Tabs value={dailyVaseOrientation} onValueChange={(value) => setDailyVaseOrientation(value as any)} className="w-full sm:w-auto">
+                <TabsList>
+                    <TabsTrigger value="vertical">Вертикально</TabsTrigger>
+                    <TabsTrigger value="horizontal">Горизонтально</TabsTrigger>
+                </TabsList>
+            </Tabs>
+        </div>
       </CardHeader>
       <CardContent className="pr-0" ref={chartContainerRef}>
         {isLoading ? (
@@ -847,106 +858,174 @@ const dailyVaseExpenseChart = (
             className="relative"
             onMouseLeave={() => setActiveTooltip(null)}
           >
-            <div className="grid grid-cols-[2rem_1fr] items-center">
-              <div className="flex flex-col-reverse">
-                {dailyVaseData.map((dayData) => (
-                  <div
-                    key={dayData.date.toISOString()}
-                    className="h-4 flex items-center justify-end pr-2"
-                  >
-                    <span className="text-xs text-muted-foreground">
-                      {format(dayData.date, 'd')}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="relative h-full">
-                <div className="absolute inset-0 flex justify-center">
-                  {dailyBudget > 0 && (
-                    <div
-                      className="h-full bg-destructive/20"
-                      style={{
-                        width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`,
-                      }}
-                      onMouseMove={(e) => {
-                          const rect = chartContainerRef.current?.getBoundingClientRect();
-                          if (rect) {
-                              setActiveTooltip({
-                                  category: 'Денний бюджет',
-                                  amount: dailyBudget,
-                                  top: e.clientY - rect.top,
-                                  left: e.clientX - rect.left,
-                              });
-                          }
-                      }}
-                    />
-                  )}
-                </div>
-
-                <div className="relative flex flex-col-reverse w-full">
-                  {dailyVaseData.map((dayData) => (
-                    <div
-                      key={dayData.date.toISOString()}
-                      className="h-4 flex justify-center py-px"
-                    >
-                      {dayData.total > 0 && (
+            {dailyVaseOrientation === 'vertical' ? (
+                <div className="grid grid-cols-[2rem_1fr] items-center">
+                    <div className="flex flex-col">
+                        {dailyVaseData.sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
                         <div
-                          className="flex h-full relative z-10"
-                          style={{
-                            width: `${Math.min(
-                              100,
-                              (dayData.total / maxDailyValue) * 100
-                            )}%`,
-                          }}
+                            key={dayData.date.toISOString()}
+                            className="h-4 flex items-center justify-end pr-2 py-px"
                         >
-                          {dayData.segments.map((segment, index) => (
-                            <div
-                              key={index}
-                              className="h-full"
-                              style={{
-                                width: `${
-                                  (segment.amount / dayData.total) * 100
-                                }%`,
-                                backgroundColor: segment.color,
-                              }}
-                              onMouseMove={(e) => {
-                                const rect = chartContainerRef.current?.getBoundingClientRect();
-                                if (rect) {
-                                  setActiveTooltip({
-                                    category: segment.category,
-                                    amount: segment.amount,
-                                    top: e.clientY - rect.top,
-                                    left: e.clientX - rect.left,
-                                  });
-                                }
-                              }}
-                              onClick={(e) => {
-                                const rect = chartContainerRef.current?.getBoundingClientRect();
-                                if (rect) {
-                                  setActiveTooltip({
-                                    category: segment.category,
-                                    amount: segment.amount,
-                                    top: e.clientY - rect.top,
-                                    left: e.clientX - rect.left,
-                                  });
-                                }
-                              }}
-                            />
-                          ))}
+                            <span className="text-xs text-muted-foreground">
+                            {format(dayData.date, 'd')}
+                            </span>
                         </div>
-                      )}
+                        ))}
                     </div>
-                  ))}
+
+                    <div className="relative h-full">
+                         <div className="absolute inset-0 flex justify-center">
+                            {dailyBudget > 0 && (
+                                <div
+                                className="h-full bg-destructive/20"
+                                style={{
+                                    width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`,
+                                }}
+                                onMouseMove={(e) => {
+                                    const rect = chartContainerRef.current?.getBoundingClientRect();
+                                    if (rect) {
+                                        setActiveTooltip({
+                                            category: 'Денний бюджет',
+                                            amount: dailyBudget,
+                                            top: e.clientY - rect.top,
+                                            left: e.clientX - rect.left,
+                                        });
+                                    }
+                                }}
+                                />
+                            )}
+                        </div>
+
+                        <div className="relative flex flex-col w-full">
+                        {dailyVaseData.sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
+                            <div
+                            key={dayData.date.toISOString()}
+                            className="h-4 flex justify-center py-px"
+                            >
+                            {dayData.total > 0 && (
+                                <div
+                                className="flex h-full relative z-10"
+                                style={{
+                                    width: `${Math.min(
+                                    100,
+                                    (dayData.total / maxDailyValue) * 100
+                                    )}%`,
+                                }}
+                                >
+                                {dayData.segments.map((segment, index) => (
+                                    <div
+                                    key={index}
+                                    className="h-full"
+                                    style={{
+                                        width: `${
+                                        (segment.amount / dayData.total) * 100
+                                        }%`,
+                                        backgroundColor: segment.color,
+                                    }}
+                                    onMouseMove={(e) => {
+                                        const rect = chartContainerRef.current?.getBoundingClientRect();
+                                        if (rect) {
+                                        setActiveTooltip({
+                                            category: segment.category,
+                                            amount: segment.amount,
+                                            top: e.clientY - rect.top,
+                                            left: e.clientX - rect.left,
+                                        });
+                                        }
+                                    }}
+                                    onClick={(e) => {
+                                        const rect = chartContainerRef.current?.getBoundingClientRect();
+                                        if (rect) {
+                                        setActiveTooltip({
+                                            category: segment.category,
+                                            amount: segment.amount,
+                                            top: e.clientY - rect.top,
+                                            left: e.clientX - rect.left,
+                                        });
+                                        }
+                                    }}
+                                    />
+                                ))}
+                                </div>
+                            )}
+                            </div>
+                        ))}
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
+            ) : (
+                <div className="flex flex-col h-[400px]">
+                    <div className="flex-grow relative flex items-end">
+                        {dailyVaseData.sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData, dayIndex) => (
+                            <div key={dayData.date.toISOString()} className="flex-1 h-full flex flex-col-reverse items-center px-px">
+                                {dayData.total > 0 && (
+                                <div
+                                    className="w-full flex flex-col-reverse relative z-10"
+                                    style={{
+                                        height: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%`,
+                                    }}
+                                >
+                                    {dayData.segments.map((segment, index) => (
+                                    <div
+                                        key={index}
+                                        className="w-full"
+                                        style={{
+                                            height: `${(segment.amount / dayData.total) * 100}%`,
+                                            backgroundColor: segment.color,
+                                        }}
+                                        onMouseMove={(e) => {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            if (rect) {
+                                            setActiveTooltip({
+                                                category: segment.category,
+                                                amount: segment.amount,
+                                                top: rect.top - 10,
+                                                left: rect.left + rect.width / 2,
+                                            });
+                                            }
+                                        }}
+                                    />
+                                    ))}
+                                </div>
+                                )}
+                            </div>
+                        ))}
+                        {dailyBudget > 0 && (
+                             <div className="absolute left-0 right-0 z-0 bg-destructive/20"
+                                style={{ 
+                                    height: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`,
+                                    bottom: 0
+                                }}
+                                 onMouseMove={(e) => {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setActiveTooltip({
+                                        category: 'Денний бюджет',
+                                        amount: dailyBudget,
+                                        top: e.clientY - rect.top,
+                                        left: e.clientX - rect.left,
+                                    });
+                                }}
+                             />
+                        )}
+                    </div>
+                     <div className="flex h-4 border-t mt-2">
+                        {dailyVaseData.sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
+                            <div key={dayData.date.toISOString()} className="flex-1 text-center">
+                                <span className="text-xs text-muted-foreground">{format(dayData.date, 'd')}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
             {activeTooltip && (
               <div
-                className="absolute z-20 pointer-events-none transform -translate-y-1/2 -translate-x-1/2"
+                className="absolute z-20 pointer-events-none transform -translate-x-1/2"
                 style={{
                   top: activeTooltip.top,
                   left: activeTooltip.left,
+                  marginTop: '-10px',
+                  ...(dailyVaseOrientation === 'vertical' && { transform: 'translateY(-100%) translateX(-50%)' }),
+                  ...(dailyVaseOrientation === 'horizontal' && { transform: 'translateY(-100%) translateX(-50%)' }),
                 }}
               >
                 <div className="bg-popover text-popover-foreground rounded-md border shadow-lg px-3 py-1.5 text-sm">
