@@ -226,11 +226,13 @@ export default function ReportsPage() {
       }
     });
 
-    return Object.values(data).sort((a,b) => {
-        const aDate = new Date(a.month.split('. ')[1], uk.localize?.month(uk.locale.match.months.findIndex(m => m.test(a.month.split('. ')[0]))), 1);
-        const bDate = new Date(b.month.split('. ')[1], uk.localize?.month(uk.locale.match.months.findIndex(m => m.test(b.month.split('. ')[0]))), 1);
-        return aDate.getTime() - bDate.getTime();
-    });
+    const monthOrder = (monthStr: string) => {
+        const [monthName, year] = monthStr.split('. ');
+        const monthIndex = ['січ', 'лют', 'бер', 'кві', 'тра', 'чер', 'лип', 'сер', 'вер', 'жов', 'лис', 'гру'].indexOf(monthName);
+        return new Date(parseInt(year), monthIndex).getTime();
+    };
+
+    return Object.values(data).sort((a,b) => monthOrder(a.month) - monthOrder(b.month));
 
   }, [filteredTransactions, period, isLoading, earliestTransactionDate]);
   
@@ -278,7 +280,8 @@ export default function ReportsPage() {
     })).sort((a, b) => b.value - a.value);
     
     const config = chartData.reduce((acc, entry, index) => {
-        const color = COLORS[index % COLORS.length];
+        const categoryDetails = categories.find(c => c.name === entry.name);
+        const color = categoryDetails ? `hsl(var(--chart-${(index % 5) + 1}))` : COLORS[index % COLORS.length];
         acc[entry.name] = {
             label: entry.name,
             color: color,
@@ -287,7 +290,7 @@ export default function ReportsPage() {
     }, {} as ChartConfig);
 
     return { data: chartData, config };
-  }, [filteredTransactions, isLoading, categoryPeriod]);
+  }, [filteredTransactions, isLoading, categoryPeriod, categories]);
 
   const trendData = useMemo(() => {
     if (isLoading || transactions.length < 1) return [];
@@ -491,7 +494,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
 
     const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; 
     
-    return { dailyVaseData: data.reverse(), dailyVaseConfig: config, dailyBudget, maxDailyValue };
+    return { dailyVaseData: data, dailyVaseConfig: config, dailyBudget, maxDailyValue };
 }, [transactions, isLoading, categories, isCategoriesLoading]);
 
 
@@ -624,8 +627,8 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
                     );
                   }}
                 >
-                {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${entry.name}`} fill={pieChartConfig[entry.name]?.color || COLORS[index % COLORS.length]} />
+                {categoryData.map((entry) => (
+                  <Cell key={`cell-${entry.name}`} fill={pieChartConfig[entry.name]?.color} />
                 ))}
                 </Pie>
                 <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
@@ -825,22 +828,29 @@ const dailyVaseExpenseChart = (
                 <div className="text-center text-muted-foreground py-8">Немає даних про витрати цього місяця.</div>
             ) : (
               <TooltipProvider>
-                <div className="relative">
-                    <div
-                        className="absolute inset-y-0 bg-primary/10"
-                        style={{
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`
-                        }}
-                    />
-                    <div className="relative">
+                <div className="grid grid-cols-[auto_1fr] items-center">
+                    {/* Dates Column */}
+                    <div className="flex flex-col">
                         {dailyVaseData.map(dayData => (
-                            <div key={dayData.date.toISOString()} className="relative flex items-center h-8">
-                                <div className="absolute left-0 w-8 text-xs text-right text-muted-foreground pr-2">
-                                    {format(dayData.date, 'd')}
-                                </div>
-                                <div className="absolute left-8 right-0 h-full flex items-center justify-center">
+                            <div key={dayData.date.toISOString()} className="h-4 flex items-center justify-end pr-2">
+                                <span className="text-xs text-muted-foreground">{format(dayData.date, 'd')}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Chart Column */}
+                    <div className="relative">
+                        <div
+                            className="absolute inset-y-0 bg-primary/10"
+                            style={{
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`
+                            }}
+                        />
+                        <div className="relative flex flex-col">
+                            {dailyVaseData.map(dayData => (
+                                <div key={dayData.date.toISOString()} className="relative h-4 flex items-center justify-center">
                                     {dayData.total > 0 && (
                                     <div className="flex h-full" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
                                         {dayData.segments.map(segment => (
@@ -863,8 +873,8 @@ const dailyVaseExpenseChart = (
                                     </div>
                                     )}
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
               </TooltipProvider>
