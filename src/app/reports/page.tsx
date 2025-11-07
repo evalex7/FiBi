@@ -837,49 +837,51 @@ const dailyVaseExpenseChart = (
                     </div>
 
                     <div className="relative h-full flex justify-center">
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div
-                                    className="absolute inset-y-0 bg-primary/10 cursor-pointer"
-                                    style={{
-                                        left: '50%',
-                                        transform: 'translateX(-50%)',
-                                        width: dailyBudget > 0 ? `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%` : '0%'
-                                    }}
-                                />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Денний бюджет: {formatCurrencyTooltip(dailyBudget)}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                        
-                        <div className="relative flex flex-col h-full w-full">
-                            {dailyVaseData.map(dayData => (
-                                <div key={dayData.date.toISOString()} className="relative h-4 flex items-center justify-center">
-                                    {dayData.total > 0 && (
-                                    <div className="flex h-full" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
-                                        {dayData.segments.map(segment => (
-                                        <Tooltip key={segment.category}>
-                                            <TooltipTrigger asChild>
-                                                <div
-                                                    className="h-full cursor-pointer"
-                                                    style={{
-                                                    width: `${(segment.amount / dayData.total) * 100}%`,
-                                                    backgroundColor: segment.color,
-                                                    }}
-                                                />
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p className="font-bold">{segment.category}</p>
-                                                <p>{formatCurrencyTooltip(segment.amount)}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                        ))}
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div
+                                        className="absolute inset-y-0 bg-primary/10 cursor-pointer"
+                                        style={{
+                                            left: '50%',
+                                            transform: 'translateX(-50%)',
+                                            width: dailyBudget > 0 ? `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%` : '0%'
+                                        }}
+                                    />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Денний бюджет: {formatCurrencyTooltip(dailyBudget)}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                            
+                            <div className="relative flex flex-col h-full w-full">
+                                {dailyVaseData.map(dayData => (
+                                    <div key={dayData.date.toISOString()} className="relative h-4 flex items-center justify-center">
+                                        {dayData.total > 0 && (
+                                        <div className="flex h-full" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
+                                            {dayData.segments.map(segment => (
+                                            <Tooltip key={segment.category}>
+                                                <TooltipTrigger asChild>
+                                                    <div
+                                                        className="h-full cursor-pointer"
+                                                        style={{
+                                                        width: `${(segment.amount / dayData.total) * 100}%`,
+                                                        backgroundColor: segment.color,
+                                                        }}
+                                                    />
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p className="font-bold">{segment.category}</p>
+                                                    <p>{formatCurrencyTooltip(segment.amount)}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                            ))}
+                                        </div>
+                                        )}
                                     </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        </TooltipProvider>
                     </div>
                 </div>
             )}
