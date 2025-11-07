@@ -91,6 +91,10 @@ const COLORS = [
   "hsl(30, 90%, 60%)",
   "hsl(100, 60%, 50%)",
   "hsl(300, 75%, 65%)",
+  "hsl(20, 85%, 60%)",
+  "hsl(210, 80%, 65%)",
+  "hsl(140, 60%, 55%)",
+  "hsl(280, 70%, 60%)",
 ];
 
 export default function ReportsPage() {
@@ -375,27 +379,32 @@ const { data: categoryTrendData, config: categoryTrendConfig, categories: catego
     }
     const endDate = endOfMonth(now);
   
-    const monthlyData: { [month: string]: { monthDate: Date, values: { [category: string]: number } } } = {};
+    const dataByMonth: { [month: string]: { date: Date, values: { [category: string]: number } } } = {};
     const allCategoriesInPeriod = new Set<string>();
+
+    // Initialize all months in the period
+    eachMonthOfInterval({ start: startDate, end: endDate }).forEach(monthDate => {
+        const monthKey = format(monthDate, 'yyyy-MM');
+        dataByMonth[monthKey] = { date: monthDate, values: {} };
+    });
   
     filteredTransactions.forEach(t => {
         if (t.type === 'expense') {
             const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
             if (transactionDate >= startDate && transactionDate <= endDate) {
                 const monthKey = format(transactionDate, 'yyyy-MM');
-                if (!monthlyData[monthKey]) {
-                    monthlyData[monthKey] = { monthDate: startOfMonth(transactionDate), values: {} };
+                if (dataByMonth[monthKey]) {
+                    dataByMonth[monthKey].values[t.category] = (dataByMonth[monthKey].values[t.category] || 0) + t.amount;
+                    allCategoriesInPeriod.add(t.category);
                 }
-                monthlyData[monthKey].values[t.category] = (monthlyData[monthKey].values[t.category] || 0) + t.amount;
-                allCategoriesInPeriod.add(t.category);
             }
         }
     });
   
-    const chartData = Object.values(monthlyData)
-      .sort((a, b) => a.monthDate.getTime() - b.monthDate.getTime())
-      .map(({ monthDate, values }) => ({
-          month: format(monthDate, 'LLL yy', { locale: uk }),
+    const chartData = Object.values(dataByMonth)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .map(({ date, values }) => ({
+          month: format(date, 'LLL yy', { locale: uk }),
           ...values
       }));
   
@@ -817,47 +826,46 @@ const dailyVaseExpenseChart = (
             ) : (
               <TooltipProvider>
                 <div className="relative">
-                    <div className="absolute inset-y-0 left-8 right-0">
-                        <div 
-                            className="absolute inset-y-0 bg-primary/10"
-                            style={{
-                                left: `calc(50% - ${Math.min(100, (dailyBudget / maxDailyValue) * 100) / 2}%)`,
-                                width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`
-                            }}
-                        />
-                    </div>
-                  <div className="relative">
-                    {dailyVaseData.map(dayData => (
-                        <div key={dayData.date.toISOString()} className="relative flex items-center h-2">
-                            <div className="w-8 text-xs text-right text-muted-foreground pr-2">
-                                {format(dayData.date, 'd')}
-                            </div>
-                            <div className="absolute left-8 right-0 h-full flex items-center justify-center">
-                                {dayData.total > 0 && (
-                                <div className="flex h-full" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
-                                    {dayData.segments.map(segment => (
-                                    <Tooltip key={segment.category}>
-                                        <TooltipTrigger asChild>
-                                            <div
-                                                className="h-full"
-                                                style={{
-                                                width: `${(segment.amount / dayData.total) * 100}%`,
-                                                backgroundColor: segment.color,
-                                                }}
-                                            />
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p className="font-bold">{segment.category}</p>
-                                            <p>{formatCurrencyTooltip(segment.amount)}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                    ))}
+                    <div
+                        className="absolute inset-y-0 bg-primary/10"
+                        style={{
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`
+                        }}
+                    />
+                    <div className="relative">
+                        {dailyVaseData.map(dayData => (
+                            <div key={dayData.date.toISOString()} className="relative flex items-center h-8">
+                                <div className="absolute left-0 w-8 text-xs text-right text-muted-foreground pr-2">
+                                    {format(dayData.date, 'd')}
                                 </div>
-                                )}
+                                <div className="absolute left-8 right-0 h-full flex items-center justify-center">
+                                    {dayData.total > 0 && (
+                                    <div className="flex h-full" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
+                                        {dayData.segments.map(segment => (
+                                        <Tooltip key={segment.category}>
+                                            <TooltipTrigger asChild>
+                                                <div
+                                                    className="h-full"
+                                                    style={{
+                                                    width: `${(segment.amount / dayData.total) * 100}%`,
+                                                    backgroundColor: segment.color,
+                                                    }}
+                                                />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p className="font-bold">{segment.category}</p>
+                                                <p>{formatCurrencyTooltip(segment.amount)}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                        ))}
+                                    </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                  </div>
+                        ))}
+                    </div>
                 </div>
               </TooltipProvider>
             )}
