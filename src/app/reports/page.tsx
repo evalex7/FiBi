@@ -839,7 +839,7 @@ const dailyVaseExpenseChart = (
                 <div className="relative" onMouseLeave={() => setActiveTooltip(null)}>
                     {activeTooltip && (
                         <div
-                            className="absolute z-10 min-w-[8rem] rounded-lg border bg-popover p-2.5 text-popover-foreground text-xs shadow-xl"
+                            className="absolute z-10 min-w-[8rem] rounded-lg border bg-popover p-2.5 text-popover-foreground text-xs shadow-xl pointer-events-none"
                             style={{
                                 top: activeTooltip.top,
                                 left: activeTooltip.left,
@@ -861,21 +861,21 @@ const dailyVaseExpenseChart = (
 
                         <div
                             className="relative h-full"
-                            onMouseMove={(e) => {
-                                if (e.target === e.currentTarget) {
-                                  const rect = e.currentTarget.getBoundingClientRect();
-                                  setActiveTooltip({
-                                      category: 'Денний бюджет',
-                                      amount: dailyBudget,
-                                      top: e.clientY - rect.top,
-                                      left: e.clientX - rect.left,
-                                  });
-                                }
-                            }}
                         >
                             <div
-                                className="absolute inset-y-0 bg-primary/10 left-1/2 -translate-x-1/2"
+                                className="absolute inset-y-0 bg-primary/10 left-1/2 -translate-x-1/2 cursor-pointer"
                                 style={{ width: dailyBudget > 0 ? `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%` : '0%'}}
+                                onMouseMove={(e) => {
+                                  const rect = chartContainerRef.current?.getBoundingClientRect();
+                                  if (rect) {
+                                      setActiveTooltip({
+                                          category: 'Денний бюджет',
+                                          amount: dailyBudget,
+                                          top: e.clientY - rect.top,
+                                          left: e.clientX - rect.left,
+                                      });
+                                  }
+                                }}
                             />
                             
                             <div className="relative flex flex-col w-full">
