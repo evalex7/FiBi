@@ -552,7 +552,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
           Розбивка ваших витрат за обраний період.
         </CardDescription>
         <div className="pt-2 flex flex-wrap gap-2">
-          <Select value={categoryPeriod} onValueChange={setCategoryPeriod}>
+          <Select value={categoryPeriod} onValuechange={setCategoryPeriod}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Оберіть період" />
             </SelectTrigger>
@@ -831,7 +831,7 @@ const dailyVaseExpenseChart = (
                     <div className="grid grid-cols-[2rem_1fr] items-center">
                         <div className="flex flex-col">
                             {dailyVaseData.map(dayData => (
-                                <div key={dayData.date.toISOString()} className="h-4 flex items-center justify-end pr-2">
+                                <div key={dayData.date.toISOString()} className="h-8 flex items-center justify-end pr-2">
                                     <span className="text-xs text-muted-foreground">{format(dayData.date, 'd')}</span>
                                 </div>
                             ))}
@@ -854,11 +854,11 @@ const dailyVaseExpenseChart = (
                                 </TooltipContent>
                             </Tooltip>
                             
-                            <div className="relative flex flex-col h-full">
+                            <div className="relative flex flex-col h-full justify-center">
                                 {dailyVaseData.map(dayData => (
-                                    <div key={dayData.date.toISOString()} className="relative h-4 flex items-center justify-center">
+                                    <div key={dayData.date.toISOString()} className="relative h-8 flex items-center justify-center">
                                         {dayData.total > 0 && (
-                                        <div className="flex h-2" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
+                                        <div className="flex h-full" style={{ width: `${Math.min(100, (dayData.total / maxDailyValue) * 100)}%` }}>
                                             {dayData.segments.map(segment => (
                                             <Tooltip key={segment.category}>
                                                 <TooltipTrigger asChild>
