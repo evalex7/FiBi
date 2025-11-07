@@ -500,7 +500,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
             total,
             segments,
         };
-    }).sort((a,b) => b.date.getTime() - a.date.getTime());
+    });
 
     const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; 
     
@@ -836,12 +836,14 @@ const dailyVaseExpenseChart = (
                     {dailyBudget > 0 && <span> Ваш денний бюджет: <b>{formatCurrencyTooltip(dailyBudget)}</b></span>}
                 </CardDescription>
             </div>
-             <Tabs value={dailyVaseOrientation} onValueChange={(value) => setDailyVaseOrientation(value as any)} className="w-full sm:w-auto">
-                <TabsList>
-                    <TabsTrigger value="vertical">Вертикально</TabsTrigger>
-                    <TabsTrigger value="horizontal">Горизонтально</TabsTrigger>
-                </TabsList>
-            </Tabs>
+             <div className="w-full flex justify-center sm:justify-start sm:w-auto">
+                <Tabs value={dailyVaseOrientation} onValueChange={(value) => setDailyVaseOrientation(value as any)}>
+                    <TabsList>
+                        <TabsTrigger value="vertical">Вертикально</TabsTrigger>
+                        <TabsTrigger value="horizontal">Горизонтально</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+            </div>
         </div>
       </CardHeader>
       <CardContent className="pr-0" ref={chartContainerRef}>
@@ -861,7 +863,7 @@ const dailyVaseExpenseChart = (
             {dailyVaseOrientation === 'vertical' ? (
                 <div className="grid grid-cols-[2rem_1fr] items-center">
                     <div className="flex flex-col">
-                        {dailyVaseData.sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
+                        {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
                         <div
                             key={dayData.date.toISOString()}
                             className="h-4 flex items-center justify-end pr-2 py-px"
@@ -897,7 +899,7 @@ const dailyVaseExpenseChart = (
                         </div>
 
                         <div className="relative flex flex-col w-full">
-                        {dailyVaseData.sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
+                        {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
                             <div
                             key={dayData.date.toISOString()}
                             className="h-4 flex justify-center py-px"
@@ -956,7 +958,7 @@ const dailyVaseExpenseChart = (
             ) : (
                 <div className="flex flex-col h-[400px]">
                     <div className="flex-grow relative flex items-end">
-                        {dailyVaseData.sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData, dayIndex) => (
+                        {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData, dayIndex) => (
                             <div key={dayData.date.toISOString()} className="flex-1 h-full flex flex-col-reverse items-center px-px">
                                 {dayData.total > 0 && (
                                 <div
@@ -1009,7 +1011,7 @@ const dailyVaseExpenseChart = (
                         )}
                     </div>
                      <div className="flex h-4 border-t mt-2">
-                        {dailyVaseData.sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
+                        {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
                             <div key={dayData.date.toISOString()} className="flex-1 text-center">
                                 <span className="text-xs text-muted-foreground">{format(dayData.date, 'd')}</span>
                             </div>
