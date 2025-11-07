@@ -863,7 +863,7 @@ const dailyVaseExpenseChart = (
             {dailyVaseOrientation === 'vertical' ? (
                 <div className="grid grid-cols-[2rem_1fr] items-center">
                     <div className="flex flex-col">
-                        {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
+                        {[...dailyVaseData].sort((a,b) => b.date.getTime() - a.date.getTime()).map((dayData) => (
                         <div
                             key={dayData.date.toISOString()}
                             className="h-4 flex items-center justify-end pr-2 py-px"
@@ -899,7 +899,7 @@ const dailyVaseExpenseChart = (
                         </div>
 
                         <div className="relative flex flex-col w-full">
-                        {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
+                        {[...dailyVaseData].sort((a,b) => b.date.getTime() - a.date.getTime()).map((dayData) => (
                             <div
                             key={dayData.date.toISOString()}
                             className="h-4 flex justify-center py-px"
@@ -956,10 +956,11 @@ const dailyVaseExpenseChart = (
                     </div>
                 </div>
             ) : (
-                <div className="flex flex-col h-[400px]">
+              <ScrollArea className="w-full whitespace-nowrap">
+                <div className="flex flex-col h-[400px] w-max pr-4">
                     <div className="flex-grow relative flex items-end">
                         {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData, dayIndex) => (
-                            <div key={dayData.date.toISOString()} className="flex-1 h-full flex flex-col-reverse items-center px-px">
+                            <div key={dayData.date.toISOString()} className="flex-1 h-full flex flex-col-reverse items-center px-px min-w-[20px]">
                                 {dayData.total > 0 && (
                                 <div
                                     className="w-full flex flex-col-reverse relative z-10"
@@ -1012,12 +1013,13 @@ const dailyVaseExpenseChart = (
                     </div>
                      <div className="flex h-4 border-t mt-2">
                         {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
-                            <div key={dayData.date.toISOString()} className="flex-1 text-center">
+                            <div key={dayData.date.toISOString()} className="flex-1 text-center min-w-[20px]">
                                 <span className="text-xs text-muted-foreground">{format(dayData.date, 'd')}</span>
                             </div>
                         ))}
                     </div>
                 </div>
+                </ScrollArea>
             )}
             {activeTooltip && (
               <div
