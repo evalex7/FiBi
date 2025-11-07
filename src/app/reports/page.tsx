@@ -862,25 +862,26 @@ const dailyVaseExpenseChart = (
               </div>
 
               <div className="relative h-full">
-                {/* Budget Bar */}
                 {dailyBudget > 0 && (
-                  <div
-                    className="absolute top-0 h-full w-24 bg-destructive/20"
-                    style={{
-                      width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`
-                    }}
-                     onMouseMove={(e) => {
-                        const rect = chartContainerRef.current?.getBoundingClientRect();
-                        if (rect) {
-                            setActiveTooltip({
-                                category: 'Денний бюджет',
-                                amount: dailyBudget,
-                                top: e.clientY - rect.top,
-                                left: e.clientX - rect.left,
-                            });
-                        }
-                    }}
-                  />
+                  <div className="absolute inset-0 flex justify-center">
+                    <div
+                      className="h-full bg-destructive/20"
+                      style={{
+                        width: `${Math.min(100, (dailyBudget / maxDailyValue) * 100)}%`,
+                      }}
+                      onMouseMove={(e) => {
+                          const rect = chartContainerRef.current?.getBoundingClientRect();
+                          if (rect) {
+                              setActiveTooltip({
+                                  category: 'Денний бюджет',
+                                  amount: dailyBudget,
+                                  top: e.clientY - rect.top,
+                                  left: e.clientX - rect.left,
+                              });
+                          }
+                      }}
+                    />
+                  </div>
                 )}
 
                 <div className="relative flex flex-col-reverse w-full">
