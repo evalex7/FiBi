@@ -47,7 +47,7 @@ import { Timestamp } from 'firebase/firestore';
 import AppLayout from '@/components/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -863,7 +863,7 @@ const dailyVaseExpenseChart = (
             {dailyVaseOrientation === 'vertical' ? (
                 <div className="grid grid-cols-[2rem_1fr] items-center">
                     <div className="flex flex-col">
-                        {[...dailyVaseData].sort((a,b) => b.date.getTime() - a.date.getTime()).map((dayData) => (
+                        {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
                         <div
                             key={dayData.date.toISOString()}
                             className="h-4 flex items-center justify-end pr-2 py-px"
@@ -899,7 +899,7 @@ const dailyVaseExpenseChart = (
                         </div>
 
                         <div className="relative flex flex-col w-full">
-                        {[...dailyVaseData].sort((a,b) => b.date.getTime() - a.date.getTime()).map((dayData) => (
+                        {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData) => (
                             <div
                             key={dayData.date.toISOString()}
                             className="h-4 flex justify-center py-px"
@@ -957,7 +957,7 @@ const dailyVaseExpenseChart = (
                 </div>
             ) : (
               <ScrollArea className="w-full whitespace-nowrap">
-                <div className="flex flex-col h-[400px] w-max pr-4">
+                <div className="flex flex-row h-[400px] w-max pr-4">
                     <div className="flex-grow relative flex items-end">
                         {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData, dayIndex) => (
                             <div key={dayData.date.toISOString()} className="flex-1 h-full flex flex-col-reverse items-center px-px min-w-[20px]">
@@ -1019,6 +1019,7 @@ const dailyVaseExpenseChart = (
                         ))}
                     </div>
                 </div>
+                <ScrollBar orientation="horizontal" />
                 </ScrollArea>
             )}
             {activeTooltip && (
