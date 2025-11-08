@@ -8,6 +8,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { BudgetsProvider } from '@/contexts/budgets-context';
 import { CategoriesProvider } from '@/contexts/categories-context';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { SettingsProvider } from '@/contexts/settings-context';
 
 export const metadata: Metadata = {
   title: 'Сімейні фінанси',
@@ -42,15 +43,17 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <FirebaseClientProvider>
-            <CategoriesProvider>
-              <PaymentsProvider>
-                <TransactionsProvider>
-                  <BudgetsProvider>
-                    {children}
-                  </BudgetsProvider>
-                </TransactionsProvider>
-              </PaymentsProvider>
-            </CategoriesProvider>
+            <SettingsProvider>
+              <CategoriesProvider>
+                <PaymentsProvider>
+                  <TransactionsProvider>
+                    <BudgetsProvider>
+                      {children}
+                    </BudgetsProvider>
+                  </TransactionsProvider>
+                </PaymentsProvider>
+              </CategoriesProvider>
+            </SettingsProvider>
           </FirebaseClientProvider>
           <Toaster />
         </ThemeProvider>

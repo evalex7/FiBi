@@ -68,6 +68,8 @@ export default function TransactionForm({ transaction, onSave, initialValues, is
             transactionDate = transaction.date instanceof Timestamp 
                 ? transaction.date.toDate() 
                 : new Date(transaction.date);
+        } else {
+            transactionDate = new Date();
         }
         
         if (isCopy) {

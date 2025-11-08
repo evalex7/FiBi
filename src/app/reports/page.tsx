@@ -51,6 +51,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useSettings } from '@/contexts/settings-context';
+import { FileWarning } from 'lucide-react';
 
 const formatCurrency = (amount: number) => {
   if (amount >= 1000) {
@@ -108,6 +110,7 @@ type CustomTooltipPayload = {
 export default function ReportsPage() {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const { categories, isLoading: isCategoriesLoading } = useCategories();
+  const { chartSettings } = useSettings();
   const isMobile = useIsMobile();
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
@@ -1046,16 +1049,28 @@ const dailyVaseExpenseChart = (
     </Card>
 );
 
-
+const visibleCharts = [
+  { id: 'incomeVsExpense', chart: incomeVsExpenseChart },
+  { id: 'dailyVaseExpense', chart: dailyVaseExpenseChart },
+  { id: 'category', chart: categoryChart },
+  { id: 'trend', chart: trendChart },
+  { id: 'categoryTrend', chart: categoryTrendChart }
+].filter(chart => chartSettings[chart.id as keyof typeof chartSettings]);
 
   return (
     <AppLayout pageTitle="Звіти">
       <div className="w-full space-y-6">
-        {incomeVsExpenseChart}
-        {dailyVaseExpenseChart}
-        {categoryChart}
-        {trendChart}
-        {categoryTrendChart}
+        {visibleCharts.length > 0 ? (
+          visibleCharts.map(({ id, chart }) => <div key={id}>{chart}</div>)
+        ) : (
+          <Card className="text-center text-muted-foreground py-16">
+            <CardContent className="space-y-4">
+              <FileWarning className="mx-auto h-12 w-12" />
+              <h3 className="text-lg font-semibold">Графіки не вибрано</h3>
+              <p>Перейдіть до <a href="/settings" className="text-primary underline">налаштувань</a>, щоб увімкнути потрібні звіти.</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AppLayout>
   );
