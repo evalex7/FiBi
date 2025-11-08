@@ -23,7 +23,7 @@ service cloud.firestore {
 
     match /expenses/{expenseId} {
       allow read: if isSignedIn() && (resource.data.isPrivate == false || resource.data.familyMemberId == request.auth.uid);
-      allow write: if isSignedIn();
+      allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
 
     match /budgets/{budgetId} {
