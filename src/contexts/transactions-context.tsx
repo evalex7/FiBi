@@ -49,10 +49,7 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
 
   const updateTransaction = (updatedTransaction: WithId<Transaction>) => {
     if (!firestore || !user) return;
-    if (updatedTransaction.familyMemberId !== user.uid) {
-        console.warn("Attempted to update a transaction by a non-owner.");
-        return;
-    }
+
     const transactionDocRef = doc(firestore, 'expenses', updatedTransaction.id);
     const { id, ...transactionData } = updatedTransaction;
     setDocumentNonBlocking(transactionDocRef, transactionData, { merge: true }).catch(error => {
