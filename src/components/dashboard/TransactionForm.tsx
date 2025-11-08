@@ -44,7 +44,7 @@ export default function TransactionForm({ transaction, onSave, initialValues, is
   const { addTransaction, updateTransaction } = useTransactions();
   const { categories: availableCategories } = useCategories();
   const [type, setType] = useState<Transaction['type']>(initialValues?.type || 'expense');
-  const [date, setDate] = useState<Date | undefined>(initialValues?.date ? (initialValues.date as Date) : new Date());
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
   
   const [amount, setAmount] = useState(String(initialValues?.amount || ''));
@@ -63,12 +63,16 @@ export default function TransactionForm({ transaction, onSave, initialValues, is
         setCategory(transaction.category);
         setIsPrivate(transaction.isPrivate || false);
         
-        if (isCopy) {
-            setDate(new Date());
-        } else if (transaction.date) {
-            const transactionDate = transaction.date instanceof Timestamp 
+        let transactionDate;
+        if (transaction.date) {
+            transactionDate = transaction.date instanceof Timestamp 
                 ? transaction.date.toDate() 
                 : new Date(transaction.date);
+        }
+        
+        if (isCopy) {
+            setDate(new Date());
+        } else {
             setDate(transactionDate);
         }
     } else if (initialValues) {
