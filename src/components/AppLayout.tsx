@@ -104,7 +104,7 @@ export default function AppLayout({
   
   const getIsActive = (href: string) => {
     if (href === '/dashboard') {
-      return pathname === '/dashboard';
+      return pathname === href;
     }
     return pathname.startsWith(href);
   };

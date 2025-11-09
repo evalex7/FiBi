@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTransactions } from '@/contexts/transactions-context';
-import { format, startOfMonth, differenceInMonths, addMonths } from 'date-fns';
+import { format, startOfMonth, differenceInMonths, addMonths, parseISO } from 'date-fns';
 import { uk } from 'date-fns/locale';
 
 type MonthSelectorProps = {
@@ -12,55 +12,65 @@ type MonthSelectorProps = {
 };
 
 export default function MonthSelector({ selectedPeriod, onPeriodChange }: MonthSelectorProps) {
-  const { transactions } = useTransactions();
+  const { transactions, isLoading } = useTransactions();
   const [periodOptions, setPeriodOptions] = useState<{ value: string; label: string }[]>([]);
 
   useEffect(() => {
+    const now = new Date();
+    const currentMonthValue = format(now, 'yyyy-MM');
+    
+    if (isLoading) return;
+
     if (transactions.length > 0) {
       const earliestDate = transactions.reduce((earliest, t) => {
         const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
         return transactionDate < earliest ? transactionDate : earliest;
       }, new Date());
       
-      const options: { value: string; label: string }[] = [{ value: 'all', label: 'За весь час' }];
-      const now = new Date();
+      const options: { value: string; label: string }[] = [];
       const startDate = startOfMonth(earliestDate);
-      const monthsDifference = differenceInMonths(now, startDate);
+      const endDate = startOfMonth(now);
+      let monthsDifference = differenceInMonths(endDate, startDate);
+
+      // Ensure we have at least one month if earliestDate is in the future
+      if (monthsDifference < 0) monthsDifference = 0;
       
-      for (let i = 0; i <= monthsDifference; i++) {
+      for (let i = monthsDifference; i >= 0; i--) {
         const date = addMonths(startDate, i);
-        options.unshift({
+        options.push({
           value: format(date, 'yyyy-MM'),
           label: format(date, 'LLLL yyyy', { locale: uk }),
         });
       }
       
+      // If there are no transactions for the current month yet, add it manually
+      if (!options.some(opt => opt.value === currentMonthValue)) {
+          options.unshift({
+              value: currentMonthValue,
+              label: format(now, 'LLLL yyyy', { locale: uk })
+          })
+      }
+
+      // Add "All time" option
+      options.push({ value: 'all', label: 'За весь час' });
+
       setPeriodOptions(options);
 
-      // Set default to current month if available
-      const currentMonthValue = format(now, 'yyyy-MM');
-      if (options.some(opt => opt.value === currentMonthValue)) {
-        onPeriodChange(currentMonthValue);
-      } else if (options.length > 1) {
-        onPeriodChange(options[1].value); // Default to the latest month with transactions
-      } else {
-        onPeriodChange('all');
+      if (!selectedPeriod || !options.some(o => o.value === selectedPeriod)) {
+         onPeriodChange(currentMonthValue);
       }
 
     } else {
-        const now = new Date();
-        setPeriodOptions([
+        const defaultOptions = [
+            { value: currentMonthValue, label: format(now, 'LLLL yyyy', { locale: uk }) },
             { value: 'all', label: 'За весь час' },
-            { value: format(now, 'yyyy-MM'), label: format(now, 'LLLL yyyy', { locale: uk }) },
-        ]);
-        onPeriodChange(format(now, 'yyyy-MM'));
+        ];
+        setPeriodOptions(defaultOptions);
+        if (!selectedPeriod) {
+            onPeriodChange(currentMonthValue);
+        }
     }
-  // We run this only once on transactions load to build the list
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions]);
-  
-  // Find current selected label
-  const selectedLabel = periodOptions.find(opt => opt.value === selectedPeriod)?.label;
+  }, [transactions, isLoading]);
   
   const handlePeriodChange = (value: string) => {
       onPeriodChange(value);
