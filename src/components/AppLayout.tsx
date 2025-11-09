@@ -103,8 +103,10 @@ export default function AppLayout({
   };
   
   const getIsActive = (href: string) => {
-    // Exact match for dashboard, startsWith for others
-    return href === '/dashboard' ? pathname === href : pathname.startsWith(href);
+    if (href === '/dashboard') {
+      return pathname === href;
+    }
+    return pathname.startsWith(href);
   };
 
   const handleOpenTransactionForm = (payment?: Partial<RecurringPayment & { remainingAmount: number }>) => {

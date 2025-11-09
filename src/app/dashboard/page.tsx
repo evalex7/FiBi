@@ -15,10 +15,11 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import TransactionForm from '@/components/dashboard/TransactionForm';
+import { format } from 'date-fns';
 
 
 export default function DashboardPage() {
-  const [period, setPeriod] = useState('0'); // '0' for current month
+  const [period, setPeriod] = useState(format(new Date(), 'yyyy-MM'));
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
 
   return (
