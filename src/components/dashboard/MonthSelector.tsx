@@ -19,57 +19,52 @@ export default function MonthSelector({ selectedPeriod, onPeriodChange }: MonthS
     const now = new Date();
     const currentMonthValue = format(now, 'yyyy-MM');
     
-    if (isLoading) return;
-
-    if (transactions.length > 0) {
-      const earliestDate = transactions.reduce((earliest, t) => {
-        const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
-        return transactionDate < earliest ? transactionDate : earliest;
-      }, new Date());
-      
-      const options: { value: string; label: string }[] = [];
-      const startDate = startOfMonth(earliestDate);
-      const endDate = startOfMonth(now);
-      let monthsDifference = differenceInMonths(endDate, startDate);
-
-      // Ensure we have at least one month if earliestDate is in the future
-      if (monthsDifference < 0) monthsDifference = 0;
-      
-      for (let i = monthsDifference; i >= 0; i--) {
-        const date = addMonths(startDate, i);
-        options.push({
-          value: format(date, 'yyyy-MM'),
-          label: format(date, 'LLLL yyyy', { locale: uk }),
-        });
-      }
-      
-      // If there are no transactions for the current month yet, add it manually
-      if (!options.some(opt => opt.value === currentMonthValue)) {
-          options.unshift({
-              value: currentMonthValue,
-              label: format(now, 'LLLL yyyy', { locale: uk })
-          })
-      }
-
-      // Add "All time" option
-      options.push({ value: 'all', label: 'За весь час' });
-
-      setPeriodOptions(options);
-
-      // This was the bug. It was not correctly setting the initial period.
-      if (!selectedPeriod || !options.some(o => o.value === selectedPeriod)) {
-         onPeriodChange(options.length > 1 && options[0].value !== 'all' ? options[0].value : currentMonthValue);
-      }
-
-    } else {
-        const defaultOptions = [
-            { value: currentMonthValue, label: format(now, 'LLLL yyyy', { locale: uk }) },
-            { value: 'all', label: 'За весь час' },
-        ];
+    if (isLoading) {
+      // While loading, show only the current month as a default
+      const defaultOptions = [{ value: currentMonthValue, label: format(now, 'LLLL yyyy', { locale: uk }) }];
+      if (!periodOptions.some(o => o.value === currentMonthValue)) {
         setPeriodOptions(defaultOptions);
-        if (!selectedPeriod) {
-            onPeriodChange(currentMonthValue);
-        }
+      }
+      if (selectedPeriod !== currentMonthValue) {
+        onPeriodChange(currentMonthValue);
+      }
+      return;
+    };
+
+    const options: { value: string; label: string }[] = [];
+    const existingMonths = new Set<string>();
+
+    // Add current month first to ensure it's always there and at the top
+    const currentMonthLabel = format(now, 'LLLL yyyy', { locale: uk });
+    options.push({ value: currentMonthValue, label: currentMonthLabel });
+    existingMonths.add(currentMonthValue);
+    
+    // Add months from transactions
+    if (transactions.length > 0) {
+        transactions.forEach(t => {
+            const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
+            const monthKey = format(transactionDate, 'yyyy-MM');
+            if (!existingMonths.has(monthKey)) {
+                options.push({
+                    value: monthKey,
+                    label: format(transactionDate, 'LLLL yyyy', { locale: uk }),
+                });
+                existingMonths.add(monthKey);
+            }
+        });
+    }
+
+    // Sort options in descending chronological order
+    options.sort((a, b) => b.value.localeCompare(a.value));
+    
+    // Add "All time" option at the end
+    options.push({ value: 'all', label: 'За весь час' });
+
+    setPeriodOptions(options);
+
+    // Set initial period if not set or invalid
+    if (!selectedPeriod || !options.some(o => o.value === selectedPeriod)) {
+       onPeriodChange(currentMonthValue);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions, isLoading]);
