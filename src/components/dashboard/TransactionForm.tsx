@@ -56,18 +56,19 @@ export default function TransactionForm({ transaction, onSave, initialValues, is
   const isEditMode = !!transaction && !isCopy;
 
   useEffect(() => {
-    if (transaction) {
-        setType(transaction.type);
-        setAmount(String(transaction.amount));
-        setDescription(transaction.description);
-        setCategory(transaction.category);
-        setIsPrivate(transaction.isPrivate || false);
+    const valuesToSet = transaction || initialValues;
+    if (valuesToSet) {
+        setType(valuesToSet.type || 'expense');
+        setAmount(String(valuesToSet.amount || ''));
+        setDescription(valuesToSet.description || '');
+        setCategory(valuesToSet.category || '');
+        setIsPrivate(valuesToSet.isPrivate || false);
         
         let transactionDate;
-        if (transaction.date) {
-            transactionDate = transaction.date instanceof Timestamp 
-                ? transaction.date.toDate() 
-                : new Date(transaction.date);
+        if (valuesToSet.date) {
+            transactionDate = valuesToSet.date instanceof Timestamp 
+                ? valuesToSet.date.toDate() 
+                : new Date(valuesToSet.date as any);
         } else {
             transactionDate = new Date();
         }
@@ -77,13 +78,6 @@ export default function TransactionForm({ transaction, onSave, initialValues, is
         } else {
             setDate(transactionDate);
         }
-    } else if (initialValues) {
-        setType(initialValues.type || 'expense');
-        setAmount(String(initialValues.amount || ''));
-        setDescription(initialValues.description || '');
-        setCategory(initialValues.category || '');
-        setIsPrivate(initialValues.isPrivate || false);
-        setDate(initialValues.date ? new Date(initialValues.date.toString()) : new Date());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transaction, initialValues, isCopy]);
