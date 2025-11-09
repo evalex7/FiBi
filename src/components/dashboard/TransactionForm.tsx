@@ -70,14 +70,12 @@ export default function TransactionForm({ transaction, onSave, initialValues, is
             transactionDate = valuesToSet.date instanceof Timestamp 
                 ? valuesToSet.date.toDate() 
                 : new Date(valuesToSet.date as any);
-        } else {
-            transactionDate = new Date();
         }
         
         if (isCopy) {
             setDate(new Date());
         } else {
-            setDate(transactionDate);
+            setDate(transactionDate || new Date());
         }
     } else {
       // Reset form if no transaction or initialValues
