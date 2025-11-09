@@ -43,14 +43,15 @@ type TransactionFormProps = {
 export default function TransactionForm({ transaction, onSave, initialValues, isCopy = false }: TransactionFormProps) {
   const { addTransaction, updateTransaction } = useTransactions();
   const { categories: availableCategories } = useCategories();
-  const [type, setType] = useState<Transaction['type']>(initialValues?.type || 'expense');
+  
+  const [type, setType] = useState<Transaction['type']>('expense');
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
   
-  const [amount, setAmount] = useState(String(initialValues?.amount || ''));
-  const [description, setDescription] = useState(initialValues?.description || '');
-  const [category, setCategory] = useState(initialValues?.category || '');
-  const [isPrivate, setIsPrivate] = useState(initialValues?.isPrivate || false);
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
   const isEditMode = !!transaction && !isCopy;
@@ -78,8 +79,15 @@ export default function TransactionForm({ transaction, onSave, initialValues, is
         } else {
             setDate(transactionDate);
         }
+    } else {
+      // Reset form if no transaction or initialValues
+      setType('expense');
+      setAmount('');
+      setDescription('');
+      setCategory('');
+      setIsPrivate(false);
+      setDate(new Date());
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transaction, initialValues, isCopy]);
 
 
