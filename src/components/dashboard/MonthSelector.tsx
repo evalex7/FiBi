@@ -56,8 +56,9 @@ export default function MonthSelector({ selectedPeriod, onPeriodChange }: MonthS
 
       setPeriodOptions(options);
 
+      // This was the bug. It was not correctly setting the initial period.
       if (!selectedPeriod || !options.some(o => o.value === selectedPeriod)) {
-         onPeriodChange(currentMonthValue);
+         onPeriodChange(options.length > 1 && options[0].value !== 'all' ? options[0].value : currentMonthValue);
       }
 
     } else {
@@ -70,6 +71,7 @@ export default function MonthSelector({ selectedPeriod, onPeriodChange }: MonthS
             onPeriodChange(currentMonthValue);
         }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions, isLoading]);
   
   const handlePeriodChange = (value: string) => {
