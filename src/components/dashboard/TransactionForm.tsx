@@ -20,6 +20,8 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock } from 'lucide-react';
@@ -254,7 +256,10 @@ export default function TransactionForm({
                     : 'Оберіть дату'}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-auto">
+              <DialogContent className="w-auto p-0">
+                <DialogHeader className="p-4 pb-0">
+                  <DialogTitle>Оберіть дату</DialogTitle>
+                </DialogHeader>
                 <Calendar
                   mode="single"
                   selected={date}
