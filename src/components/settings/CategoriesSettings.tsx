@@ -34,7 +34,7 @@ export default function CategoriesSettings() {
               </div>
               <Button onClick={() => setIsAddCategoryOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Додати категорію
+                Додати
               </Button>
             </div>
           </div>
