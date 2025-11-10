@@ -55,6 +55,7 @@ export default function TransactionForm({
   const [category, setCategory] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const isEditMode = !!transaction && !isCopy;
 
@@ -233,7 +234,7 @@ export default function TransactionForm({
           {/* Поле вибору дати завжди активне */}
           <div className="grid gap-2">
             <Label htmlFor="date">Дата</Label>
-            <Popover>
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -253,7 +254,10 @@ export default function TransactionForm({
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={setDate}
+                  onSelect={(selectedDate) => {
+                    setDate(selectedDate);
+                    setIsCalendarOpen(false);
+                  }}
                   initialFocus
                   locale={uk}
                 />
