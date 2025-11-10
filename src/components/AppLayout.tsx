@@ -201,7 +201,7 @@ export default function AppLayout({
      <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
         <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => router.push('/settings')}>
-              <Settings className="h-5 w-5" />
+              <Menu className="h-5 w-5" />
               <span className="sr-only">Відкрити налаштування</span>
             </Button>
         </SheetTrigger>
@@ -209,43 +209,14 @@ export default function AppLayout({
   );
 
   const MobileBottomNav = () => {
-    // Reorder for mobile bottom nav
-    const mobileMenuItems = [
-      menuItems.find(i => i.href === '/dashboard'),
-      menuItems.find(i => i.href === '/budgets'),
-      null, // Placeholder for the add button
-      menuItems.find(i => i.href === '/payments'),
-      menuItems.find(i => i.href === '/reports'),
-    ].filter(Boolean) as (typeof menuItems[0])[];
-
-
     return (
       <div className={cn(
           "md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t transition-transform duration-300",
           isHeaderVisible ? "translate-y-0" : "translate-y-full"
       )}>
-        <div className="grid h-full max-w-lg grid-cols-5 mx-auto font-medium">
-          {mobileMenuItems.slice(0, 2).map((item) => (
+        <div className="grid h-full grid-cols-4 mx-auto font-medium">
+          {menuItems.map((item) => (
             <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "inline-flex flex-col items-center justify-center px-2 hover:bg-muted group",
-                getIsActive(item.href) ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              <item.icon className="w-5 h-5 mb-1" />
-              <span className="text-xs">{item.label}</span>
-            </Link>
-          ))}
-          <div className="flex items-center justify-center">
-            <Button size="icon" className="w-14 h-14 rounded-full -translate-y-4 shadow-lg" onClick={() => handleOpenTransactionForm()}>
-                <PlusCircle className="h-6 w-6" />
-                <span className="sr-only">Додати транзакцію</span>
-            </Button>
-          </div>
-          {mobileMenuItems.slice(2).map((item) => (
-             <Link
               key={item.href}
               href={item.href}
               className={cn(
@@ -270,7 +241,7 @@ export default function AppLayout({
         )}>
            <div className="flex items-center gap-2">
                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => router.push('/settings')}>
-                <Settings className="h-5 w-5" />
+                <Menu className="h-5 w-5" />
                 <span className="sr-only">Відкрити налаштування</span>
               </Button>
               <Link href="/dashboard" className="flex items-center gap-2 font-semibold">

@@ -26,8 +26,16 @@ export default function DashboardPage() {
     <AppLayout pageTitle="Панель">
       <div className="space-y-4">
         <div className="flex flex-row justify-between items-center gap-4">
-            <h2 className="text-2xl font-bold tracking-tight">Огляд</h2>
-            <MonthSelector selectedPeriod={period} onPeriodChange={setPeriod} />
+            <div className="space-y-1">
+                <h2 className="text-2xl font-bold tracking-tight">Огляд</h2>
+            </div>
+            <div className="flex items-center gap-2">
+                <MonthSelector selectedPeriod={period} onPeriodChange={setPeriod} />
+                 <Button onClick={() => setIsAddTransactionOpen(true)} size="sm" className="sm:hidden">
+                    <PlusCircle />
+                    <span className="sr-only">Додати</span>
+                </Button>
+            </div>
         </div>
         <SummaryCards selectedPeriod={period} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
