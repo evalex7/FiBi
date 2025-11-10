@@ -19,15 +19,18 @@ import CategoryForm from './CategoryForm';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/firebase';
 
 export default function CategoryList() {
   const { categories, isLoading, deleteCategory, updateCategoryOrder } = useCategories();
+  const { user } = useUser();
   const [sortedCategories, setSortedCategories] = useState<Category[]>([]);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
   
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     if (categories) {
@@ -36,6 +39,10 @@ export default function CategoryList() {
     }
   }, [categories]);
 
+  const canEditOrDelete = (category: Category) => {
+    return category.familyMemberId === user?.uid;
+  };
+  
   const handleDelete = () => {
     if (categoryToDelete) {
       deleteCategory(categoryToDelete.id);
@@ -43,8 +50,21 @@ export default function CategoryList() {
     }
   }
 
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    dragItem.current = index;
+    setDragging(true);
+    // To make it work on Firefox
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget.outerHTML);
+  };
+  
+  const handleDragEnter = (index: number) => {
+    dragOverItem.current = index;
+  };
+  
   const handleDragEnd = () => {
     if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
+        setDragging(false);
         dragItem.current = null;
         dragOverItem.current = null;
         return;
@@ -54,9 +74,10 @@ export default function CategoryList() {
     const [reorderedItem] = newCategories.splice(dragItem.current, 1);
     newCategories.splice(dragOverItem.current, 0, reorderedItem);
 
-    setSortedCategories(newCategories);
+    setSortedCategories(newCategories); // Optimistic update
     updateCategoryOrder(newCategories);
 
+    setDragging(false);
     dragItem.current = null;
     dragOverItem.current = null;
   };
@@ -91,12 +112,16 @@ export default function CategoryList() {
               return (
                 <div
                   key={category.id}
-                  draggable
-                  onDragStart={() => (dragItem.current = index)}
-                  onDragEnter={() => (dragOverItem.current = index)}
+                  draggable={canEditOrDelete(category)}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragEnter={() => handleDragEnter(index)}
                   onDragEnd={handleDragEnd}
                   onDragOver={(e) => e.preventDefault()}
-                  className="flex items-center gap-2 p-2 rounded-lg border bg-card cursor-grab active:cursor-grabbing"
+                  className={cn(
+                    "flex items-center gap-2 p-2 rounded-lg border bg-card",
+                    canEditOrDelete(category) && "cursor-grab active:cursor-grabbing",
+                    dragging && dragItem.current === index && "opacity-50"
+                  )}
                 >
                   <div className="p-2">
                     <GripVertical className="h-5 w-5 text-muted-foreground" />
@@ -119,24 +144,26 @@ export default function CategoryList() {
                     <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
                         {category.type === 'expense' ? 'Витрата' : 'Дохід'}
                     </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Відкрити меню</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setCategoryToEdit(category)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          <span>Редагувати</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setCategoryToDelete(category)} className="text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          <span>Видалити</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {canEditOrDelete(category) && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Відкрити меню</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setCategoryToEdit(category)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            <span>Редагувати</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setCategoryToDelete(category)} className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Видалити</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 </div>
               );
