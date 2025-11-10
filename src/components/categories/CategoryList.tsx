@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useCategories } from '@/contexts/categories-context';
 import type { Category } from '@/lib/types';
 import { categoryIcons } from '@/lib/category-icons';
@@ -18,18 +18,16 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import CategoryForm from './CategoryForm';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { cn } from '@/lib/utils';
 
 export default function CategoryList() {
   const { categories, isLoading, deleteCategory, updateCategoryOrder } = useCategories();
   const [sortedCategories, setSortedCategories] = useState<Category[]>([]);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
 
   useEffect(() => {
     if (categories) {
@@ -45,22 +43,24 @@ export default function CategoryList() {
     }
   }
 
-  const onDragEnd = (result: DropResult) => {
-    const { destination, source } = result;
-    if (!destination) return;
-
-    if (destination.droppableId === source.droppableId && destination.index === source.index) {
-      return;
+  const handleDragEnd = () => {
+    if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
+        dragItem.current = null;
+        dragOverItem.current = null;
+        return;
     }
 
-    const newCategories = Array.from(sortedCategories);
-    const [reorderedItem] = newCategories.splice(source.index, 1);
-    newCategories.splice(destination.index, 0, reorderedItem);
+    const newCategories = [...sortedCategories];
+    const [reorderedItem] = newCategories.splice(dragItem.current, 1);
+    newCategories.splice(dragOverItem.current, 0, reorderedItem);
 
     setSortedCategories(newCategories);
     updateCategoryOrder(newCategories);
-  };
 
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+  
   const LoadingSkeleton = () => (
     <div className="space-y-4">
       {[...Array(5)].map((_, i) => (
@@ -75,10 +75,6 @@ export default function CategoryList() {
     </div>
   );
   
-    if (!isClient) {
-        return <LoadingSkeleton />;
-    }
-
   return (
     <TooltipProvider>
       {isLoading ? (
@@ -88,72 +84,64 @@ export default function CategoryList() {
           Ще немає категорій.
         </div>
       ) : (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="categories">
-            {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
-                {sortedCategories.map((category, index) => {
-                  const Icon = categoryIcons[category.icon];
-                  const isPersonal = category.isPrivate;
-                  return (
-                    <Draggable key={category.id} draggableId={category.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className={`flex items-center gap-2 p-2 rounded-lg border bg-card ${snapshot.isDragging ? 'shadow-lg' : ''}`}
-                        >
-                          <div className="cursor-grab p-2">
-                            <GripVertical className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                          {Icon && <div className="h-8 w-8 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}
-                          <div className="flex-grow font-medium flex items-center gap-2">
-                            <span>{category.name}</span>
-                            {isPersonal && (
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <User className="h-4 w-4 text-muted-foreground" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Особиста категорія</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
-                                {category.type === 'expense' ? 'Витрата' : 'Дохід'}
-                            </Badge>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Відкрити меню</span>
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => setCategoryToEdit(category)}>
-                                  <Pencil className="mr-2 h-4 w-4" />
-                                  <span>Редагувати</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setCategoryToDelete(category)} className="text-destructive">
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  <span>Видалити</span>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  );
-                })}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+          <div className="space-y-2">
+            {sortedCategories.map((category, index) => {
+              const Icon = categoryIcons[category.icon];
+              const isPersonal = category.isPrivate;
+              return (
+                <div
+                  key={category.id}
+                  draggable
+                  onDragStart={() => (dragItem.current = index)}
+                  onDragEnter={() => (dragOverItem.current = index)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => e.preventDefault()}
+                  className="flex items-center gap-2 p-2 rounded-lg border bg-card cursor-grab active:cursor-grabbing"
+                >
+                  <div className="p-2">
+                    <GripVertical className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  {Icon && <div className="h-8 w-8 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}
+                  <div className="flex-grow font-medium flex items-center gap-2">
+                    <span>{category.name}</span>
+                    {isPersonal && (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <User className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Особиста категорія</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
+                        {category.type === 'expense' ? 'Витрата' : 'Дохід'}
+                    </Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Відкрити меню</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setCategoryToEdit(category)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>Редагувати</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setCategoryToDelete(category)} className="text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Видалити</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
       )}
       
       <AlertDialog open={!!categoryToDelete} onOpenChange={(isOpen) => !isOpen && setCategoryToDelete(null)}>
