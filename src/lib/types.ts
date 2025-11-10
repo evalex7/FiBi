@@ -28,6 +28,7 @@ export type Category = {
   familyMemberId?: string;
   isCommon?: boolean;
   isPrivate?: boolean;
+  order: number;
 };
 
 export type RecurringPayment = {

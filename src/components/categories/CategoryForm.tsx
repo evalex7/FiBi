@@ -66,7 +66,7 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
       };
   
       if (isEditMode && category) {
-          updateCategory({ ...categoryData, id: category.id });
+          updateCategory({ ...category, ...categoryData });
           toast({
             title: 'Успіх!',
             description: 'Вашу категорію було оновлено.',

@@ -14,8 +14,9 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 interface CategoriesContextType {
   categories: WithId<Category>[];
-  addCategory: (category: Omit<Category, 'id' | 'familyMemberId'>) => void;
+  addCategory: (category: Omit<Category, 'id' | 'familyMemberId' | 'order'>) => void;
   updateCategory: (category: WithId<Category>) => void;
+  updateCategoryOrder: (categories: WithId<Category>[]) => void;
   deleteCategory: (id: string) => void;
   isLoading: boolean;
 }
@@ -57,10 +58,11 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, isLoading, categories, firestore, categoriesCollectionRef, toast]);
   
-  const addCategory = (categoryData: Omit<Category, 'id' | 'familyMemberId'>) => {
-    if (!firestore || !user) return;
+  const addCategory = (categoryData: Omit<Category, 'id' | 'familyMemberId' | 'order'>) => {
+    if (!firestore || !user || !categories) return;
     const categoriesCollection = collection(firestore, 'categories');
-    const dataWithUser = { ...categoryData, familyMemberId: user.uid };
+    const order = (categories.length > 0) ? Math.max(...categories.map(c => c.order)) + 1 : 0;
+    const dataWithUser = { ...categoryData, familyMemberId: user.uid, order };
     const newDocRef = doc(categoriesCollection);
     setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
       errorEmitter.emit(
@@ -91,6 +93,25 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
       });
   };
 
+  const updateCategoryOrder = (reorderedCategories: WithId<Category>[]) => {
+    if (!firestore || !user) return;
+
+    const batch = writeBatch(firestore);
+    reorderedCategories.forEach((category, index) => {
+      const docRef = doc(firestore, 'categories', category.id);
+      batch.update(docRef, { order: index });
+    });
+
+    batch.commit().catch(error => {
+      console.error("Failed to update category order:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Помилка',
+        description: 'Не вдалося зберегти новий порядок категорій.',
+      });
+    });
+  };
+
   const deleteCategory = (id: string) => {
     if (!firestore || !user) return;
     const categoryDocRef = doc(firestore, 'categories', id);
@@ -110,6 +131,7 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     categories: categories || [],
     addCategory,
     updateCategory,
+    updateCategoryOrder,
     deleteCategory,
     isLoading
   }), [categories, isLoading, user]);
