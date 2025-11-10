@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useCategories } from '@/contexts/categories-context';
 import type { Category } from '@/lib/types';
 import { categoryIcons } from '@/lib/category-icons';
-import { MoreHorizontal, Pencil, Trash2, User, GripVertical } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, User, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,16 +21,16 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
 
-export default function CategoryList() {
+type CategoryListProps = {
+  isReorderMode: boolean;
+};
+
+export default function CategoryList({ isReorderMode }: CategoryListProps) {
   const { categories, isLoading, deleteCategory, updateCategoryOrder } = useCategories();
   const { user } = useUser();
   const [sortedCategories, setSortedCategories] = useState<Category[]>([]);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
-  
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
-  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     if (categories) {
@@ -39,14 +39,19 @@ export default function CategoryList() {
     }
   }, [categories]);
 
-  const canEditOrDelete = (category: Category) => {
-    // A category is considered common if it doesn't have the isPrivate flag or it's false.
-    // Common categories can be edited by anyone.
-    // Private categories can only be edited by the owner.
-    if (!category.isPrivate) {
-      return true;
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    const newCategories = [...sortedCategories];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex < 0 || targetIndex >= newCategories.length) {
+      return;
     }
-    return category.familyMemberId === user?.uid;
+
+    const [movedItem] = newCategories.splice(index, 1);
+    newCategories.splice(targetIndex, 0, movedItem);
+
+    setSortedCategories(newCategories); // Optimistic update
+    updateCategoryOrder(newCategories);
   };
   
   const handleDelete = () => {
@@ -55,38 +60,6 @@ export default function CategoryList() {
       setCategoryToDelete(null);
     }
   }
-
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-    dragItem.current = index;
-    setDragging(true);
-    // To make it work on Firefox
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', e.currentTarget.outerHTML);
-  };
-  
-  const handleDragEnter = (index: number) => {
-    dragOverItem.current = index;
-  };
-  
-  const handleDragEnd = () => {
-    if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
-        setDragging(false);
-        dragItem.current = null;
-        dragOverItem.current = null;
-        return;
-    }
-
-    const newCategories = [...sortedCategories];
-    const [reorderedItem] = newCategories.splice(dragItem.current, 1);
-    newCategories.splice(dragOverItem.current, 0, reorderedItem);
-
-    setSortedCategories(newCategories); // Optimistic update
-    updateCategoryOrder(newCategories);
-
-    setDragging(false);
-    dragItem.current = null;
-    dragOverItem.current = null;
-  };
   
   const LoadingSkeleton = () => (
     <div className="space-y-4">
@@ -118,19 +91,8 @@ export default function CategoryList() {
               return (
                 <div
                   key={category.id}
-                  draggable={true}
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragEnter={() => handleDragEnter(index)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={(e) => e.preventDefault()}
-                  className={cn(
-                    "flex items-center gap-2 p-2 rounded-lg border bg-card cursor-grab active:cursor-grabbing",
-                    dragging && dragItem.current === index && "opacity-50"
-                  )}
+                  className="flex items-center gap-2 p-2 rounded-lg border bg-card"
                 >
-                  <div className="p-2">
-                    <GripVertical className="h-5 w-5 text-muted-foreground" />
-                  </div>
                   {Icon && <div className="h-8 w-8 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}
                   <div className="flex-grow font-medium flex items-center gap-2">
                     <span>{category.name}</span>
@@ -145,30 +107,42 @@ export default function CategoryList() {
                       </Tooltip>
                     )}
                   </div>
-                  <div className="flex items-center gap-4">
-                    <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
-                        {category.type === 'expense' ? 'Витрата' : 'Дохід'}
-                    </Badge>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Відкрити меню</span>
-                          <MoreHorizontal className="h-4 w-4" />
+                  <div className="flex items-center gap-2">
+                    {isReorderMode ? (
+                      <>
+                        <Button variant="ghost" size="icon" onClick={() => handleMove(index, 'up')} disabled={index === 0}>
+                          <ArrowUp className="h-4 w-4" />
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setCategoryToEdit(category)} disabled={!canEditOrDelete(category)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          <span>Редагувати</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setCategoryToDelete(category)} className="text-destructive" disabled={!canEditOrDelete(category)}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          <span>Видалити</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
+                        <Button variant="ghost" size="icon" onClick={() => handleMove(index, 'down')} disabled={index === sortedCategories.length - 1}>
+                          <ArrowDown className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
+                            {category.type === 'expense' ? 'Витрата' : 'Дохід'}
+                        </Badge>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Відкрити меню</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setCategoryToEdit(category)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              <span>Редагувати</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setCategoryToDelete(category)} className="text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              <span>Видалити</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </>
+                    )}
                   </div>
                 </div>
               );
