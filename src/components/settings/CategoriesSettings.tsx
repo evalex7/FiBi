@@ -18,8 +18,8 @@ export default function CategoriesSettings() {
     <>
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
+          <div className="flex flex-wrap justify-between items-center gap-4">
+            <div className="flex-grow">
               <CardTitle>Категорії витрат та доходів</CardTitle>
               <CardDescription>Керуйте своїми категоріями для транзакцій.</CardDescription>
             </div>
