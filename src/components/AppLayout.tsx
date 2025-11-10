@@ -48,9 +48,11 @@ const menuItems = [
 export default function AppLayout({
   children,
   pageTitle,
+  onAddTransaction,
 }: {
   children: React.ReactNode;
   pageTitle: string;
+  onAddTransaction: () => void;
 }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();

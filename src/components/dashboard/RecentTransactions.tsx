@@ -17,7 +17,7 @@ import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { useTransactions } from '@/contexts/transactions-context';
 import { Button } from '../ui/button';
-import { MoreHorizontal, Pencil, Trash2, Copy } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Copy, PlusCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,9 +48,10 @@ type FormattedTransaction = Transaction & { formattedAmount: string };
 
 type RecentTransactionsProps = {
   selectedPeriod: string;
+  onAddTransaction: () => void;
 };
 
-export default function RecentTransactions({ selectedPeriod }: RecentTransactionsProps) {
+export default function RecentTransactions({ selectedPeriod, onAddTransaction }: RecentTransactionsProps) {
   const { transactions, deleteTransaction, isLoading } = useTransactions();
   const { categories } = useCategories();
   const { user } = useUser();
@@ -192,9 +193,17 @@ export default function RecentTransactions({ selectedPeriod }: RecentTransaction
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Транзакції</CardTitle>
-        <CardDescription>Огляд ваших доходів та витрат.</CardDescription>
-        <div className="pt-2">
+        <div className="flex justify-between items-center">
+            <div>
+                <CardTitle>Транзакції</CardTitle>
+                <CardDescription>Огляд ваших доходів та витрат.</CardDescription>
+            </div>
+            <Button onClick={onAddTransaction} size="icon">
+                <PlusCircle className="h-5 w-5" />
+                <span className="sr-only">Додати транзакцію</span>
+            </Button>
+        </div>
+        <div className="pt-4">
             <Input 
                 placeholder="Пошук за описом..."
                 value={searchTerm}

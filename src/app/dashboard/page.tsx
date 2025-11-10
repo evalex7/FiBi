@@ -23,7 +23,7 @@ export default function DashboardPage() {
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
 
   return (
-    <AppLayout pageTitle="Панель">
+    <AppLayout pageTitle="Панель" onAddTransaction={() => setIsAddTransactionOpen(true)}>
       <div className="space-y-4">
         <div className="flex flex-row justify-between items-center gap-4">
             <div className="space-y-1">
@@ -31,16 +31,12 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-2">
                 <MonthSelector selectedPeriod={period} onPeriodChange={setPeriod} />
-                 <Button onClick={() => setIsAddTransactionOpen(true)} size="sm" className="sm:hidden">
-                    <PlusCircle />
-                    <span className="sr-only">Додати</span>
-                </Button>
             </div>
         </div>
         <SummaryCards selectedPeriod={period} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 order-2 lg:order-1 space-y-6">
-             <RecentTransactions selectedPeriod={period} />
+             <RecentTransactions selectedPeriod={period} onAddTransaction={() => setIsAddTransactionOpen(true)} />
           </div>
         </div>
       </div>
