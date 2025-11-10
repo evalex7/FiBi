@@ -11,16 +11,6 @@ export default function SettingsPage() {
   return (
     <AppLayout pageTitle="Налаштування">
       <div className="space-y-6">
-        <Card>
-            <CardHeader>
-                <CardTitle>Профіль</CardTitle>
-                <CardDescription>Керуйте налаштуваннями вашого профілю.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <SettingsForm />
-            </CardContent>
-        </Card>
-        
         <CategoriesSettings />
         
         <ThemeSettings />
