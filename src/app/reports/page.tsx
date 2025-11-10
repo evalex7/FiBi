@@ -398,6 +398,7 @@ const { data: categoryTrendData, config: categoryTrendConfig, categories: catego
   
     const dataByMonth: { [month: string]: { date: Date, values: { [category: string]: number } } } = {};
     const allCategoriesInPeriod = new Set<string>();
+    const categoryTotals: { [category: string]: number } = {};
 
     // Initialize all months in the period
     eachMonthOfInterval({ start: startDate, end: endDate }).forEach(monthDate => {
@@ -413,6 +414,7 @@ const { data: categoryTrendData, config: categoryTrendConfig, categories: catego
                 if (dataByMonth[monthKey]) {
                     dataByMonth[monthKey].values[t.category] = (dataByMonth[monthKey].values[t.category] || 0) + t.amount;
                     allCategoriesInPeriod.add(t.category);
+                    categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
                 }
             }
         }
@@ -425,7 +427,9 @@ const { data: categoryTrendData, config: categoryTrendConfig, categories: catego
           ...values
       }));
   
-    const sortedCategories = Array.from(allCategoriesInPeriod).sort((a,b) => a.localeCompare(b));
+    const sortedCategories = Array.from(allCategoriesInPeriod).sort((a, b) => {
+        return categoryTotals[b] - categoryTotals[a];
+    });
   
     const config: ChartConfig = {};
     sortedCategories.forEach((categoryName, index) => {
