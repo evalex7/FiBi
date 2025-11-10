@@ -98,7 +98,9 @@ export default function TransactionForm({
     }
   }, [transaction, initialValues, isCopy]);
 
-  const categories = availableCategories.filter((c) => c.type === type);
+  const categories = availableCategories
+    .filter((c) => c.type === type)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
