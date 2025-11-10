@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useCategories } from '@/contexts/categories-context';
 import type { Category } from '@/lib/types';
 import { categoryIcons } from '@/lib/category-icons';
-import { MoreHorizontal, Pencil, Trash2, User, ArrowUp, ArrowDown } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, User, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -22,10 +22,10 @@ import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
 
 type CategoryListProps = {
-  isReorderMode: boolean;
+  isEditMode: boolean;
 };
 
-export default function CategoryList({ isReorderMode }: CategoryListProps) {
+export default function CategoryList({ isEditMode }: CategoryListProps) {
   const { categories, isLoading, deleteCategory, updateCategoryOrder } = useCategories();
   const { user } = useUser();
   const [sortedCategories, setSortedCategories] = useState<Category[]>([]);
@@ -107,21 +107,20 @@ export default function CategoryList({ isReorderMode }: CategoryListProps) {
                       </Tooltip>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    {isReorderMode ? (
+                  <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
+                      {category.type === 'expense' ? 'Витрата' : 'Дохід'}
+                  </Badge>
+                  <div className="flex items-center gap-1">
+                    {isEditMode && (
                       <>
-                        <Button variant="ghost" size="icon" onClick={() => handleMove(index, 'up')} disabled={index === 0}>
-                          <ArrowUp className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleMove(index, 'down')} disabled={index === sortedCategories.length - 1}>
-                          <ArrowDown className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
-                            {category.type === 'expense' ? 'Витрата' : 'Дохід'}
-                        </Badge>
+                        <div className="flex flex-col">
+                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMove(index, 'up')} disabled={index === 0}>
+                            <ArrowUp className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMove(index, 'down')} disabled={index === sortedCategories.length - 1}>
+                            <ArrowDown className="h-3 w-3" />
+                            </Button>
+                        </div>
                         
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

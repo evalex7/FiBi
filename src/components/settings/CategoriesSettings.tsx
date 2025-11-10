@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 
 export default function CategoriesSettings() {
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
-  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   return (
     <>
@@ -27,10 +27,10 @@ export default function CategoriesSettings() {
               <div className="flex items-center space-x-2">
                 <Switch
                   id="reorder-mode"
-                  checked={isReorderMode}
-                  onCheckedChange={setIsReorderMode}
+                  checked={isEditMode}
+                  onCheckedChange={setIsEditMode}
                 />
-                <Label htmlFor="reorder-mode">Режим сортування</Label>
+                <Label htmlFor="reorder-mode">Режим редагування</Label>
               </div>
               <Button onClick={() => setIsAddCategoryOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -40,7 +40,7 @@ export default function CategoriesSettings() {
           </div>
         </CardHeader>
         <CardContent>
-          <CategoryList isReorderMode={isReorderMode} />
+          <CategoryList isEditMode={isEditMode} />
         </CardContent>
       </Card>
 
