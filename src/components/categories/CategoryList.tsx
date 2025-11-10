@@ -25,6 +25,11 @@ export default function CategoryList() {
   const [sortedCategories, setSortedCategories] = useState<Category[]>([]);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (categories) {
@@ -70,6 +75,10 @@ export default function CategoryList() {
       ))}
     </div>
   );
+  
+    if (!isClient) {
+        return <LoadingSkeleton />;
+    }
 
   return (
     <TooltipProvider>
@@ -93,9 +102,10 @@ export default function CategoryList() {
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
+                          {...provided.dragHandleProps}
                           className={`flex items-center gap-2 p-2 rounded-lg border ${snapshot.isDragging ? 'bg-muted shadow-lg' : ''}`}
                         >
-                          <div {...provided.dragHandleProps} className="cursor-grab p-2">
+                          <div className="cursor-grab p-2">
                             <GripVertical className="h-5 w-5 text-muted-foreground" />
                           </div>
                           {Icon && <div className="h-8 w-8 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}
