@@ -7,7 +7,7 @@ import { PaymentsProvider } from '@/contexts/payments-context';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { BudgetsProvider } from '@/contexts/budgets-context';
 import { CategoriesProvider } from '@/contexts/categories-context';
-import { ThemeProvider } from '@/components/ThemeProvider';
+import { AppThemeProvider } from '@/components/AppThemeProvider';
 import { SettingsProvider } from '@/contexts/settings-context';
 
 export const metadata: Metadata = {
@@ -36,7 +36,7 @@ export default function RootLayout({
           'font-body'
         )}
       >
-        <ThemeProvider
+        <AppThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
@@ -56,7 +56,7 @@ export default function RootLayout({
             </SettingsProvider>
           </FirebaseClientProvider>
           <Toaster />
-        </ThemeProvider>
+        </AppThemeProvider>
       </body>
     </html>
   );
