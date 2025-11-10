@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from './ui/skeleton';
-import { useAuth, useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { useAuth, useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { useEffect, useState, useRef } from 'react';
 import { Button } from './ui/button';
 import { doc } from 'firebase/firestore';
@@ -265,10 +265,7 @@ export default function AppLayout({
             </div>
 
             <div className="flex w-full flex-1 md:w-auto md:flex-initial justify-end items-center gap-2">
-                <Button size="sm" onClick={() => handleOpenTransactionForm()} className="hidden sm:inline-flex">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Додати транзакцію
-                </Button>
+                
                 <HeaderPaymentReminders onPayClick={handleOpenTransactionForm} />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -282,10 +279,6 @@ export default function AppLayout({
                             <p className="text-xs text-muted-foreground font-normal">{familyMember?.email}</p>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => router.push('/settings')}>
-                          <Settings className="mr-2 h-4 w-4" />
-                          <span>Налаштування</span>
-                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={handleLogout}>
                           <LogOut className="mr-2 h-4 w-4" />
                           <span>Вийти</span>
@@ -317,3 +310,5 @@ export default function AppLayout({
     </div>
   );
 }
+
+    
