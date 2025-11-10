@@ -98,17 +98,28 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
 
     const batch = writeBatch(firestore);
     reorderedCategories.forEach((category, index) => {
-      const docRef = doc(firestore, 'categories', category.id);
-      batch.update(docRef, { order: index });
+      if (category.familyMemberId === user.uid) {
+        const docRef = doc(firestore, 'categories', category.id);
+        batch.update(docRef, { order: index });
+      }
     });
 
     batch.commit().catch(error => {
-      console.error("Failed to update category order:", error);
-      toast({
-        variant: 'destructive',
-        title: 'Помилка',
-        description: 'Не вдалося зберегти новий порядок категорій.',
-      });
+        // Because this is a batch write, we can't pinpoint the exact failing document.
+        // We'll emit a generic error for the collection path. The LLM can inspect the rules.
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: 'categories/{categoryId}',
+            operation: 'update',
+          })
+        );
+        // Also show a toast to the user
+        toast({
+            variant: 'destructive',
+            title: 'Помилка оновлення',
+            description: 'Не вдалося зберегти новий порядок. Можливо, у вас немає прав на редагування деяких категорій.',
+        });
     });
   };
 
