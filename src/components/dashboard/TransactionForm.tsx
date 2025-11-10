@@ -17,6 +17,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -231,11 +236,10 @@ export default function TransactionForm({
             </div>
           </div>
 
-          {/* Поле вибору дати завжди активне */}
           <div className="grid gap-2">
             <Label htmlFor="date">Дата</Label>
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <PopoverTrigger asChild>
+            <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <DialogTrigger asChild>
                 <Button
                   variant="outline"
                   type="button"
@@ -249,8 +253,8 @@ export default function TransactionForm({
                     ? format(date, 'PPP', { locale: uk })
                     : 'Оберіть дату'}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              </DialogTrigger>
+              <DialogContent className="w-auto">
                 <Calendar
                   mode="single"
                   selected={date}
@@ -261,8 +265,8 @@ export default function TransactionForm({
                   initialFocus
                   locale={uk}
                 />
-              </PopoverContent>
-            </Popover>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
