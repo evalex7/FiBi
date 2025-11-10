@@ -34,12 +34,18 @@ export default function CategoryList() {
 
   useEffect(() => {
     if (categories) {
-      const newSorted = [...categories].sort((a, b) => a.order - b.order);
+      const newSorted = [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       setSortedCategories(newSorted);
     }
   }, [categories]);
 
   const canEditOrDelete = (category: Category) => {
+    // A category is considered common if it doesn't have the isPrivate flag or it's false.
+    // Common categories can be edited by anyone.
+    // Private categories can only be edited by the owner.
+    if (!category.isPrivate) {
+      return true;
+    }
     return category.familyMemberId === user?.uid;
   };
   
@@ -112,14 +118,13 @@ export default function CategoryList() {
               return (
                 <div
                   key={category.id}
-                  draggable={canEditOrDelete(category)}
+                  draggable={true}
                   onDragStart={(e) => handleDragStart(e, index)}
                   onDragEnter={() => handleDragEnter(index)}
                   onDragEnd={handleDragEnd}
                   onDragOver={(e) => e.preventDefault()}
                   className={cn(
-                    "flex items-center gap-2 p-2 rounded-lg border bg-card",
-                    canEditOrDelete(category) && "cursor-grab active:cursor-grabbing",
+                    "flex items-center gap-2 p-2 rounded-lg border bg-card cursor-grab active:cursor-grabbing",
                     dragging && dragItem.current === index && "opacity-50"
                   )}
                 >
@@ -144,26 +149,26 @@ export default function CategoryList() {
                     <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
                         {category.type === 'expense' ? 'Витрата' : 'Дохід'}
                     </Badge>
-                    {canEditOrDelete(category) && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Відкрити меню</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setCategoryToEdit(category)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            <span>Редагувати</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setCategoryToDelete(category)} className="text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Видалити</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Відкрити меню</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setCategoryToEdit(category)} disabled={!canEditOrDelete(category)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>Редагувати</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setCategoryToDelete(category)} className="text-destructive" disabled={!canEditOrDelete(category)}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Видалити</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
                   </div>
                 </div>
               );
