@@ -77,6 +77,14 @@ export default function AppLayout({
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      if (pathname === '/' || pathname === '/budgets') {
+        router.replace('/dashboard');
+      }
+    }
+  }, [pathname, user, isUserLoading, router]);
   
   useEffect(() => {
     if (!isMobile) return;
@@ -348,5 +356,3 @@ export default function AppLayout({
     </div>
   );
 }
-
-    
