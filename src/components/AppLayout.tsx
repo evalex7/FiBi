@@ -79,10 +79,8 @@ export default function AppLayout({
   }, [user, isUserLoading, router]);
 
   useEffect(() => {
-    if (!isUserLoading && user) {
-      if (pathname === '/' || pathname === '/budgets') {
-        router.replace('/dashboard');
-      }
+    if (!isUserLoading && user && pathname === '/') {
+      router.replace('/dashboard');
     }
   }, [pathname, user, isUserLoading, router]);
   
