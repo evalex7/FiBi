@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from './ui/skeleton';
-import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useAuth, useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { useEffect, useState, useRef } from 'react';
 import { Button } from './ui/button';
 import { doc } from 'firebase/firestore';
@@ -52,7 +52,7 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
   pageTitle: string;
-  onAddTransaction: () => void;
+  onAddTransaction?: () => void;
 }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
@@ -131,6 +131,14 @@ export default function AppLayout({
     setIsAddTransactionOpen(true);
   };
   
+  const handleSettingsToggle = () => {
+    if (pathname === '/settings') {
+      router.back();
+    } else {
+      router.push('/settings');
+    }
+  };
+
   if (isMobile === null) {
       return (
         <div className="flex min-h-screen w-full">
@@ -242,9 +250,9 @@ export default function AppLayout({
           isMobile && !isHeaderVisible && "-translate-y-full"
         )}>
            <div className="flex items-center gap-2">
-               <Button variant="ghost" size="icon" className="md:hidden" onClick={() => router.push('/settings')}>
+               <Button variant="ghost" size="icon" className="md:hidden" onClick={handleSettingsToggle}>
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">Відкрити налаштування</span>
+                <span className="sr-only">Відкрити/закрити налаштування</span>
               </Button>
               <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                 <Logo className="h-6 w-6" />
