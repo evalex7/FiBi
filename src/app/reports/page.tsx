@@ -116,7 +116,7 @@ export default function ReportsPage() {
 
   const [period, setPeriod] = useState('0');
   const [categoryPeriod, setCategoryPeriod] = useState('all');
-  const [trendPeriod, setTrendPeriod] = useState('monthly');
+  const [trendPeriod, setTrendPeriod] = useState('daily');
   const [categoryTrendPeriod, setCategoryTrendPeriod] = useState('last_6_months');
   const [activeTooltip, setActiveTooltip] = useState<CustomTooltipPayload | null>(null);
   const [dailyVaseOrientation, setDailyVaseOrientation] = useState<'vertical' | 'horizontal'>('vertical');
