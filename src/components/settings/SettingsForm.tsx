@@ -10,6 +10,18 @@ import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import type { FamilyMember } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const profileColors = [
+    'hsl(221, 83%, 53%)', // Blue
+    'hsl(210, 90%, 50%)', // Sky
+    'hsl(142, 71%, 45%)', // Green
+    'hsl(12, 76%, 61%)',  // Red
+    'hsl(48, 96%, 53%)',  // Yellow
+    'hsl(27, 87%, 67%)',  // Orange
+    'hsl(262, 84%, 59%)', // Purple
+    'hsl(314, 79%, 56%)', // Pink
+];
 
 export default function SettingsForm() {
     const { user } = useUser();
@@ -25,38 +37,32 @@ export default function SettingsForm() {
     
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [color, setColor] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (familyMember) {
             setName(familyMember.name);
             setEmail(familyMember.email);
+            setColor(familyMember.color);
         }
     }, [familyMember]);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!user || !firestore || !name) {
-            toast({
-                variant: 'destructive',
-                title: 'Помилка',
-                description: 'Не вдалося зберегти профіль. Будь ласка, спробуйте ще раз.',
-            });
-            return;
-        }
+    const handleSave = (field: 'name' | 'color', value: string) => {
+        if (!user || !firestore) return;
 
         setIsSaving(true);
-        const updatedData = {
-            name,
-        };
-
+        const updatedData = { [field]: value };
+        
         const userRef = doc(firestore, 'users', user.uid);
         setDocumentNonBlocking(userRef, updatedData, { merge: true })
             .then(() => {
-                toast({
-                    title: 'Успіх!',
-                    description: 'Ваш профіль було оновлено.',
-                });
+                if (field === 'name') {
+                    toast({
+                        title: 'Успіх!',
+                        description: 'Ваше ім\'я було оновлено.',
+                    });
+                }
             })
             .catch(error => {
                 console.error("Error updating profile: ", error);
@@ -69,7 +75,17 @@ export default function SettingsForm() {
             .finally(() => {
                 setIsSaving(false);
             });
+    }
+
+    const handleNameSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        handleSave('name', name);
     };
+
+    const handleColorSelect = (newColor: string) => {
+        setColor(newColor);
+        handleSave('color', newColor);
+    }
     
     if (isMemberLoading) {
         return (
@@ -80,20 +96,38 @@ export default function SettingsForm() {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 max-w-lg">
-            <div className="grid gap-2">
-                <Label htmlFor="name">Повне ім'я</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
+        <div className="space-y-6 max-w-lg">
+            <form onSubmit={handleNameSubmit} className="space-y-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="name">Повне ім'я</Label>
+                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+                </div>
+                <Button type="submit" disabled={isSaving || name === familyMember?.name} size="sm" className="w-full">
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Зберегти ім'я
+                </Button>
+            </form>
             <div className="grid gap-2">
                 <Label htmlFor="email">Електронна пошта</Label>
                 <Input id="email" type="email" value={email} disabled />
-                 <p className="text-xs text-muted-foreground">Електронну пошту не можна змінити.</p>
             </div>
-            <Button type="submit" disabled={isSaving}>
-                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Зберегти зміни
-            </Button>
-        </form>
+             <div className="grid gap-2">
+                <Label>Колір аватара</Label>
+                <div className="flex flex-wrap gap-2">
+                    {profileColors.map((c) => (
+                        <button
+                            key={c}
+                            type="button"
+                            className={cn(
+                                "h-8 w-8 rounded-full border-2 transition-transform hover:scale-110",
+                                color === c ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-transparent'
+                            )}
+                            style={{ backgroundColor: c }}
+                            onClick={() => handleColorSelect(c)}
+                        />
+                    ))}
+                </div>
+             </div>
+        </div>
     );
 }

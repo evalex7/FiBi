@@ -211,17 +211,6 @@ export default function AppLayout({
     </nav>
   );
 
-  const MobileNavSheet = () => (
-     <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
-        <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => router.push('/settings')}>
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Відкрити налаштування</span>
-            </Button>
-        </SheetTrigger>
-    </Sheet>
-  );
-
   const MobileBottomNav = () => {
     return (
       <div className={cn(
@@ -260,7 +249,7 @@ export default function AppLayout({
               </Button>
               <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                 <Logo className="h-6 w-6" />
-                <span className="text-lg">Сімейні фінанси</span>
+                <span className={cn("text-lg", isMobile && "hidden sm:inline")}>Сімейні фінанси</span>
               </Link>
            </div>
            
@@ -274,7 +263,7 @@ export default function AppLayout({
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+                     <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
                       <UserAvatar />
                     </Button>
                   </DropdownMenuTrigger>
