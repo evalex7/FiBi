@@ -261,7 +261,7 @@ export default function TransactionForm({
 
           <div className="grid gap-2">
             <Label htmlFor="date">Дата</Label>
-            {isMobile ? (
+            {isMobile === true && (
                 <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <DialogTrigger asChild>
                         <Button
@@ -281,7 +281,7 @@ export default function TransactionForm({
                        <DialogHeader className="hidden">
                            <DialogTitle>Оберіть дату</DialogTitle>
                        </DialogHeader>
-                        <div className="flex justify-center">
+                        <div className="flex justify-center pt-8">
                             <Calendar
                                 mode="single"
                                 selected={date}
@@ -299,7 +299,8 @@ export default function TransactionForm({
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            ) : (
+            )}
+            {isMobile === false && (
                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <PopoverTrigger asChild>
                          <Button
