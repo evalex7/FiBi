@@ -178,11 +178,11 @@ export default function TransactionForm({
     );
   };
   
-  const DateButton = ({ onClick }: { onClick?: () => void }) => (
+  const DateButton = () => (
     <Button
         variant={'outline'}
         type="button"
-        onClick={onClick}
+        onClick={() => setIsCalendarOpen(true)}
         className={cn(
             'w-full justify-start text-left font-normal',
             !date && 'text-muted-foreground'
@@ -266,6 +266,9 @@ export default function TransactionForm({
                         <DateButton />
                     </DialogTrigger>
                     <DialogContent className="p-0 w-auto">
+                       <DialogHeader className="hidden">
+                           <DialogTitle>Оберіть дату</DialogTitle>
+                       </DialogHeader>
                         <div className="flex justify-center">
                             <Calendar
                                 mode="single"
