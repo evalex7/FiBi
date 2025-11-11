@@ -37,6 +37,7 @@ import { useCategories } from '@/contexts/categories-context';
 import { Timestamp } from 'firebase/firestore';
 import ReceiptCalculator from './ReceiptCalculator';
 import { Switch } from '../ui/switch';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type TransactionFormProps = {
   transaction?: Transaction;
@@ -54,6 +55,7 @@ export default function TransactionForm({
   const { addTransaction, updateTransaction } = useTransactions();
   const { categories: availableCategories } = useCategories();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const [type, setType] = useState<Transaction['type']>('expense');
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -175,6 +177,26 @@ export default function TransactionForm({
       </>
     );
   };
+  
+  const DateButton = ({ asTrigger = false }: { asTrigger?: boolean }) => {
+    const Comp = asTrigger ? DialogTrigger : 'button';
+    return (
+      <Button
+        variant="outline"
+        type="button"
+        asChild={asTrigger}
+        onClick={!asTrigger ? () => setIsCalendarOpen(true) : undefined}
+        className={cn(
+          'w-full justify-start text-left font-normal',
+          !date && 'text-muted-foreground'
+        )}
+      >
+        <CalendarIcon className="mr-2 h-4 w-4" />
+        {date ? format(date, 'PPP', { locale: uk }) : 'Оберіть дату'}
+      </Button>
+    )
+  };
+
 
   return (
     <form onSubmit={handleSubmit}>
@@ -242,35 +264,45 @@ export default function TransactionForm({
 
           <div className="grid gap-2">
             <Label htmlFor="date">Дата</Label>
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  type="button"
-                  className={cn(
-                    'w-full justify-start text-left font-normal',
-                    !date && 'text-muted-foreground'
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date
-                    ? format(date, 'PPP', { locale: uk })
-                    : 'Оберіть дату'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(selectedDate) => {
-                    setDate(selectedDate);
-                    setIsCalendarOpen(false);
-                  }}
-                  initialFocus
-                  locale={uk}
-                />
-              </PopoverContent>
-            </Popover>
+             {isMobile ? (
+               <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <DateButton asTrigger />
+                  <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Оберіть дату</DialogTitle>
+                    </DialogHeader>
+                     <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={(selectedDate) => {
+                            setDate(selectedDate);
+                            setIsCalendarOpen(false);
+                        }}
+                        initialFocus
+                        locale={uk}
+                        className="p-0"
+                    />
+                  </DialogContent>
+               </Dialog>
+             ) : (
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <PopoverTrigger asChild>
+                       <DateButton />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={(selectedDate) => {
+                            setDate(selectedDate);
+                            setIsCalendarOpen(false);
+                        }}
+                        initialFocus
+                        locale={uk}
+                        />
+                    </PopoverContent>
+                </Popover>
+             )}
           </div>
         </div>
 
