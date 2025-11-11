@@ -251,28 +251,23 @@ export default function AppLayout({
           isMobile && !isHeaderVisible && "-translate-y-full"
         )}>
            <div className="flex items-center gap-2">
-               <Button variant="ghost" size="icon" className="md:hidden" onClick={handleSettingsToggle}>
+               <Button variant="ghost" size="icon" onClick={handleSettingsToggle}>
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Відкрити/закрити налаштування</span>
               </Button>
-              <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+              <Link href="/dashboard" className="hidden sm:flex items-center gap-2 font-semibold">
                 <Logo className="h-6 w-6" />
                 <span className="text-lg">Сімейні фінанси</span>
               </Link>
            </div>
            
-            <div className="hidden md:flex flex-1 justify-center">
+            <div className="flex flex-1 justify-center">
               <DesktopNav />
             </div>
 
             <div className="flex w-full flex-1 md:w-auto md:flex-initial justify-end items-center gap-2">
                 
                 <HeaderPaymentReminders onPayClick={handleOpenTransactionForm} />
-                
-                 <Button variant="ghost" size="icon" className="hidden md:flex" onClick={handleSettingsToggle}>
-                    <Settings className="h-5 w-5" />
-                    <span className="sr-only">Налаштування</span>
-                </Button>
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
