@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from './ui/skeleton';
-import { useAuth, useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { useAuth, useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { useEffect, useState, useRef } from 'react';
 import { Button } from './ui/button';
 import { doc } from 'firebase/firestore';
@@ -73,7 +73,10 @@ export default function AppLayout({
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: familyMember } = useDoc<FamilyMember>(userDocRef);
+  const { data: familyMember } = useMemoFirebase(() => {
+    if (!userDocRef) return { data: null };
+    return useDoc<FamilyMember>(userDocRef);
+  }, [userDocRef]);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -255,9 +258,9 @@ export default function AppLayout({
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Відкрити/закрити налаштування</span>
               </Button>
-              <Link href="/dashboard" className="hidden sm:flex items-center gap-2 font-semibold">
+              <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                 <Logo className="h-6 w-6" />
-                <span className="text-lg">Сімейні фінанси</span>
+                <span className="text-lg hidden sm:inline">Сімейні фінанси</span>
               </Link>
            </div>
            
