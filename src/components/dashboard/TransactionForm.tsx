@@ -177,12 +177,12 @@ export default function TransactionForm({
       </>
     );
   };
-
-  const DateButton = () => (
-     <Button
+  
+  const DateButton = ({ onClick }: { onClick?: () => void }) => (
+    <Button
         variant={'outline'}
         type="button"
-        onClick={() => setIsCalendarOpen(true)}
+        onClick={onClick}
         className={cn(
             'w-full justify-start text-left font-normal',
             !date && 'text-muted-foreground'
@@ -191,7 +191,7 @@ export default function TransactionForm({
         <CalendarIcon className="mr-2 h-4 w-4" />
         {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
     </Button>
-  )
+  );
 
 
   return (
@@ -260,14 +260,13 @@ export default function TransactionForm({
 
           <div className="grid gap-2">
             <Label htmlFor="date">Дата</Label>
-             {isMobile ? (
-                <>
-                    <DateButton />
-                    <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Оберіть дату</DialogTitle>
-                            </DialogHeader>
+            {isMobile ? (
+                <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <DialogTrigger asChild>
+                        <DateButton />
+                    </DialogTrigger>
+                    <DialogContent className="p-0 w-auto">
+                        <div className="flex justify-center">
                             <Calendar
                                 mode="single"
                                 selected={date}
@@ -277,30 +276,29 @@ export default function TransactionForm({
                                 }}
                                 initialFocus
                                 locale={uk}
-                                className="p-0"
                             />
-                        </DialogContent>
-                    </Dialog>
-                </>
-             ) : (
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            ) : (
                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <PopoverTrigger asChild>
-                       <DateButton />
+                        <DateButton />
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
                         <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={(selectedDate) => {
-                            setDate(selectedDate);
-                            setIsCalendarOpen(false);
-                        }}
-                        initialFocus
-                        locale={uk}
+                            mode="single"
+                            selected={date}
+                            onSelect={(selectedDate) => {
+                                setDate(selectedDate);
+                                setIsCalendarOpen(false);
+                            }}
+                            initialFocus
+                            locale={uk}
                         />
                     </PopoverContent>
                 </Popover>
-             )}
+            )}
           </div>
         </div>
 
