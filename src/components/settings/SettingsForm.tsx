@@ -26,7 +26,6 @@ const profileColors = [
     'hsl(280, 85%, 65%)', // Magenta
     'hsl(262, 84%, 59%)', // Purple
     'hsl(230, 75%, 60%)', // Indigo
-    'hsl(207, 82%, 68%)', // Light Blue
     'hsl(190, 70%, 50%)', // Teal
 ];
 
