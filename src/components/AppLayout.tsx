@@ -267,26 +267,25 @@ export default function AppLayout({
             <div className="flex w-full flex-1 md:w-auto md:flex-initial justify-end items-center gap-2">
                 
                 <HeaderPaymentReminders onPayClick={handleOpenTransactionForm} />
+                
+                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => router.push('/profile')}>
+                    <UserAvatar />
+                </Button>
+
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
-                           <UserAvatar />
+                        <Button variant="ghost" size="icon" className="h-10 w-10">
+                           <LogOut />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" align="end">
                         <DropdownMenuLabel>
-                            <p>{familyMember?.name}</p>
-                            <p className="text-xs text-muted-foreground font-normal">{familyMember?.email}</p>
+                            Ви впевнені, що хочете вийти?
                         </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                         <DropdownMenuItem onClick={() => router.push('/profile')}>
-                          <UserIcon className="mr-2 h-4 w-4" />
-                          <span>Профіль</span>
-                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleLogout}>
                           <LogOut className="mr-2 h-4 w-4" />
-                          <span>Вийти</span>
+                          <span>Так, вийти</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -315,5 +314,3 @@ export default function AppLayout({
     </div>
   );
 }
-
-    
