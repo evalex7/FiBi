@@ -242,8 +242,8 @@ export default function TransactionForm({
 
           <div className="grid gap-2">
             <Label htmlFor="date">Дата</Label>
-            <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <DialogTrigger asChild>
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   type="button"
@@ -257,11 +257,8 @@ export default function TransactionForm({
                     ? format(date, 'PPP', { locale: uk })
                     : 'Оберіть дату'}
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="w-auto p-0">
-                <DialogHeader className="p-4 pb-0">
-                  <DialogTitle>Оберіть дату</DialogTitle>
-                </DialogHeader>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
                   selected={date}
@@ -272,8 +269,8 @@ export default function TransactionForm({
                   initialFocus
                   locale={uk}
                 />
-              </DialogContent>
-            </Dialog>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 

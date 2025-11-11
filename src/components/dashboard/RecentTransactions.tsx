@@ -43,6 +43,7 @@ import { useUser } from '@/firebase';
 import { useCategories } from '@/contexts/categories-context';
 import TransactionUserAvatar from './TransactionUserAvatar';
 import { Input } from '../ui/input';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
 
@@ -55,6 +56,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   const { transactions, deleteTransaction, isLoading } = useTransactions();
   const { categories } = useCategories();
   const { user } = useUser();
+  const isMobile = useIsMobile();
 
   const [sortedTransactions, setSortedTransactions] = useState<FormattedTransaction[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -198,10 +200,17 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                 <CardTitle>Транзакції</CardTitle>
                 <CardDescription>Огляд ваших доходів та витрат.</CardDescription>
             </div>
-            <Button onClick={onAddTransaction} size="icon">
-                <PlusCircle className="h-5 w-5" />
-                <span className="sr-only">Додати транзакцію</span>
-            </Button>
+             {isMobile ? (
+                <Button onClick={onAddTransaction} size="icon">
+                    <PlusCircle className="h-5 w-5" />
+                    <span className="sr-only">Додати транзакцію</span>
+                </Button>
+             ) : (
+                <Button onClick={onAddTransaction}>
+                    <PlusCircle />
+                    Додати транзакцію
+                </Button>
+             )}
         </div>
         <div className="pt-4">
             <Input 
@@ -348,5 +357,3 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
     </Card>
   );
 }
-
-    

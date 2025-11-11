@@ -269,6 +269,11 @@ export default function AppLayout({
                 
                 <HeaderPaymentReminders onPayClick={handleOpenTransactionForm} />
                 
+                 <Button variant="ghost" size="icon" className="hidden md:flex" onClick={handleSettingsToggle}>
+                    <Settings className="h-5 w-5" />
+                    <span className="sr-only">Налаштування</span>
+                </Button>
+                
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
