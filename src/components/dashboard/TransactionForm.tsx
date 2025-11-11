@@ -22,6 +22,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
+  DialogClose,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock } from 'lucide-react';
@@ -182,7 +184,6 @@ export default function TransactionForm({
     <Button
         variant={'outline'}
         type="button"
-        onClick={() => setIsCalendarOpen(true)}
         className={cn(
             'w-full justify-start text-left font-normal',
             !date && 'text-muted-foreground'
@@ -263,9 +264,20 @@ export default function TransactionForm({
             {isMobile ? (
                 <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <DialogTrigger asChild>
-                        <DateButton />
+                        <Button
+                            variant={'outline'}
+                            type="button"
+                            onClick={() => setIsCalendarOpen(true)}
+                            className={cn(
+                                'w-full justify-start text-left font-normal',
+                                !date && 'text-muted-foreground'
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
+                        </Button>
                     </DialogTrigger>
-                    <DialogContent className="p-0 w-auto">
+                    <DialogContent className="p-0 w-auto" showCloseButton={false}>
                        <DialogHeader className="hidden">
                            <DialogTitle>Оберіть дату</DialogTitle>
                        </DialogHeader>
@@ -275,18 +287,32 @@ export default function TransactionForm({
                                 selected={date}
                                 onSelect={(selectedDate) => {
                                     setDate(selectedDate);
-                                    setIsCalendarOpen(false);
                                 }}
                                 initialFocus
                                 locale={uk}
                             />
                         </div>
+                        <DialogFooter className="p-4 pt-0">
+                           <DialogClose asChild>
+                                <Button type="button" className="w-full">Готово</Button>
+                           </DialogClose>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             ) : (
                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <PopoverTrigger asChild>
-                        <DateButton />
+                         <Button
+                            variant={'outline'}
+                            type="button"
+                            className={cn(
+                                'w-full justify-start text-left font-normal',
+                                !date && 'text-muted-foreground'
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
+                        </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
                         <Calendar
