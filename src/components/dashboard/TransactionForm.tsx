@@ -177,25 +177,21 @@ export default function TransactionForm({
       </>
     );
   };
-  
-  const DateButton = ({ asTrigger = false }: { asTrigger?: boolean }) => {
-    const Comp = asTrigger ? DialogTrigger : 'button';
-    return (
-      <Button
-        variant="outline"
+
+  const DateButton = () => (
+     <Button
+        variant={'outline'}
         type="button"
-        asChild={asTrigger}
-        onClick={!asTrigger ? () => setIsCalendarOpen(true) : undefined}
+        onClick={() => setIsCalendarOpen(true)}
         className={cn(
-          'w-full justify-start text-left font-normal',
-          !date && 'text-muted-foreground'
+            'w-full justify-start text-left font-normal',
+            !date && 'text-muted-foreground'
         )}
-      >
+        >
         <CalendarIcon className="mr-2 h-4 w-4" />
-        {date ? format(date, 'PPP', { locale: uk }) : 'Оберіть дату'}
-      </Button>
-    )
-  };
+        {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
+    </Button>
+  )
 
 
   return (
@@ -265,25 +261,27 @@ export default function TransactionForm({
           <div className="grid gap-2">
             <Label htmlFor="date">Дата</Label>
              {isMobile ? (
-               <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                  <DateButton asTrigger />
-                  <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Оберіть дату</DialogTitle>
-                    </DialogHeader>
-                     <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={(selectedDate) => {
-                            setDate(selectedDate);
-                            setIsCalendarOpen(false);
-                        }}
-                        initialFocus
-                        locale={uk}
-                        className="p-0"
-                    />
-                  </DialogContent>
-               </Dialog>
+                <>
+                    <DateButton />
+                    <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Оберіть дату</DialogTitle>
+                            </DialogHeader>
+                            <Calendar
+                                mode="single"
+                                selected={date}
+                                onSelect={(selectedDate) => {
+                                    setDate(selectedDate);
+                                    setIsCalendarOpen(false);
+                                }}
+                                initialFocus
+                                locale={uk}
+                                className="p-0"
+                            />
+                        </DialogContent>
+                    </Dialog>
+                </>
              ) : (
                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <PopoverTrigger asChild>
