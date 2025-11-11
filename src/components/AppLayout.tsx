@@ -37,6 +37,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import TransactionForm from './dashboard/TransactionForm';
 import HeaderPaymentReminders from './dashboard/HeaderPaymentReminders';
+import SettingsForm from './settings/SettingsForm';
 
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
@@ -274,22 +275,14 @@ export default function AppLayout({
                       <UserAvatar />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuContent className="w-80 p-4" align="end">
                     <DropdownMenuLabel>
-                      <p>Мій акаунт</p>
-                      {familyMember && (
-                        <p className="text-xs text-muted-foreground font-normal">
-                          {familyMember.email}
-                        </p>
-                      )}
+                      Профіль
                     </DropdownMenuLabel>
+                     <DropdownMenuSeparator />
+                     <SettingsForm />
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push('/profile')}>
-                      <UserIcon className="mr-2 h-4 w-4" />
-                      <span>Профіль</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
+                    <DropdownMenuItem onClick={handleLogout} className="focus:bg-destructive/80 focus:text-destructive-foreground">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Вийти</span>
                     </DropdownMenuItem>
