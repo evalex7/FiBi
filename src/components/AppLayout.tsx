@@ -268,26 +268,32 @@ export default function AppLayout({
                 
                 <HeaderPaymentReminders onPayClick={handleOpenTransactionForm} />
                 
-                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => router.push('/profile')}>
-                    <UserAvatar />
-                </Button>
-
                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-10 w-10">
-                           <LogOut />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56" align="end">
-                        <DropdownMenuLabel>
-                            Ви впевнені, що хочете вийти?
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout}>
-                          <LogOut className="mr-2 h-4 w-4" />
-                          <span>Так, вийти</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+                      <UserAvatar />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end">
+                    <DropdownMenuLabel>
+                      <p>Мій акаунт</p>
+                      {familyMember && (
+                        <p className="text-xs text-muted-foreground font-normal">
+                          {familyMember.email}
+                        </p>
+                      )}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push('/profile')}>
+                      <UserIcon className="mr-2 h-4 w-4" />
+                      <span>Профіль</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Вийти</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
                 </DropdownMenu>
             </div>
         </header>
