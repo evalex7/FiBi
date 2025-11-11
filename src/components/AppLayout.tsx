@@ -84,9 +84,10 @@ export default function AppLayout({
   }, [pathname, user, isUserLoading, router]);
   
   useEffect(() => {
-    if (!isMobile) return;
-
     const handleScroll = () => {
+      // Only run this logic on mobile
+      if (!isMobile) return;
+
       const currentScrollY = window.scrollY;
       if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
         // Scrolling down
@@ -101,7 +102,7 @@ export default function AppLayout({
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobile]);
+  }, [isMobile]); // Dependency on isMobile is correct here
 
   const handleLogout = () => {
     auth.signOut();
