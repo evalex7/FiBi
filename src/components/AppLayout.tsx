@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from './ui/skeleton';
-import { useAuth, useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { useAuth, useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { useEffect, useState, useRef } from 'react';
 import { Button } from './ui/button';
 import { doc } from 'firebase/firestore';
@@ -260,7 +260,7 @@ export default function AppLayout({
               </Button>
               <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                 <Logo className="h-6 w-6" />
-                <span className="text-lg hidden sm:inline">Сімейні фінанси</span>
+                <span className="text-lg">Сімейні фінанси</span>
               </Link>
            </div>
            
