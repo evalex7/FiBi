@@ -48,12 +48,8 @@ const menuItems = [
 
 export default function AppLayout({
   children,
-  pageTitle,
-  onAddTransaction,
 }: {
   children: React.ReactNode;
-  pageTitle: string;
-  onAddTransaction?: () => void;
 }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
@@ -73,10 +69,7 @@ export default function AppLayout({
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: familyMember } = useMemoFirebase(() => {
-    if (!userDocRef) return { data: null };
-    return useDoc<FamilyMember>(userDocRef);
-  }, [userDocRef]);
+  const { data: familyMember } = useDoc<FamilyMember>(userDocRef);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
