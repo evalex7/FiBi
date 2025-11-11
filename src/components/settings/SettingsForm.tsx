@@ -15,12 +15,19 @@ import { cn } from '@/lib/utils';
 const profileColors = [
     'hsl(221, 83%, 53%)', // Blue
     'hsl(210, 90%, 50%)', // Sky
+    'hsl(173, 58%, 39%)', // Turquoise
     'hsl(142, 71%, 45%)', // Green
-    'hsl(12, 76%, 61%)',  // Red
     'hsl(48, 96%, 53%)',  // Yellow
+    'hsl(43, 74%, 66%)',  // Mustard
     'hsl(27, 87%, 67%)',  // Orange
-    'hsl(262, 84%, 59%)', // Purple
+    'hsl(12, 76%, 61%)',  // Red
+    'hsl(340, 82%, 52%)', // Crimson
     'hsl(314, 79%, 56%)', // Pink
+    'hsl(280, 85%, 65%)', // Magenta
+    'hsl(262, 84%, 59%)', // Purple
+    'hsl(230, 75%, 60%)', // Indigo
+    'hsl(207, 82%, 68%)', // Light Blue
+    'hsl(190, 70%, 50%)', // Teal
 ];
 
 export default function SettingsForm() {
