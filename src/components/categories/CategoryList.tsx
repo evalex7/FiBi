@@ -41,7 +41,6 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, category: Category) => {
     setDraggedItem(category);
-    // To make the dragged element semi-transparent
     if (e.currentTarget) {
         e.currentTarget.style.opacity = '0.5';
     }
@@ -59,11 +58,12 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
       e.preventDefault();
       if (!draggedItem || draggedItem.id === targetCategory.id) return;
   
-      const newCategories = [...sortedCategories];
+      let newCategories = [...sortedCategories];
       const draggedIndex = newCategories.findIndex(c => c.id === draggedItem.id);
       const targetIndex = newCategories.findIndex(c => c.id === targetCategory.id);
   
-      // Remove dragged item and insert it at the target's position
+      if (draggedIndex === -1) return;
+
       const [removed] = newCategories.splice(draggedIndex, 1);
       newCategories.splice(targetIndex, 0, removed);
   
@@ -110,9 +110,9 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
                   className="flex items-center gap-2 p-2 rounded-lg border bg-card transition-all"
                   draggable={isEditMode}
                   onDragStart={(e) => handleDragStart(e, category)}
-                  onDragEnd={handleDragEnd}
                   onDragOver={(e) => handleDragOver(e, category)}
                   onDrop={handleDragEnd}
+                  onDragEnd={handleDragEnd} // handles case where drop is outside a valid target
                 >
                   {isEditMode && (
                     <div className="cursor-grab text-muted-foreground">
