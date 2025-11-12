@@ -19,7 +19,8 @@ service cloud.firestore {
     match /categories/{categoryId} {
       allow read: if isSignedIn() && (resource.data.isPrivate == false || resource.data.familyMemberId == request.auth.uid);
       allow create: if isSignedIn() && isOwner(request.resource.data);
-      allow update, delete: if isSignedIn() && isOwner(resource.data);
+      allow update: if isSignedIn() && isOwner(resource.data);
+      allow delete: if isSignedIn() && isOwner(resource.data);
     }
 
     match /expenses/{expenseId} {
