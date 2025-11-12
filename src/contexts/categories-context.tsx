@@ -61,7 +61,7 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
   const addCategory = (categoryData: Omit<Category, 'id' | 'familyMemberId' | 'order'>) => {
     if (!firestore || !user || !categories) return;
     const categoriesCollection = collection(firestore, 'categories');
-    const order = (categories.length > 0) ? Math.max(...categories.map(c => c.order)) + 1 : 0;
+    const order = (categories.length > 0) ? Math.max(...categories.map(c => c.order || 0)) + 1 : 0;
     const dataWithUser = { ...categoryData, familyMemberId: user.uid, order };
     const newDocRef = doc(categoriesCollection);
     setDocumentNonBlocking(newDocRef, dataWithUser, {}).catch(error => {
@@ -103,8 +103,6 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     });
 
     batch.commit().catch(error => {
-        // Because this is a batch write, we can't pinpoint the exact failing document.
-        // We'll emit a generic error for the collection path. The LLM can inspect the rules.
         errorEmitter.emit(
           'permission-error',
           new FirestorePermissionError({
@@ -112,7 +110,6 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
             operation: 'update',
           })
         );
-        // Also show a toast to the user
         toast({
             variant: 'destructive',
             title: 'Помилка оновлення',

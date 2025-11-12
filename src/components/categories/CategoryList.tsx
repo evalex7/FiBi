@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useCategories } from '@/contexts/categories-context';
 import type { Category } from '@/lib/types';
 import { categoryIcons } from '@/lib/category-icons';
-import { MoreHorizontal, Pencil, Trash2, User, GripVertical } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, User, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -76,6 +76,18 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
       setCategoryToDelete(null);
     }
   }
+
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    const newCategories = [...sortedCategories];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+    if (targetIndex < 0 || targetIndex >= newCategories.length) return;
+
+    [newCategories[index], newCategories[targetIndex]] = [newCategories[targetIndex], newCategories[index]];
+    
+    setSortedCategories(newCategories);
+    updateCategoryOrder(newCategories);
+  };
   
   const LoadingSkeleton = () => (
     <div className="space-y-4">
@@ -101,7 +113,7 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
         </div>
       ) : (
           <div className="space-y-2">
-            {sortedCategories.map((category) => {
+            {sortedCategories.map((category, index) => {
               const Icon = categoryIcons[category.icon];
               const isPersonal = category.isPrivate;
               return (
@@ -138,6 +150,15 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
                   </Badge>
                   <div className="flex items-center gap-1">
                     {isEditMode && (
+                      <>
+                        <div className="flex flex-col">
+                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMove(index, 'up')} disabled={index === 0}>
+                                <ArrowUp className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMove(index, 'down')} disabled={index === sortedCategories.length - 1}>
+                                <ArrowDown className="h-4 w-4" />
+                            </Button>
+                        </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -156,6 +177,7 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
+                      </>
                     )}
                   </div>
                 </div>
