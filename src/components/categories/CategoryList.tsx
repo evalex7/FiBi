@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useCategories } from '@/contexts/categories-context';
 import type { Category } from '@/lib/types';
 import { categoryIcons } from '@/lib/category-icons';
-import { MoreHorizontal, Pencil, Trash2, User, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, User, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,7 +18,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import CategoryForm from './CategoryForm';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
 
 type CategoryListProps = {
@@ -31,6 +30,7 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
   const [sortedCategories, setSortedCategories] = useState<Category[]>([]);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
+  const [draggedItem, setDraggedItem] = useState<Category | null>(null);
 
   useEffect(() => {
     if (categories) {
@@ -39,19 +39,35 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
     }
   }, [categories]);
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
-    const newCategories = [...sortedCategories];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    
-    if (targetIndex < 0 || targetIndex >= newCategories.length) {
-      return;
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, category: Category) => {
+    setDraggedItem(category);
+    // To make the dragged element semi-transparent
+    if (e.currentTarget) {
+        e.currentTarget.style.opacity = '0.5';
     }
+  };
 
-    const [movedItem] = newCategories.splice(index, 1);
-    newCategories.splice(targetIndex, 0, movedItem);
-
-    setSortedCategories(newCategories); // Optimistic update
-    updateCategoryOrder(newCategories);
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    if (e.currentTarget) {
+        e.currentTarget.style.opacity = '1';
+    }
+    setDraggedItem(null);
+    updateCategoryOrder(sortedCategories);
+  };
+  
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, targetCategory: Category) => {
+      e.preventDefault();
+      if (!draggedItem || draggedItem.id === targetCategory.id) return;
+  
+      const newCategories = [...sortedCategories];
+      const draggedIndex = newCategories.findIndex(c => c.id === draggedItem.id);
+      const targetIndex = newCategories.findIndex(c => c.id === targetCategory.id);
+  
+      // Remove dragged item and insert it at the target's position
+      const [removed] = newCategories.splice(draggedIndex, 1);
+      newCategories.splice(targetIndex, 0, removed);
+  
+      setSortedCategories(newCategories);
   };
   
   const handleDelete = () => {
@@ -85,14 +101,24 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
         </div>
       ) : (
           <div className="space-y-2">
-            {sortedCategories.map((category, index) => {
+            {sortedCategories.map((category) => {
               const Icon = categoryIcons[category.icon];
               const isPersonal = category.isPrivate;
               return (
                 <div
                   key={category.id}
-                  className="flex items-center gap-2 p-2 rounded-lg border bg-card"
+                  className="flex items-center gap-2 p-2 rounded-lg border bg-card transition-all"
+                  draggable={isEditMode}
+                  onDragStart={(e) => handleDragStart(e, category)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => handleDragOver(e, category)}
+                  onDrop={handleDragEnd}
                 >
+                  {isEditMode && (
+                    <div className="cursor-grab text-muted-foreground">
+                        <GripVertical className="h-5 w-5" />
+                    </div>
+                  )}
                   {Icon && <div className="h-8 w-8 flex items-center justify-center bg-secondary rounded-lg"><Icon className="h-5 w-5 text-muted-foreground" /></div>}
                   <div className="flex-grow font-medium flex items-center gap-2">
                     <span>{category.name}</span>
@@ -112,16 +138,6 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
                   </Badge>
                   <div className="flex items-center gap-1">
                     {isEditMode && (
-                      <>
-                        <div className="flex flex-col">
-                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMove(index, 'up')} disabled={index === 0}>
-                            <ArrowUp className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMove(index, 'down')} disabled={index === sortedCategories.length - 1}>
-                            <ArrowDown className="h-3 w-3" />
-                            </Button>
-                        </div>
-                        
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -140,7 +156,6 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </>
                     )}
                   </div>
                 </div>
