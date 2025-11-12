@@ -98,10 +98,8 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
 
     const batch = writeBatch(firestore);
     reorderedCategories.forEach((category, index) => {
-      if (category.familyMemberId === user.uid) {
-        const docRef = doc(firestore, 'categories', category.id);
-        batch.update(docRef, { order: index });
-      }
+      const docRef = doc(firestore, 'categories', category.id);
+      batch.update(docRef, { order: index });
     });
 
     batch.commit().catch(error => {
@@ -145,6 +143,7 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     updateCategoryOrder,
     deleteCategory,
     isLoading
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [categories, isLoading, user]);
 
   return (
