@@ -3,11 +3,9 @@
 import React, { createContext, useContext, useMemo, ReactNode, useState, useEffect } from 'react';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { useTransactions } from './transactions-context';
 
 interface CreditContextType {
   creditLimit: number;
-  currentDebt: number;
   setCreditLimit: (limit: number) => Promise<void>;
   isLoading: boolean;
 }
@@ -17,13 +15,11 @@ const CreditContext = createContext<CreditContextType | undefined>(undefined);
 export const CreditProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
   const { user } = useUser();
-  const { transactions, isLoading: isTransactionsLoading } = useTransactions();
 
   const [creditLimit, setCreditLimitState] = useState<number>(0);
-  const [currentDebt, setCurrentDebt] = useState<number>(0);
   const [isSettingsLoading, setIsSettingsLoading] = useState(true);
 
-  const isLoading = isSettingsLoading || isTransactionsLoading;
+  const isLoading = isSettingsLoading;
 
   useEffect(() => {
     if (!user || !firestore) {
@@ -55,22 +51,6 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
     fetchOrCreateCreditSettings();
   }, [user, firestore]);
 
-  useEffect(() => {
-    if (isTransactionsLoading) return;
-
-    const debt = transactions.reduce((acc, t) => {
-      if (t.type === 'credit_purchase') {
-        return acc + t.amount;
-      }
-      if (t.type === 'credit_payment') {
-        return acc - t.amount;
-      }
-      return acc;
-    }, 0);
-    setCurrentDebt(debt);
-
-  }, [transactions, isTransactionsLoading]);
-
   const setCreditLimit = async (limit: number) => {
     if (!user || !firestore) return;
     const creditSettingsDocRef = doc(firestore, 'users', user.uid);
@@ -84,10 +64,9 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo(() => ({
     creditLimit,
-    currentDebt,
     setCreditLimit,
     isLoading
-  }), [creditLimit, currentDebt, isLoading]);
+  }), [creditLimit, isLoading]);
 
   return (
     <CreditContext.Provider value={value}>

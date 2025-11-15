@@ -24,17 +24,16 @@ type SummaryCardsProps = {
 
 export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
-  const { creditLimit, currentDebt, isLoading: isCreditLoading } = useCredit();
+  const { creditLimit, isLoading: isCreditLoading } = useCredit();
 
   const [formattedIncome, setFormattedIncome] = useState('0,00 ₴');
   const [formattedExpenses, setFormattedExpenses] = useState('0,00 ₴');
-  const [formattedNetIncome, setFormattedNetIncome] = useState('0,00 ₴');
-  const [netIncome, setNetIncome] = useState(0);
+  
+  const [formattedOwnFunds, setFormattedOwnFunds] = useState('0,00 ₴');
+  const [ownFunds, setOwnFunds] = useState(0);
 
   const [formattedCreditUsed, setFormattedCreditUsed] = useState('0,00 ₴');
-  const [formattedCreditLimit, setFormattedCreditLimit] = useState('0,00 ₴');
-  const [formattedNetBalance, setFormattedNetBalance] = useState('0,00 ₴');
-  const [netBalance, setNetBalance] = useState(0);
+  const [formattedCreditAvailable, setFormattedCreditAvailable] = useState('0,00 ₴');
   
   const isLoading = isTransactionsLoading || isCreditLoading;
 
@@ -71,24 +70,36 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       { income: 0, expenses: 0 }
     );
       
-    const currentNetIncome = income - expenses;
-    setNetIncome(currentNetIncome);
+    const netIncome = income - expenses;
+
+    let currentOwnFunds = 0;
+    let usedCredit = 0;
+
+    if (netIncome >= 0) {
+        currentOwnFunds = netIncome;
+        usedCredit = 0;
+    } else {
+        currentOwnFunds = 0;
+        usedCredit = Math.abs(netIncome);
+    }
+    
+    const availableCredit = creditLimit - usedCredit;
+
     setFormattedIncome(formatCurrency(income));
     setFormattedExpenses(formatCurrency(expenses));
-    setFormattedNetIncome(formatCurrency(currentNetIncome));
     
-    const currentNetBalance = income - expenses - currentDebt; // Net income - total debt
+    setOwnFunds(currentOwnFunds);
+    setFormattedOwnFunds(formatCurrency(currentOwnFunds));
 
-    setFormattedCreditUsed(formatCurrency(currentDebt));
-    setFormattedCreditLimit(formatCurrency(creditLimit));
-    setFormattedNetBalance(formatCurrency(currentNetBalance));
-    setNetBalance(currentNetBalance);
+    setFormattedCreditUsed(formatCurrency(usedCredit));
+    setFormattedCreditAvailable(formatCurrency(availableCredit < 0 ? 0 : availableCredit));
 
-  }, [transactions, selectedPeriod, creditLimit, currentDebt, isLoading]);
+
+  }, [transactions, selectedPeriod, creditLimit, isLoading]);
 
 
   return (
-    <div className="grid gap-2 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-2 grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
           <CardTitle className="text-xs font-medium h-8">Дохід</CardTitle>
@@ -109,14 +120,20 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
       <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-10 flex items-center">Кредитний ліміт</CardTitle>
-          <PiggyBank className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-xs font-medium h-8">Власні кошти</CardTitle>
+          <Scale className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="text-xl font-bold text-orange-500">{formattedCreditLimit}</div>
+          <div className={cn(
+            "text-xl font-bold",
+            ownFunds > 0 ? "text-green-600" : "text-foreground",
+            )}
+          >
+            {formattedOwnFunds}
+          </div>
         </CardContent>
       </Card>
-       <Card className="p-2">
+      <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
           <CardTitle className="text-xs font-medium h-10 flex items-center">Використано кредиту</CardTitle>
           <CreditCard className="h-4 w-4 text-muted-foreground" />
@@ -125,36 +142,13 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <div className="text-xl font-bold text-orange-500">{formattedCreditUsed}</div>
         </CardContent>
       </Card>
-      <Card className="p-2">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-8">Власні кошти</CardTitle>
-          <Scale className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className={cn(
-            "text-xl font-bold",
-            netIncome > 0 && "text-green-600",
-            netIncome < 0 && "text-red-600"
-            )}
-          >
-            {formattedNetIncome}
-          </div>
-        </CardContent>
-      </Card>
        <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-8">Чистий баланс</CardTitle>
-          <Landmark className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-xs font-medium h-10 flex items-center">Доступний кредит</CardTitle>
+          <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-           <div className={cn(
-            "text-xl font-bold",
-            netBalance > 0 && "text-green-600",
-            netBalance < 0 && "text-red-600"
-            )}
-          >
-            {formattedNetBalance}
-          </div>
+          <div className="text-xl font-bold text-orange-500">{formattedCreditAvailable}</div>
         </CardContent>
       </Card>
     </div>
