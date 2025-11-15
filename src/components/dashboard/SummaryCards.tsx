@@ -118,17 +118,11 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
       <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-10 flex items-center">Власні кошти</CardTitle>
-          <Scale className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-xs font-medium h-10 flex items-center">Кредитний ліміт</CardTitle>
+          <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className={cn(
-            "text-xl font-bold",
-            ownFunds > 0 ? "text-green-600" : "text-foreground",
-            )}
-          >
-            {formattedOwnFunds}
-          </div>
+          <div className="text-xl font-bold text-orange-500">{formattedCreditLimit}</div>
         </CardContent>
       </Card>
       <Card className="p-2">
@@ -142,11 +136,17 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
        <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-10 flex items-center">Кредитний ліміт</CardTitle>
-          <PiggyBank className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-xs font-medium h-10 flex items-center">Власні кошти</CardTitle>
+          <Scale className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="text-xl font-bold text-orange-500">{formattedCreditLimit}</div>
+          <div className={cn(
+            "text-xl font-bold",
+            ownFunds > 0 ? "text-green-600" : "text-foreground",
+            )}
+          >
+            {formattedOwnFunds}
+          </div>
         </CardContent>
       </Card>
     </div>
