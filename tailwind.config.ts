@@ -86,6 +86,9 @@ export default {
         blue: {
           100: '#dbeafe',
           600: '#2563eb'
+        },
+        orange: {
+          500: '#f97316'
         }
       },
       borderRadius: {

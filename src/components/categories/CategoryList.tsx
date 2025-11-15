@@ -31,7 +31,7 @@ const getBadgeVariant = (type: Category['type']) => {
         case 'expense':
             return 'destructive';
         case 'credit':
-            return 'secondary';
+            return 'warning';
         default:
             return 'outline';
     }
@@ -171,7 +171,7 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
                       </Tooltip>
                     )}
                   </div>
-                  <Badge variant={getBadgeVariant(category.type)} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
+                  <Badge variant={getBadgeVariant(category.type)} className="text-white hidden sm:inline-flex">
                       {getBadgeLabel(category.type)}
                   </Badge>
                   <div className="flex items-center gap-1">
