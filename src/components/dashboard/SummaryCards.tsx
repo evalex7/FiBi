@@ -72,12 +72,11 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       },
       { income: 0, expenses: 0 }
     );
-      
+    
     const netIncome = income - expenses;
     setNetBalance(netIncome);
     setFormattedNetBalance(formatCurrency(netIncome));
-
-
+    
     let currentOwnFunds = 0;
     let usedCredit = 0;
 
@@ -88,7 +87,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
         currentOwnFunds = 0;
         usedCredit = Math.abs(netIncome);
     }
-    
+
     setFormattedIncome(formatCurrency(income));
     setFormattedExpenses(formatCurrency(expenses));
     
@@ -97,7 +96,6 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
 
     setFormattedCreditUsed(formatCurrency(usedCredit));
     setFormattedCreditLimit(formatCurrency(creditLimit));
-
 
   }, [transactions, selectedPeriod, creditLimit, isLoading]);
 
