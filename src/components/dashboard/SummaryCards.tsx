@@ -21,7 +21,7 @@ type SummaryCardsProps = {
 
 export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const { transactions } = useTransactions();
-  const { creditLimit } = useCredit();
+  const { creditLimit, currentDebt } = useCredit();
 
   const [formattedIncome, setFormattedIncome] = useState('');
   const [formattedExpenses, setFormattedExpenses] = useState('');
@@ -45,7 +45,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     }
     
 
-    const { income, expenses, creditPurchases, creditPayments } = transactions.reduce(
+    const { income, expenses } = transactions.reduce(
       (acc, transaction) => {
         const transactionDate = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
         
@@ -59,17 +59,11 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
                 case 'expense':
                     acc.expenses += transaction.amount;
                     break;
-                case 'credit_purchase':
-                    acc.creditPurchases += transaction.amount;
-                    break;
-                case 'credit_payment':
-                    acc.creditPayments += transaction.amount;
-                    break;
             }
         }
         return acc;
       },
-      { income: 0, expenses: 0, creditPurchases: 0, creditPayments: 0 }
+      { income: 0, expenses: 0 }
     );
       
     const currentNetIncome = income - expenses;
@@ -78,16 +72,15 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     setFormattedExpenses(formatCurrency(expenses));
     setFormattedNetIncome(formatCurrency(currentNetIncome));
 
-    const creditUsed = creditPurchases - creditPayments;
-    const creditAvailable = creditLimit - creditUsed;
-    const currentNetBalance = currentNetIncome - creditUsed;
+    const creditAvailable = creditLimit - currentDebt;
+    const currentNetBalance = currentNetIncome - currentDebt;
 
-    setFormattedCreditUsed(formatCurrency(creditUsed));
+    setFormattedCreditUsed(formatCurrency(currentDebt));
     setFormattedCreditAvailable(formatCurrency(creditAvailable));
     setFormattedNetBalance(formatCurrency(currentNetBalance));
     setNetBalance(currentNetBalance);
 
-  }, [transactions, selectedPeriod, creditLimit]);
+  }, [transactions, selectedPeriod, creditLimit, currentDebt]);
 
 
   return (
@@ -116,7 +109,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="text-xl font-bold">{formattedCreditAvailable}</div>
+          <div className="text-xl font-bold text-orange-500">{formattedCreditAvailable}</div>
         </CardContent>
       </Card>
        <Card className="p-2">
@@ -125,7 +118,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <CreditCard className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="text-xl font-bold">{formattedCreditUsed}</div>
+          <div className="text-xl font-bold text-orange-500">{formattedCreditUsed}</div>
         </CardContent>
       </Card>
       <Card className="p-2">
