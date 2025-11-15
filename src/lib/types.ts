@@ -5,7 +5,7 @@ export type Transaction = {
   date: Date | Timestamp;
   description: string;
   amount: number;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'credit_purchase' | 'credit_payment';
   category: string;
   familyMemberId?: string;
   isPrivate?: boolean;
@@ -24,7 +24,7 @@ export type Category = {
   id: string;
   name: string;
   icon: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'credit';
   familyMemberId?: string;
   isCommon?: boolean;
   isPrivate?: boolean;
@@ -46,4 +46,11 @@ export type FamilyMember = {
     name: string;
     email: string;
     color: string;
+    creditLimit?: number;
+}
+
+export type CreditSettings = {
+    id: string;
+    familyMemberId: string;
+    creditLimit: number;
 }

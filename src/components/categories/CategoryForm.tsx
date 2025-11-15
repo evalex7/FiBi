@@ -98,15 +98,19 @@ export default function CategoryForm({ category, onSave }: CategoryFormProps) {
                 <RadioGroup
                     className="flex gap-4"
                     value={type}
-                    onValueChange={(value: 'income' | 'expense') => setType(value)}
+                    onValueChange={(value: Category['type']) => setType(value)}
                 >
                     <Label className="flex items-center space-x-2 cursor-pointer">
-                    <RadioGroupItem value="expense" id="type-expense" />
-                    <span>Витрата</span>
+                        <RadioGroupItem value="expense" id="type-expense" />
+                        <span>Витрата</span>
                     </Label>
                     <Label className="flex items-center space-x-2 cursor-pointer">
-                    <RadioGroupItem value="income" id="type-income" />
-                    <span>Дохід</span>
+                        <RadioGroupItem value="income" id="type-income" />
+                        <span>Дохід</span>
+                    </Label>
+                     <Label className="flex items-center space-x-2 cursor-pointer">
+                        <RadioGroupItem value="credit" id="type-credit" />
+                        <span>Кредит</span>
                     </Label>
                 </RadioGroup>
             </div>

@@ -26,7 +26,7 @@ import {
   DialogClose,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock } from 'lucide-react';
+import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock, Landmark, CreditCard } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -101,9 +101,16 @@ export default function TransactionForm({
       setDate(new Date());
     }
   }, [transaction, initialValues, isCopy]);
+  
+  const categoryTypeMap = {
+    income: 'income',
+    expense: 'expense',
+    credit_purchase: 'credit',
+    credit_payment: 'credit'
+  };
 
   const categories = availableCategories
-    .filter((c) => c.type === type)
+    .filter((c) => c.type === categoryTypeMap[type])
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -203,17 +210,28 @@ export default function TransactionForm({
             <Label>Тип</Label>
             <RadioGroup
               defaultValue="expense"
-              className="flex"
+              className="flex gap-2 sm:gap-4 flex-wrap"
               value={type}
-              onValueChange={(value: 'income' | 'expense') => setType(value)}
+              onValueChange={(value: Transaction['type']) => {
+                setType(value);
+                setCategory(''); // Reset category when type changes
+              }}
             >
-              <Label className="flex items-center space-x-2 cursor-pointer">
+              <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
                 <RadioGroupItem value="expense" id="r2" />
                 <span>Витрата</span>
               </Label>
-              <Label className="flex items-center space-x-2 cursor-pointer">
+              <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
                 <RadioGroupItem value="income" id="r3" />
                 <span>Дохід</span>
+              </Label>
+              <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
+                <RadioGroupItem value="credit_purchase" id="r4" />
+                <span>Кредит</span>
+              </Label>
+               <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
+                <RadioGroupItem value="credit_payment" id="r5" />
+                <span className="flex items-center gap-1">Погашення <CreditCard className="h-4 w-4 text-muted-foreground"/></span>
               </Label>
             </RadioGroup>
           </div>

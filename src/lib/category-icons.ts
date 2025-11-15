@@ -20,6 +20,7 @@ import {
   Shirt,
   Plane,
   HeartPulse,
+  Banknote
 } from 'lucide-react';
 import type { Category } from './types';
 
@@ -44,6 +45,7 @@ export const categoryIcons: { [key: string]: LucideIcon } = {
   'Shirt': Shirt,
   'Plane': Plane,
   'HeartPulse': HeartPulse,
+  'Banknote': Banknote,
 };
 
 export const defaultCategories: Omit<Category, 'id'| 'familyMemberId'>[] = [
@@ -65,4 +67,6 @@ export const defaultCategories: Omit<Category, 'id'| 'familyMemberId'>[] = [
   { name: 'Інвестиції', icon: 'TrendingUp', type: 'income', order: 15 },
   { name: 'Подарунки (дохід)', icon: 'Gift', type: 'income', order: 16 },
   { name: 'Інше (дохід)', icon: 'CircleDollarSign', type: 'income', order: 17 },
+  { name: 'Погашення кредиту', icon: 'Banknote', type: 'credit', order: 18 },
+  { name: 'Кредитні покупки', icon: 'ShoppingCart', type: 'credit', order: 19 },
 ];

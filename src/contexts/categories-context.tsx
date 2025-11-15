@@ -99,7 +99,7 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
     const batch = writeBatch(firestore);
     reorderedCategories.forEach((category, index) => {
       // Only update categories that the user owns.
-      if (category.familyMemberId === user.uid) {
+      if (category.familyMemberId === user.uid || category.isCommon) {
         const docRef = doc(firestore, 'categories', category.id);
         batch.update(docRef, { order: index });
       }

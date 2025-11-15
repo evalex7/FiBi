@@ -24,6 +24,32 @@ type CategoryListProps = {
   isEditMode: boolean;
 };
 
+const getBadgeVariant = (type: Category['type']) => {
+    switch (type) {
+        case 'income':
+            return 'default';
+        case 'expense':
+            return 'destructive';
+        case 'credit':
+            return 'secondary';
+        default:
+            return 'outline';
+    }
+};
+
+const getBadgeLabel = (type: Category['type']) => {
+    switch (type) {
+        case 'income':
+            return 'Дохід';
+        case 'expense':
+            return 'Витрата';
+        case 'credit':
+            return 'Кредит';
+        default:
+            return 'Невідомо';
+    }
+};
+
 export default function CategoryList({ isEditMode }: CategoryListProps) {
   const { categories, isLoading, deleteCategory, updateCategoryOrder } = useCategories();
   const { user } = useUser();
@@ -145,8 +171,8 @@ export default function CategoryList({ isEditMode }: CategoryListProps) {
                       </Tooltip>
                     )}
                   </div>
-                  <Badge variant={category.type === 'expense' ? 'destructive' : 'default'} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
-                      {category.type === 'expense' ? 'Витрата' : 'Дохід'}
+                  <Badge variant={getBadgeVariant(category.type)} className="bg-opacity-20 text-foreground hidden sm:inline-flex">
+                      {getBadgeLabel(category.type)}
                   </Badge>
                   <div className="flex items-center gap-1">
                     {isEditMode && (
