@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils';
 import { useCredit } from '@/contexts/credit-context';
 
 const formatCurrency = (amount: number) => {
+    if (isNaN(amount)) {
+      return '0,00 ₴';
+    }
     return new Intl.NumberFormat('uk-UA', {
       style: 'currency',
       currency: 'UAH',
@@ -20,21 +23,24 @@ type SummaryCardsProps = {
 };
 
 export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
-  const { transactions } = useTransactions();
-  const { creditLimit, currentDebt } = useCredit();
+  const { transactions, isLoading: isTransactionsLoading } = useTransactions();
+  const { creditLimit, currentDebt, isLoading: isCreditLoading } = useCredit();
 
-  const [formattedIncome, setFormattedIncome] = useState('');
-  const [formattedExpenses, setFormattedExpenses] = useState('');
-  const [formattedNetIncome, setFormattedNetIncome] = useState('');
+  const [formattedIncome, setFormattedIncome] = useState('0,00 ₴');
+  const [formattedExpenses, setFormattedExpenses] = useState('0,00 ₴');
+  const [formattedNetIncome, setFormattedNetIncome] = useState('0,00 ₴');
   const [netIncome, setNetIncome] = useState(0);
 
-  const [formattedCreditUsed, setFormattedCreditUsed] = useState('');
-  const [formattedCreditAvailable, setFormattedCreditAvailable] = useState('');
-  const [formattedNetBalance, setFormattedNetBalance] = useState('');
+  const [formattedCreditUsed, setFormattedCreditUsed] = useState('0,00 ₴');
+  const [formattedCreditAvailable, setFormattedCreditAvailable] = useState('0,00 ₴');
+  const [formattedNetBalance, setFormattedNetBalance] = useState('0,00 ₴');
   const [netBalance, setNetBalance] = useState(0);
-
+  
+  const isLoading = isTransactionsLoading || isCreditLoading;
 
   useEffect(() => {
+    if (isLoading) return;
+
     let periodStart: Date | null = null;
     let periodEnd: Date | null = null;
     
@@ -43,7 +49,6 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       periodStart = startOfMonth(periodDate);
       periodEnd = endOfMonth(periodDate);
     }
-    
 
     const { income, expenses } = transactions.reduce(
       (acc, transaction) => {
@@ -80,7 +85,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     setFormattedNetBalance(formatCurrency(currentNetBalance));
     setNetBalance(currentNetBalance);
 
-  }, [transactions, selectedPeriod, creditLimit, currentDebt]);
+  }, [transactions, selectedPeriod, creditLimit, currentDebt, isLoading]);
 
 
   return (
@@ -105,7 +110,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
       <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-8">Доступний кредит</CardTitle>
+          <CardTitle className="text-xs font-medium h-10 flex items-center">Доступний кредит</CardTitle>
           <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
@@ -114,7 +119,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
        <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-8">Використано кредиту</CardTitle>
+          <CardTitle className="text-xs font-medium h-10 flex items-center">Використано кредиту</CardTitle>
           <CreditCard className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
