@@ -48,17 +48,17 @@ export default function RootLayout({
           <ThemeSync />
           <FirebaseClientProvider>
             <SettingsProvider>
-              <CreditProvider>
-                <CategoriesProvider>
-                  <PaymentsProvider>
-                    <TransactionsProvider>
+              <CategoriesProvider>
+                <PaymentsProvider>
+                  <TransactionsProvider>
+                    <CreditProvider>
                       <BudgetsProvider>
                         {children}
                       </BudgetsProvider>
-                    </TransactionsProvider>
-                  </PaymentsProvider>
-                </CategoriesProvider>
-              </CreditProvider>
+                    </CreditProvider>
+                  </TransactionsProvider>
+                </PaymentsProvider>
+              </CategoriesProvider>
             </SettingsProvider>
           </FirebaseClientProvider>
           <Toaster />
