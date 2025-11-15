@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Scale, CreditCard, PiggyBank } from 'lucide-react';
+import { TrendingUp, TrendingDown, Scale, CreditCard, PiggyBank, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTransactions } from '@/contexts/transactions-context';
 import { useState, useEffect } from 'react';
@@ -29,11 +29,14 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const [formattedIncome, setFormattedIncome] = useState('0,00 ₴');
   const [formattedExpenses, setFormattedExpenses] = useState('0,00 ₴');
   
-  const [formattedOwnFunds, setFormattedOwnFunds] = useState('0,00 ₴');
   const [ownFunds, setOwnFunds] = useState(0);
+  const [formattedOwnFunds, setFormattedOwnFunds] = useState('0,00 ₴');
 
   const [formattedCreditUsed, setFormattedCreditUsed] = useState('0,00 ₴');
   const [formattedCreditLimit, setFormattedCreditLimit] = useState('0,00 ₴');
+
+  const [netBalance, setNetBalance] = useState(0);
+  const [formattedNetBalance, setFormattedNetBalance] = useState('0,00 ₴');
   
   const isLoading = isTransactionsLoading || isCreditLoading;
 
@@ -71,6 +74,9 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     );
       
     const netIncome = income - expenses;
+    setNetBalance(netIncome);
+    setFormattedNetBalance(formatCurrency(netIncome));
+
 
     let currentOwnFunds = 0;
     let usedCredit = 0;
@@ -97,7 +103,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
 
 
   return (
-    <div className="grid gap-2 grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <div className="grid gap-2 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
           <CardTitle className="text-xs font-medium h-8">Дохід</CardTitle>
@@ -146,6 +152,22 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             )}
           >
             {formattedOwnFunds}
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="p-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+          <CardTitle className="text-xs font-medium h-10 flex items-center">Чистий баланс</CardTitle>
+          <Briefcase className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className={cn(
+            "text-xl font-bold",
+            netBalance > 0 && "text-green-600",
+            netBalance < 0 && "text-red-600"
+            )}
+          >
+            {formattedNetBalance}
           </div>
         </CardContent>
       </Card>
