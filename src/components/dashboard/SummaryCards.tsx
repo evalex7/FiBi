@@ -76,9 +76,9 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     setFormattedIncome(formatCurrency(income));
     setFormattedExpenses(formatCurrency(expenses));
     setFormattedNetIncome(formatCurrency(currentNetIncome));
-
+    
     const creditAvailable = creditLimit - currentDebt;
-    const currentNetBalance = currentNetIncome - currentDebt;
+    const currentNetBalance = income - expenses - currentDebt; // Net income - total debt
 
     setFormattedCreditUsed(formatCurrency(currentDebt));
     setFormattedCreditAvailable(formatCurrency(creditAvailable));

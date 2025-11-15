@@ -3,11 +3,12 @@
 import React, { createContext, useContext, useMemo, ReactNode, useState, useEffect } from 'react';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import type { CreditSettings } from '@/lib/types';
+import { useTransactions } from './transactions-context';
 
 interface CreditContextType {
   creditLimit: number;
-  setCreditLimit: (limit: number) => void;
+  currentDebt: number;
+  setCreditLimit: (limit: number) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -16,38 +17,58 @@ const CreditContext = createContext<CreditContextType | undefined>(undefined);
 export const CreditProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
   const { user } = useUser();
+  const { transactions, isLoading: isTransactionsLoading } = useTransactions();
+
   const [creditLimit, setCreditLimitState] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentDebt, setCurrentDebt] = useState<number>(0);
+  const [isSettingsLoading, setIsSettingsLoading] = useState(true);
+
+  const isLoading = isSettingsLoading || isTransactionsLoading;
 
   useEffect(() => {
     if (!user || !firestore) {
-      setIsLoading(false);
+      setIsSettingsLoading(false);
       return;
     }
 
     const creditSettingsDocRef = doc(firestore, 'users', user.uid);
 
     const fetchOrCreateCreditSettings = async () => {
-      setIsLoading(true);
+      setIsSettingsLoading(true);
       try {
         const docSnap = await getDoc(creditSettingsDocRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
           setCreditLimitState(data.creditLimit || 0);
         } else {
-          // If the user document doesn't have a creditLimit, create it
           await setDoc(creditSettingsDocRef, { creditLimit: 0 }, { merge: true });
           setCreditLimitState(0);
         }
       } catch (error) {
         console.error("Error fetching or creating credit settings:", error);
       } finally {
-        setIsLoading(false);
+        setIsSettingsLoading(false);
       }
     };
 
     fetchOrCreateCreditSettings();
   }, [user, firestore]);
+
+  useEffect(() => {
+    if (isTransactionsLoading) return;
+
+    const debt = transactions.reduce((acc, t) => {
+      if (t.type === 'credit_purchase') {
+        return acc + t.amount;
+      }
+      if (t.type === 'credit_payment') {
+        return acc - t.amount;
+      }
+      return acc;
+    }, 0);
+    setCurrentDebt(debt);
+
+  }, [transactions, isTransactionsLoading]);
 
   const setCreditLimit = async (limit: number) => {
     if (!user || !firestore) return;
@@ -62,9 +83,10 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo(() => ({
     creditLimit,
+    currentDebt,
     setCreditLimit,
     isLoading
-  }), [creditLimit, isLoading]);
+  }), [creditLimit, currentDebt, isLoading]);
 
   return (
     <CreditContext.Provider value={value}>
