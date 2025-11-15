@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Scale, CreditCard, Landmark, PiggyBank } from 'lucide-react';
+import { TrendingUp, TrendingDown, Scale, CreditCard, PiggyBank } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTransactions } from '@/contexts/transactions-context';
 import { useState, useEffect } from 'react';
@@ -33,7 +33,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const [ownFunds, setOwnFunds] = useState(0);
 
   const [formattedCreditUsed, setFormattedCreditUsed] = useState('0,00 ₴');
-  const [formattedCreditAvailable, setFormattedCreditAvailable] = useState('0,00 ₴');
+  const [formattedCreditLimit, setFormattedCreditLimit] = useState('0,00 ₴');
   
   const isLoading = isTransactionsLoading || isCreditLoading;
 
@@ -83,8 +83,6 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
         usedCredit = Math.abs(netIncome);
     }
     
-    const availableCredit = creditLimit - usedCredit;
-
     setFormattedIncome(formatCurrency(income));
     setFormattedExpenses(formatCurrency(expenses));
     
@@ -92,7 +90,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     setFormattedOwnFunds(formatCurrency(currentOwnFunds));
 
     setFormattedCreditUsed(formatCurrency(usedCredit));
-    setFormattedCreditAvailable(formatCurrency(availableCredit < 0 ? 0 : availableCredit));
+    setFormattedCreditLimit(formatCurrency(creditLimit));
 
 
   }, [transactions, selectedPeriod, creditLimit, isLoading]);
@@ -144,11 +142,11 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
        <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-10 flex items-center">Доступний кредит</CardTitle>
+          <CardTitle className="text-xs font-medium h-10 flex items-center">Кредитний ліміт</CardTitle>
           <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="text-xl font-bold text-orange-500">{formattedCreditAvailable}</div>
+          <div className="text-xl font-bold text-orange-500">{formattedCreditLimit}</div>
         </CardContent>
       </Card>
     </div>
