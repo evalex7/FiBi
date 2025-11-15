@@ -191,6 +191,21 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
       ))}
     </div>
   );
+  
+  const getAmountColor = (type: Transaction['type']) => {
+    switch (type) {
+      case 'income':
+        return 'text-green-600';
+      case 'expense':
+        return 'text-red-600';
+      case 'credit_purchase':
+        return 'text-orange-500';
+      case 'credit_payment':
+        return 'text-orange-500';
+      default:
+        return 'text-foreground';
+    }
+  };
 
   return (
     <Card>
@@ -248,7 +263,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                         <div
                             className={cn(
                                 'font-medium text-base whitespace-nowrap',
-                                !isMasked && (transaction.type === 'income' ? 'text-green-600' : 'text-red-600'),
+                                !isMasked && getAmountColor(transaction.type),
                                 isMasked && 'font-mono'
                             )}
                             >
@@ -304,7 +319,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                         <TableCell
                           className={cn(
                             'text-right font-medium',
-                            !isMasked && (transaction.type === 'income' ? 'text-green-600' : 'text-red-600'),
+                            !isMasked && getAmountColor(transaction.type),
                             isMasked && 'font-mono'
                           )}
                         >
