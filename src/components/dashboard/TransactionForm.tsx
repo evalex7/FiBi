@@ -26,7 +26,7 @@ import {
   DialogClose,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock, Landmark, CreditCard } from 'lucide-react';
+import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock, TrendingUp, TrendingDown } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -48,6 +48,9 @@ type TransactionFormProps = {
   isCopy?: boolean;
 };
 
+type UiTransactionType = 'income' | 'expense' | 'credit';
+
+
 export default function TransactionForm({
   transaction,
   onSave,
@@ -59,7 +62,9 @@ export default function TransactionForm({
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  const [type, setType] = useState<Transaction['type']>('expense');
+  const [uiType, setUiType] = useState<UiTransactionType>('expense');
+  const [creditAction, setCreditAction] = useState<'purchase' | 'payment'>('purchase');
+
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -69,11 +74,24 @@ export default function TransactionForm({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const isEditMode = !!transaction && !isCopy;
+  
+  const getFinalTransactionType = (): Transaction['type'] => {
+      if (uiType === 'credit') {
+          return creditAction === 'purchase' ? 'credit_purchase' : 'credit_payment';
+      }
+      return uiType;
+  }
 
   useEffect(() => {
     const valuesToSet = transaction || initialValues;
     if (valuesToSet) {
-      setType(valuesToSet.type || 'expense');
+        if (valuesToSet.type === 'credit_purchase' || valuesToSet.type === 'credit_payment') {
+            setUiType('credit');
+            setCreditAction(valuesToSet.type === 'credit_payment' ? 'payment' : 'purchase');
+        } else {
+            setUiType(valuesToSet.type || 'expense');
+        }
+
       setAmount(String(valuesToSet.amount || ''));
       setDescription(valuesToSet.description || '');
       setCategory(valuesToSet.category || '');
@@ -93,7 +111,8 @@ export default function TransactionForm({
         setDate(transactionDate || new Date());
       }
     } else {
-      setType('expense');
+      setUiType('expense');
+      setCreditAction('purchase');
       setAmount('');
       setDescription('');
       setCategory('');
@@ -102,21 +121,22 @@ export default function TransactionForm({
     }
   }, [transaction, initialValues, isCopy]);
   
-  const categoryTypeMap = {
+  const categoryTypeMap: Record<UiTransactionType, 'income' | 'expense' | 'credit'> = {
     income: 'income',
     expense: 'expense',
-    credit_purchase: 'credit',
-    credit_payment: 'credit'
+    credit: 'credit'
   };
 
   const categories = availableCategories
-    .filter((c) => c.type === categoryTypeMap[type])
+    .filter((c) => c.type === categoryTypeMap[uiType])
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const finalType = getFinalTransactionType();
 
-    if (!amount || !description || !category || !date) {
+    if (!amount || !description || (!category && uiType !== 'credit') || !date) {
       toast({
         variant: 'destructive',
         title: 'Помилка',
@@ -128,8 +148,8 @@ export default function TransactionForm({
     const transactionData = {
       description,
       amount: parseFloat(amount),
-      type,
-      category,
+      type: finalType,
+      category: uiType === 'credit' ? 'Кредитна операція' : category, // Use a default category for credit
       date,
       isPrivate,
     };
@@ -187,21 +207,6 @@ export default function TransactionForm({
     );
   };
   
-  const DateButton = () => (
-    <Button
-        variant={'outline'}
-        type="button"
-        className={cn(
-            'w-full justify-start text-left font-normal',
-            !date && 'text-muted-foreground'
-        )}
-        >
-        <CalendarIcon className="mr-2 h-4 w-4" />
-        {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
-    </Button>
-  );
-
-
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
@@ -209,29 +214,24 @@ export default function TransactionForm({
           <div className="grid gap-2">
             <Label>Тип</Label>
             <RadioGroup
-              defaultValue="expense"
               className="flex gap-2 sm:gap-4 flex-wrap"
-              value={type}
-              onValueChange={(value: Transaction['type']) => {
-                setType(value);
+              value={uiType}
+              onValueChange={(value: UiTransactionType) => {
+                setUiType(value);
                 setCategory(''); // Reset category when type changes
               }}
             >
               <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
-                <RadioGroupItem value="expense" id="r2" />
+                <RadioGroupItem value="expense" />
                 <span>Витрата</span>
               </Label>
               <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
-                <RadioGroupItem value="income" id="r3" />
+                <RadioGroupItem value="income" />
                 <span>Дохід</span>
               </Label>
               <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
-                <RadioGroupItem value="credit_purchase" id="r4" />
-                <span>Кредит</span>
-              </Label>
-               <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
-                <RadioGroupItem value="credit_payment" id="r5" />
-                <span className="flex items-center gap-1">Погашення <CreditCard className="h-4 w-4 text-muted-foreground"/></span>
+                <RadioGroupItem value="credit" />
+                <span>Кредитна операція</span>
               </Label>
             </RadioGroup>
           </div>
@@ -245,6 +245,26 @@ export default function TransactionForm({
             />
           </div>
         </div>
+
+        {uiType === 'credit' && (
+             <div className="p-3 rounded-lg border bg-muted/50">
+                <Label>Дія з кредитом</Label>
+                <RadioGroup
+                    className="flex gap-4 mt-2"
+                    value={creditAction}
+                    onValueChange={(value: 'purchase' | 'payment') => setCreditAction(value)}
+                >
+                    <Label className="flex items-center space-x-2 cursor-pointer text-sm">
+                        <RadioGroupItem value="purchase" />
+                        <span className="flex items-center gap-1.5"><TrendingDown className="h-4 w-4 text-red-500"/>Збільшити борг (покупка)</span>
+                    </Label>
+                    <Label className="flex items-center space-x-2 cursor-pointer text-sm">
+                        <RadioGroupItem value="payment" />
+                         <span className="flex items-center gap-1.5"><TrendingUp className="h-4 w-4 text-green-500"/>Зменшити борг (погашення)</span>
+                    </Label>
+                </RadioGroup>
+            </div>
+        )}
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="grid gap-2">
@@ -354,34 +374,36 @@ export default function TransactionForm({
           <Label htmlFor="description">Опис</Label>
           <Input
             id="description"
-            placeholder="напр., Щотижневі продукти"
+            placeholder={uiType === 'credit' ? 'напр., Монобанк' : 'напр., Щотижневі продукти'}
             required
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
         </div>
 
-        <div className="grid gap-2">
-          <Label htmlFor="category">Категорія</Label>
-          <Select required value={category} onValueChange={setCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Оберіть категорію" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => {
-                const Icon = categoryIcons[cat.icon];
-                return (
-                  <SelectItem key={cat.id} value={cat.name}>
-                    <div className="flex items-center gap-2">
-                      {Icon && <Icon className="h-4 w-4" />}
-                      {cat.name}
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        </div>
+        {uiType !== 'credit' && (
+            <div className="grid gap-2">
+            <Label htmlFor="category">Категорія</Label>
+            <Select required value={category} onValueChange={setCategory}>
+                <SelectTrigger>
+                <SelectValue placeholder="Оберіть категорію" />
+                </SelectTrigger>
+                <SelectContent>
+                {categories.map((cat) => {
+                    const Icon = categoryIcons[cat.icon];
+                    return (
+                    <SelectItem key={cat.id} value={cat.name}>
+                        <div className="flex items-center gap-2">
+                        {Icon && <Icon className="h-4 w-4" />}
+                        {cat.name}
+                        </div>
+                    </SelectItem>
+                    );
+                })}
+                </SelectContent>
+            </Select>
+            </div>
+        )}
       </div>
 
       <Button type="submit" className="w-full">
