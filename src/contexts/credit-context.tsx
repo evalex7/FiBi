@@ -39,10 +39,11 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
         const docSnap = await getDoc(creditSettingsDocRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setCreditLimitState(data.creditLimit || 0);
+          setCreditLimitState(data.creditLimit || 10000);
         } else {
-          await setDoc(creditSettingsDocRef, { creditLimit: 0 }, { merge: true });
-          setCreditLimitState(0);
+          // Set default credit limit to 10000 on first load for the user
+          await setDoc(creditSettingsDocRef, { creditLimit: 10000 }, { merge: true });
+          setCreditLimitState(10000);
         }
       } catch (error) {
         console.error("Error fetching or creating credit settings:", error);
