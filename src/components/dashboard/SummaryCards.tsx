@@ -112,18 +112,11 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
       <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium">Власні кошти</CardTitle>
-          <Scale className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-xs font-medium">Доступний кредит</CardTitle>
+          <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className={cn(
-            "text-xl font-bold",
-            netIncome > 0 && "text-green-600",
-            netIncome < 0 && "text-red-600"
-            )}
-          >
-            {formattedNetIncome}
-          </div>
+          <div className="text-xl font-bold">{formattedCreditAvailable}</div>
         </CardContent>
       </Card>
        <Card className="p-2">
@@ -137,11 +130,18 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
       <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium">Доступний кредит</CardTitle>
-          <PiggyBank className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-xs font-medium">Власні кошти</CardTitle>
+          <Scale className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="text-xl font-bold">{formattedCreditAvailable}</div>
+          <div className={cn(
+            "text-xl font-bold",
+            netIncome > 0 && "text-green-600",
+            netIncome < 0 && "text-red-600"
+            )}
+          >
+            {formattedNetIncome}
+          </div>
         </CardContent>
       </Card>
        <Card className="p-2">
