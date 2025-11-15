@@ -73,20 +73,22 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       { income: 0, expenses: 0 }
     );
     
-    const netIncome = income - expenses;
-    setNetBalance(netIncome);
-    setFormattedNetBalance(formatCurrency(netIncome));
+    const balance = income - expenses;
     
     let currentOwnFunds = 0;
     let usedCredit = 0;
 
-    if (netIncome >= 0) {
-        currentOwnFunds = netIncome;
+    if (balance >= 0) {
+        currentOwnFunds = balance;
         usedCredit = 0;
     } else {
         currentOwnFunds = 0;
-        usedCredit = Math.abs(netIncome);
+        usedCredit = Math.abs(balance);
     }
+    
+    const finalNetBalance = income - (expenses + creditLimit);
+    setNetBalance(finalNetBalance);
+    setFormattedNetBalance(formatCurrency(finalNetBalance));
 
     setFormattedIncome(formatCurrency(income));
     setFormattedExpenses(formatCurrency(expenses));
