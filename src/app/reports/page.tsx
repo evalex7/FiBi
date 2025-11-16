@@ -122,6 +122,7 @@ export default function ReportsPage() {
   const [categoryTrendPeriod, setCategoryTrendPeriod] = useState('last_6_months');
   const [activeTooltip, setActiveTooltip] = useState<CustomTooltipPayload | null>(null);
   const [dailyVaseOrientation, setDailyVaseOrientation] = useState<'vertical' | 'horizontal'>('vertical');
+  const [barChartHover, setBarChartHover] = useState<string | null>(null);
 
   const [periodOptions, setPeriodOptions] = useState<{value: string, label: string}[]>([]);
   const [earliestTransactionDate, setEarliestTransactionDate] = useState<Date | null>(null);
@@ -551,10 +552,36 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                 <ChartTooltip
                   cursor={false}
-                  content={<ChartTooltipContent />}
+                  content={({ active, payload, label }) => {
+                    if (active && payload?.length) {
+                      const data = payload.find(p => p.dataKey === barChartHover);
+                      if (!data) return null;
+        
+                      return (
+                        <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                          <p className="font-medium">{label}</p>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                              style={{ backgroundColor: data.color }}
+                            />
+                            <div className="flex flex-1 justify-between">
+                              <span className="text-muted-foreground">
+                                {barChartConfig[data.dataKey as keyof typeof barChartConfig]?.label}
+                              </span>
+                              <span className="font-medium">
+                                {formatCurrencyTooltip(data.value as number)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
                 />
-                <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} />
-                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={60} />
+                <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={60} onMouseOver={() => setBarChartHover('income')} />
+                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={60} onMouseOver={() => setBarChartHover('expenses')} />
                 <ChartLegend content={<ChartLegendContent />} />
             </BarChart>
           </ResponsiveContainer>
