@@ -39,7 +39,7 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useCategories } from '@/contexts/categories-context';
 import TransactionUserAvatar from './TransactionUserAvatar';
 import { Input } from '../ui/input';
@@ -47,7 +47,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
-import { collection } from 'firebase/firestore';
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
 
@@ -63,13 +62,6 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   const firestore = useFirestore();
   const isMobile = useIsMobile();
   
-  const usersCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'users');
-  }, [firestore]);
-  
-  const { data: familyMembers } = useCollection<FamilyMember>(usersCollectionRef);
-
   const [sortedTransactions, setSortedTransactions] = useState<FormattedTransaction[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
@@ -78,7 +70,6 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [filterMember, setFilterMember] = useState('all');
   const [filterDate, setFilterDate] = useState<Date | undefined>();
 
   const canEditOrDelete = (transaction: Transaction) => {
@@ -141,15 +132,9 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
         }
       }
 
-      // 4. Filter by Member
-      if (filterMember !== 'all') {
-        filteredBySearch = filteredBySearch.filter(t => t.familyMemberId === filterMember);
-      }
-
-      // 5. Filter by Date
+      // 4. Filter by Date
       if (filterDate) {
         const dayStart = startOfDay(filterDate);
-        const dayEnd = endOfMonth(filterDate);
         filteredBySearch = filteredBySearch.filter(t => {
           const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
           return startOfDay(transactionDate).getTime() === dayStart.getTime();
@@ -166,7 +151,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
       setSortedTransactions(newSorted);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions, selectedPeriod, searchTerm, user, filterType, filterMember, filterDate]);
+  }, [transactions, selectedPeriod, searchTerm, user, filterType, filterDate]);
 
   const handleDelete = () => {
     if (transactionToDelete) {
@@ -287,17 +272,6 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                         <SelectItem value="income">Дохід</SelectItem>
                         <SelectItem value="expense">Витрата</SelectItem>
                         <SelectItem value="credit">Кредит</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select value={filterMember} onValueChange={setFilterMember}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Член сім'ї" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Всі члени сім'ї</SelectItem>
-                        {familyMembers?.map(member => (
-                            <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
-                        ))}
                     </SelectContent>
                 </Select>
                 <Popover>
