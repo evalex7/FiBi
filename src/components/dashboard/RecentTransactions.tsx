@@ -39,7 +39,7 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useCategories } from '@/contexts/categories-context';
 import TransactionUserAvatar from './TransactionUserAvatar';
 import { Input } from '../ui/input';
@@ -47,6 +47,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
+import { collection } from 'firebase/firestore';
+
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
 
