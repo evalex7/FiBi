@@ -571,7 +571,13 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
         <CardDescription>
           Розбивка ваших витрат за обраний період.
         </CardDescription>
-        <div className="pt-2 flex flex-wrap gap-2 items-center">
+        <div className="pt-2 flex items-center gap-2">
+          <Tabs value={categoryChartType} onValueChange={(value) => setCategoryChartType(value as any)}>
+            <TabsList>
+                <TabsTrigger value="pie" className="px-2 sm:px-3"><PieChartIcon className="h-4 w-4" /></TabsTrigger>
+                <TabsTrigger value="bar" className="px-2 sm:px-3"><BarChartBig className="h-4 w-4" /></TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Select value={categoryPeriod} onValueChange={setCategoryPeriod}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Оберіть період" />
@@ -582,12 +588,6 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
               <SelectItem value="prev_month">Попередній місяць</SelectItem>
             </SelectContent>
           </Select>
-          <Tabs value={categoryChartType} onValueChange={(value) => setCategoryChartType(value as any)}>
-            <TabsList>
-                <TabsTrigger value="pie" className="px-2 sm:px-3"><PieChartIcon className="h-4 w-4" /></TabsTrigger>
-                <TabsTrigger value="bar" className="px-2 sm:px-3"><BarChartBig className="h-4 w-4" /></TabsTrigger>
-            </TabsList>
-          </Tabs>
         </div>
       </CardHeader>
       <CardContent className="flex items-center justify-center">
