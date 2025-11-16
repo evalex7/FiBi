@@ -690,13 +690,11 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
                                 </div>
                             )} />}
                         />
-                         {categoryData.map((entry, index) => (
-                            <Bar key={entry.name} dataKey="value" name={entry.name} fill={pieChartConfig[entry.name]?.color} radius={4}>
-                                 {categoryData.map((cellEntry) => (
-                                    <Cell key={`cell-${cellEntry.name}`} fill={pieChartConfig[cellEntry.name]?.color} />
-                                ))}
-                            </Bar>
-                        ))}
+                        <Bar dataKey="value" radius={4}>
+                            {categoryData.map((entry) => (
+                                <Cell key={`cell-bar-${entry.name}`} fill={pieChartConfig[entry.name]?.color} />
+                            ))}
+                        </Bar>
                     </BarChart>
                 </ResponsiveContainer>
             </ChartContainer>
