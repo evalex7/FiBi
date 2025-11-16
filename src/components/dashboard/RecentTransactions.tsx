@@ -13,11 +13,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { categoryIcons } from '@/lib/category-icons';
 import { cn } from '@/lib/utils';
-import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, parseISO, startOfDay } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { useTransactions } from '@/contexts/transactions-context';
 import { Button } from '../ui/button';
-import { MoreHorizontal, Pencil, Trash2, Copy, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Copy, PlusCircle, Calendar as CalendarIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +27,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import TransactionForm from './TransactionForm';
 
-import type { Transaction } from '@/lib/types';
+import type { Transaction, FamilyMember } from '@/lib/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,11 +39,15 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useCategories } from '@/contexts/categories-context';
 import TransactionUserAvatar from './TransactionUserAvatar';
 import { Input } from '../ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { collection } from 'firebase/firestore';
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
 
@@ -56,13 +60,26 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   const { transactions, deleteTransaction, isLoading } = useTransactions();
   const { categories } = useCategories();
   const { user } = useUser();
+  const firestore = useFirestore();
   const isMobile = useIsMobile();
+  
+  const usersCollectionRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
+  
+  const { data: familyMembers } = useCollection<FamilyMember>(usersCollectionRef);
 
   const [sortedTransactions, setSortedTransactions] = useState<FormattedTransaction[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [transactionToCopy, setTransactionToCopy] = useState<Transaction | null>(null);
+  
+  // Filter states
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [filterMember, setFilterMember] = useState('all');
+  const [filterDate, setFilterDate] = useState<Date | undefined>();
 
   const canEditOrDelete = (transaction: Transaction) => {
     return transaction.familyMemberId === user?.uid;
@@ -95,9 +112,10 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
     };
 
     if (transactions) {
-      const formatted = transactions.map(t => ({ ...t, formattedAmount: formatCurrency(t.amount) }));
+      let formatted = transactions.map(t => ({ ...t, formattedAmount: formatCurrency(t.amount) }));
 
-      const filteredByPeriod = formatted.filter(t => {
+      // 1. Filter by Period (Month or All)
+      let filteredByPeriod = formatted.filter(t => {
         if (selectedPeriod === 'all') return true;
         
         const periodDate = parseISO(`${selectedPeriod}-01`);
@@ -108,10 +126,36 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
         return transactionDate >= periodStart && transactionDate <= periodEnd;
       });
 
-      const filteredBySearch = filteredByPeriod.filter(t => {
+      // 2. Filter by Search Term
+      let filteredBySearch = filteredByPeriod.filter(t => {
         const { description } = getTransactionInfo(t);
         return description.toLowerCase().includes(searchTerm.toLowerCase())
       });
+
+      // 3. Filter by Type
+      if (filterType !== 'all') {
+        if (filterType === 'credit') {
+            filteredBySearch = filteredBySearch.filter(t => t.type === 'credit_purchase' || t.type === 'credit_payment');
+        } else {
+            filteredBySearch = filteredBySearch.filter(t => t.type === filterType);
+        }
+      }
+
+      // 4. Filter by Member
+      if (filterMember !== 'all') {
+        filteredBySearch = filteredBySearch.filter(t => t.familyMemberId === filterMember);
+      }
+
+      // 5. Filter by Date
+      if (filterDate) {
+        const dayStart = startOfDay(filterDate);
+        const dayEnd = endOfMonth(filterDate);
+        filteredBySearch = filteredBySearch.filter(t => {
+          const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
+          return startOfDay(transactionDate).getTime() === dayStart.getTime();
+        });
+      }
+
 
       const newSorted = [...filteredBySearch]
         .sort((a, b) => {
@@ -122,7 +166,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
       setSortedTransactions(newSorted);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions, selectedPeriod, searchTerm, user]);
+  }, [transactions, selectedPeriod, searchTerm, user, filterType, filterMember, filterDate]);
 
   const handleDelete = () => {
     if (transactionToDelete) {
@@ -227,12 +271,62 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                 </Button>
              )}
         </div>
-        <div className="pt-4">
+        <div className="pt-4 space-y-2">
             <Input 
                 placeholder="Пошук за описом..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <div className="flex flex-col sm:flex-row gap-2">
+                <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Тип" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Всі типи</SelectItem>
+                        <SelectItem value="income">Дохід</SelectItem>
+                        <SelectItem value="expense">Витрата</SelectItem>
+                        <SelectItem value="credit">Кредит</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Select value={filterMember} onValueChange={setFilterMember}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Член сім'ї" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Всі члени сім'ї</SelectItem>
+                        {familyMembers?.map(member => (
+                            <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                        variant={'outline'}
+                        className={cn(
+                            'w-full justify-start text-left font-normal',
+                            !filterDate && 'text-muted-foreground'
+                        )}
+                        >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {filterDate ? format(filterDate, 'PPP', { locale: uk }) : <span>Фільтр по даті</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            mode="single"
+                            selected={filterDate}
+                            onSelect={setFilterDate}
+                            initialFocus
+                            locale={uk}
+                        />
+                         <div className="p-2 border-t">
+                            <Button variant="ghost" className="w-full" onClick={() => setFilterDate(undefined)}>Очистити</Button>
+                        </div>
+                    </PopoverContent>
+                </Popover>
+            </div>
         </div>
       </CardHeader>
       <CardContent>
