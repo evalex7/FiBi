@@ -116,6 +116,7 @@ export default function ReportsPage() {
 
   const [period, setPeriod] = useState('0');
   const [categoryPeriod, setCategoryPeriod] = useState('all');
+  const [categoryChartType, setCategoryChartType] = useState<'pie' | 'bar'>('pie');
   const [trendPeriod, setTrendPeriod] = useState('daily');
   const [categoryTrendPeriod, setCategoryTrendPeriod] = useState('last_6_months');
   const [activeTooltip, setActiveTooltip] = useState<CustomTooltipPayload | null>(null);
@@ -569,7 +570,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
         <CardDescription>
           Розбивка ваших витрат за обраний період.
         </CardDescription>
-        <div className="pt-2 flex flex-wrap gap-2">
+        <div className="pt-2 flex flex-wrap gap-2 items-center">
           <Select value={categoryPeriod} onValueChange={setCategoryPeriod}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Оберіть період" />
@@ -580,6 +581,12 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
               <SelectItem value="prev_month">Попередній місяць</SelectItem>
             </SelectContent>
           </Select>
+          <Tabs value={categoryChartType} onValueChange={(value) => setCategoryChartType(value as any)}>
+            <TabsList>
+                <TabsTrigger value="pie">Круговий</TabsTrigger>
+                <TabsTrigger value="bar">Стовпчастий</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       </CardHeader>
       <CardContent className="flex items-center justify-center">
@@ -587,7 +594,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
             <div className="text-center text-muted-foreground py-8">
             Немає даних про витрати для відображення.
           </div>
-        ) : (
+        ) : categoryChartType === 'pie' ? (
           <ChartContainer config={pieChartConfig} className="w-full h-[450px] flex flex-col items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -653,6 +660,45 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
               </PieChart>
             </ResponsiveContainer>
           </ChartContainer>
+        ) : (
+            <ChartContainer config={pieChartConfig} className="h-[450px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                        data={categoryData}
+                        layout="vertical"
+                        margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
+                    >
+                        <XAxis type="number" hide />
+                        <YAxis
+                            dataKey="name"
+                            type="category"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={10}
+                            width={120}
+                            fontSize={12}
+                        />
+                        <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent formatter={(value, name) => (
+                                <div className="flex items-center gap-2">
+                                <div className="flex flex-1 justify-between">
+                                    <span className="text-muted-foreground">{pieChartConfig[name as keyof typeof pieChartConfig]?.label}</span>
+                                    <span className="font-bold">{formatCurrencyTooltip(value as number)}</span>
+                                </div>
+                                </div>
+                            )} />}
+                        />
+                         {categoryData.map((entry, index) => (
+                            <Bar key={entry.name} dataKey="value" name={entry.name} fill={pieChartConfig[entry.name]?.color} radius={4}>
+                                 {categoryData.map((cellEntry) => (
+                                    <Cell key={`cell-${cellEntry.name}`} fill={pieChartConfig[cellEntry.name]?.color} />
+                                ))}
+                            </Bar>
+                        ))}
+                    </BarChart>
+                </ResponsiveContainer>
+            </ChartContainer>
         )}
       </CardContent>
     </Card>
