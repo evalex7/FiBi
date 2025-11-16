@@ -53,7 +53,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSettings } from '@/contexts/settings-context';
-import { FileWarning } from 'lucide-react';
+import { FileWarning, PieChart as PieChartIcon, BarChartBig } from 'lucide-react';
 
 const formatCurrency = (amount: number) => {
   if (amount >= 1000) {
@@ -584,8 +584,8 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
           </Select>
           <Tabs value={categoryChartType} onValueChange={(value) => setCategoryChartType(value as any)}>
             <TabsList>
-                <TabsTrigger value="pie">Круговий</TabsTrigger>
-                <TabsTrigger value="bar">Стовпчастий</TabsTrigger>
+                <TabsTrigger value="pie" className="px-2 sm:px-3"><PieChartIcon className="h-4 w-4" /></TabsTrigger>
+                <TabsTrigger value="bar" className="px-2 sm:px-3"><BarChartBig className="h-4 w-4" /></TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -691,7 +691,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
                             )} />}
                         />
                         <Bar dataKey="value" radius={4}>
-                            {categoryData.map((entry) => (
+                            {[...categoryData].sort((a, b) => a.value - b.value).map((entry) => (
                                 <Cell key={`cell-bar-${entry.name}`} fill={pieChartConfig[entry.name]?.color} />
                             ))}
                         </Bar>
