@@ -46,7 +46,7 @@ import { Input } from '../ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { collection } from 'firebase/firestore';
+import { Calendar } from '../ui/calendar';
 
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
