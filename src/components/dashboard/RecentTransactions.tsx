@@ -46,7 +46,6 @@ import { Input } from '../ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { Calendar } from '../ui/calendar';
 import { collection } from 'firebase/firestore';
 
 
@@ -61,7 +60,6 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   const { transactions, deleteTransaction, isLoading } = useTransactions();
   const { categories } = useCategories();
   const { user } = useUser();
-  const firestore = useFirestore();
   const isMobile = useIsMobile();
   
   const [sortedTransactions, setSortedTransactions] = useState<FormattedTransaction[]>([]);
