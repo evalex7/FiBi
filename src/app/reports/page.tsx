@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -664,7 +665,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
             <ChartContainer config={pieChartConfig} className="h-[450px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                        data={categoryData}
+                        data={[...categoryData].sort((a, b) => a.value - b.value)}
                         layout="vertical"
                         margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
                     >
