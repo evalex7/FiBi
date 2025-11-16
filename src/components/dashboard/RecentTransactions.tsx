@@ -71,7 +71,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
   const [filterDate, setFilterDate] = useState<Date | undefined>();
 
   const canEditOrDelete = (transaction: Transaction) => {
@@ -125,13 +125,9 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
         return description.toLowerCase().includes(searchTerm.toLowerCase())
       });
 
-      // 3. Filter by Type
-      if (filterType !== 'all') {
-        if (filterType === 'credit') {
-            filteredBySearch = filteredBySearch.filter(t => t.type === 'credit_purchase' || t.type === 'credit_payment');
-        } else {
-            filteredBySearch = filteredBySearch.filter(t => t.type === filterType);
-        }
+      // 3. Filter by Category
+      if (filterCategory !== 'all') {
+        filteredBySearch = filteredBySearch.filter(t => t.category === filterCategory);
       }
 
       // 4. Filter by Date
@@ -153,7 +149,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
       setSortedTransactions(newSorted);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions, selectedPeriod, searchTerm, user, filterType, filterDate]);
+  }, [transactions, selectedPeriod, searchTerm, user, filterCategory, filterDate]);
 
   const handleDelete = () => {
     if (transactionToDelete) {
@@ -265,15 +261,15 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
             <div className="flex flex-col sm:flex-row gap-2">
-                <Select value={filterType} onValueChange={setFilterType}>
+                <Select value={filterCategory} onValueChange={setFilterCategory}>
                     <SelectTrigger>
-                        <SelectValue placeholder="Тип" />
+                        <SelectValue placeholder="Категорія" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">Всі типи</SelectItem>
-                        <SelectItem value="income">Дохід</SelectItem>
-                        <SelectItem value="expense">Витрата</SelectItem>
-                        <SelectItem value="credit">Кредит</SelectItem>
+                        <SelectItem value="all">Всі категорії</SelectItem>
+                        {categories.sort((a, b) => a.name.localeCompare(b.name)).map(cat => (
+                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
                 <Popover>
