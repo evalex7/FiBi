@@ -15,6 +15,7 @@ import { CreditProvider } from '@/contexts/credit-context';
 export const metadata: Metadata = {
   title: 'Сімейні фінанси',
   description: 'Простий спосіб керувати сімейним бюджетом.',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -31,6 +32,8 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap"
           rel="stylesheet"
         />
+        <meta name="theme-color" content="#2563eb" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body
         className={cn(
