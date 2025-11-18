@@ -65,7 +65,6 @@ export const defaultCategories: Omit<Category, 'id'| 'familyMemberId'>[] = [
   { name: 'Інше', icon: 'CircleDollarSign', type: 'expense', order: 13 },
   { name: 'Зарплата', icon: 'Landmark', type: 'income', order: 14 },
   { name: 'Інвестиції', icon: 'TrendingUp', type: 'income', order: 15 },
-  { name: 'Інше (дохід)', icon: 'CircleDollarSign', type: 'income', order: 17 },
-  { name: 'Погашення кредиту', icon: 'Banknote', type: 'credit', order: 18 },
-  { name: 'Кредитні покупки', icon: 'ShoppingCart', type: 'credit', order: 19 },
+  { name: 'Погашення кредиту', icon: 'Banknote', type: 'credit', order: 16 },
+  { name: 'Кредитні покупки', icon: 'ShoppingCart', type: 'credit', order: 17 },
 ];
