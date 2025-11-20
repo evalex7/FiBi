@@ -29,12 +29,9 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const [formattedIncome, setFormattedIncome] = useState('0,00 ₴');
   const [formattedExpenses, setFormattedExpenses] = useState('0,00 ₴');
   
-  const [ownFunds, setOwnFunds] = useState(0);
   const [formattedOwnFunds, setFormattedOwnFunds] = useState('0,00 ₴');
-
   const [formattedCreditUsed, setFormattedCreditUsed] = useState('0,00 ₴');
   const [formattedCreditLimit, setFormattedCreditLimit] = useState('0,00 ₴');
-
   const [netBalance, setNetBalance] = useState(0);
   const [formattedNetBalance, setFormattedNetBalance] = useState('0,00 ₴');
   
@@ -75,28 +72,18 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     
     const balance = income - expenses;
     
-    let currentOwnFunds = 0;
-    let usedCredit = 0;
-
-    if (balance >= 0) {
-        currentOwnFunds = balance;
-        usedCredit = 0;
-    } else {
-        currentOwnFunds = 0;
-        usedCredit = Math.abs(balance);
-    }
+    const ownFunds = Math.max(0, balance);
+    const creditUsed = Math.max(0, -balance);
+    const totalAvailable = ownFunds + (creditLimit - creditUsed);
     
-    const finalNetBalance = income - (expenses + creditLimit);
-    setNetBalance(finalNetBalance);
-    setFormattedNetBalance(formatCurrency(finalNetBalance));
+    setNetBalance(totalAvailable);
+    setFormattedNetBalance(formatCurrency(totalAvailable));
 
     setFormattedIncome(formatCurrency(income));
     setFormattedExpenses(formatCurrency(expenses));
     
-    setOwnFunds(currentOwnFunds);
-    setFormattedOwnFunds(formatCurrency(currentOwnFunds));
-
-    setFormattedCreditUsed(formatCurrency(usedCredit));
+    setFormattedOwnFunds(formatCurrency(ownFunds));
+    setFormattedCreditUsed(formatCurrency(creditUsed));
     setFormattedCreditLimit(formatCurrency(creditLimit));
 
   }, [transactions, selectedPeriod, creditLimit, isLoading]);
@@ -142,28 +129,24 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
        <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-10 flex items-center">Загальний залишок</CardTitle>
+          <CardTitle className="text-xs font-medium h-10 flex items-center">Власні кошти</CardTitle>
           <Scale className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className={cn(
-            "text-xl font-bold",
-            ownFunds > 0 ? "text-green-600" : "text-foreground",
-            )}
-          >
+          <div className={cn("text-xl font-bold text-green-600")}>
             {formattedOwnFunds}
           </div>
         </CardContent>
       </Card>
       <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-10 flex items-center">Чистий баланс</CardTitle>
+          <CardTitle className="text-xs font-medium h-10 flex items-center">Загальний баланс</CardTitle>
           <Briefcase className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
           <div className={cn(
             "text-xl font-bold",
-            netBalance > 0 && "text-green-600",
+            netBalance >= 0 && "text-green-600",
             netBalance < 0 && "text-red-600"
             )}
           >
