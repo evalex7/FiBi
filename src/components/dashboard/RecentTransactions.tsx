@@ -224,9 +224,9 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
       case 'expense':
         return 'text-red-600';
       case 'credit_purchase':
-        return 'text-orange-500';
+        return 'text-blue-600';
       case 'credit_payment':
-        return 'text-orange-500';
+        return 'text-blue-600';
       default:
         return 'text-foreground';
     }
