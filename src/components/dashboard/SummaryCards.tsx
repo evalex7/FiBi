@@ -70,10 +70,8 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       { income: 0, expenses: 0 }
     );
     
-    const balance = income - expenses;
-    
-    const ownFunds = Math.max(0, balance);
-    const creditUsed = Math.max(0, -balance);
+    const ownFunds = Math.max(0, income - creditLimit - expenses);
+    const creditUsed = Math.max(0, expenses - Math.max(0, income - creditLimit));
     const totalAvailable = ownFunds + (creditLimit - creditUsed);
     
     setNetBalance(totalAvailable);
