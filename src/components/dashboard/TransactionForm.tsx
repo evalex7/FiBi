@@ -132,10 +132,15 @@ export default function TransactionForm({
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     
   useEffect(() => {
-    if (!categories.find(c => c.name === category)) {
+    // Only reset category if it's not present in the new list of categories for the selected type
+    if (category && !categories.find(c => c.name === category)) {
       setCategory('');
     }
-  }, [uiType, categories, category]);
+  // This dependency array is correct. We only want this effect to run when `uiType` changes,
+  // which in turn changes the `categories` array. We don't want to run it when `category` itself changes,
+  // as that would cause a loop or unintended resets.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uiType, categories]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
