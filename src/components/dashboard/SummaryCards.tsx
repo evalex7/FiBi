@@ -95,7 +95,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   return (
     <div className="grid gap-2 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <Card className="p-2">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-0">
           <CardTitle className="text-xs font-medium h-10 flex items-center">Дохід</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -104,7 +104,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
         </CardContent>
       </Card>
       <Card className="p-2">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-0">
           <CardTitle className="text-xs font-medium h-10 flex items-center">Витрати</CardTitle>
           <TrendingDown className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -113,7 +113,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
         </CardContent>
       </Card>
       <Card className="p-2">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-0">
           <CardTitle className="text-xs font-medium h-10 flex items-center">Кредитний ліміт</CardTitle>
           <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -122,7 +122,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
         </CardContent>
       </Card>
       <Card className="p-2">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-0">
           <CardTitle className="text-xs font-medium h-10 flex items-center">Використано кредиту</CardTitle>
           <CreditCard className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -131,7 +131,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
         </CardContent>
       </Card>
        <Card className="p-2">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-0">
           <CardTitle className="text-xs font-medium h-10 flex items-center">Власні кошти</CardTitle>
           <Scale className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -142,7 +142,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
         </CardContent>
       </Card>
       <Card className="p-2">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-0">
           <CardTitle className="text-xs font-medium h-10 flex items-center">Загальний баланс</CardTitle>
           <Briefcase className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
