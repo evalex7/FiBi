@@ -10,7 +10,6 @@ import { CategoriesProvider } from '@/contexts/categories-context';
 import { AppThemeProvider } from '@/components/AppThemeProvider';
 import { SettingsProvider } from '@/contexts/settings-context';
 import ThemeSync from '@/components/ThemeSync';
-import { CreditProvider } from '@/contexts/credit-context';
 
 export const metadata: Metadata = {
   title: 'Сімейні фінанси',
@@ -54,11 +53,9 @@ export default function RootLayout({
               <CategoriesProvider>
                 <PaymentsProvider>
                   <TransactionsProvider>
-                    <CreditProvider>
-                      <BudgetsProvider>
-                        {children}
-                      </BudgetsProvider>
-                    </CreditProvider>
+                    <BudgetsProvider>
+                      {children}
+                    </BudgetsProvider>
                   </TransactionsProvider>
                 </PaymentsProvider>
               </CategoriesProvider>
