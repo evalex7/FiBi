@@ -130,6 +130,12 @@ export default function TransactionForm({
   const categories = availableCategories
     .filter((c) => c.type === categoryTypeMap[uiType])
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    
+  useEffect(() => {
+    if (!categories.find(c => c.name === category)) {
+      setCategory('');
+    }
+  }, [uiType, categories, category]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,7 +224,6 @@ export default function TransactionForm({
               value={uiType}
               onValueChange={(value: UiTransactionType) => {
                 setUiType(value);
-                setCategory(''); // Reset category when type changes
               }}
             >
               <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
