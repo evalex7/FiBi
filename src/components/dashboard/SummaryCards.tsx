@@ -96,7 +96,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     <div className="grid gap-2 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-8">Дохід</CardTitle>
+          <CardTitle className="text-xs font-medium h-10 flex items-center">Дохід</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
@@ -105,7 +105,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
       <Card className="p-2">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <CardTitle className="text-xs font-medium h-8">Витрати</CardTitle>
+          <CardTitle className="text-xs font-medium h-10 flex items-center">Витрати</CardTitle>
           <TrendingDown className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
