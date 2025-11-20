@@ -82,45 +82,6 @@ export default function TransactionForm({
       return uiType;
   }
 
-  useEffect(() => {
-    const valuesToSet = transaction || initialValues;
-    if (valuesToSet) {
-        if (valuesToSet.type === 'credit_purchase' || valuesToSet.type === 'credit_payment') {
-            setUiType('credit');
-            setCreditAction(valuesToSet.type === 'credit_payment' ? 'payment' : 'purchase');
-        } else {
-            setUiType(valuesToSet.type || 'expense');
-        }
-
-      setAmount(String(valuesToSet.amount || ''));
-      setDescription(valuesToSet.description || '');
-      setCategory(valuesToSet.category || '');
-      setIsPrivate(valuesToSet.isPrivate || false);
-
-      let transactionDate;
-      if (valuesToSet.date) {
-        transactionDate =
-          valuesToSet.date instanceof Timestamp
-            ? valuesToSet.date.toDate()
-            : new Date(valuesToSet.date as any);
-      }
-
-      if (isCopy) {
-        setDate(new Date());
-      } else {
-        setDate(transactionDate || new Date());
-      }
-    } else {
-      setUiType('expense');
-      setCreditAction('purchase');
-      setAmount('');
-      setDescription('');
-      setCategory('');
-      setIsPrivate(false);
-      setDate(new Date());
-    }
-  }, [transaction, initialValues, isCopy]);
-  
   const categoryTypeMap: Record<UiTransactionType, 'income' | 'expense' | 'credit'> = {
     income: 'income',
     expense: 'expense',
@@ -131,16 +92,62 @@ export default function TransactionForm({
     .filter((c) => c.type === categoryTypeMap[uiType])
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     
+  // This effect handles the initial population of the form
   useEffect(() => {
-    // Only reset category if it's not present in the new list of categories for the selected type
-    if (category && !categories.find(c => c.name === category)) {
+    const valuesToSet = transaction || initialValues;
+
+    if (valuesToSet) {
+      // Determine UI type from transaction type
+      let initialUiType: UiTransactionType = 'expense';
+      if (valuesToSet.type === 'credit_purchase' || valuesToSet.type === 'credit_payment') {
+        initialUiType = 'credit';
+        setCreditAction(valuesToSet.type === 'credit_payment' ? 'payment' : 'purchase');
+      } else if (valuesToSet.type) {
+        initialUiType = valuesToSet.type;
+      }
+      setUiType(initialUiType);
+      
+      // Set simple values
+      setAmount(String(valuesToSet.amount || ''));
+      setDescription(valuesToSet.description || '');
+      setIsPrivate(valuesToSet.isPrivate || false);
+
+      // Set date
+      let transactionDate;
+      if (valuesToSet.date) {
+        transactionDate = valuesToSet.date instanceof Timestamp
+            ? valuesToSet.date.toDate()
+            : new Date(valuesToSet.date as any);
+      }
+      setDate(isCopy ? new Date() : transactionDate || new Date());
+      
+      // Set category *after* uiType is set and categories are filtered
+      setCategory(valuesToSet.category || '');
+
+    } else {
+      // Reset form for new transaction
+      setUiType('expense');
+      setCreditAction('purchase');
+      setAmount('');
+      setDescription('');
+      setCategory('');
+      setIsPrivate(false);
+      setDate(new Date());
+    }
+  }, [transaction, initialValues, isCopy]);
+
+  // This effect handles resetting the category ONLY when the type changes
+  useEffect(() => {
+    // Don't run on initial load when `transaction` is present
+    if (isEditMode && transaction?.type === uiType) return;
+    
+    if (category && !categories.some(c => c.name === category)) {
       setCategory('');
     }
-  // This dependency array is correct. We only want this effect to run when `uiType` changes,
-  // which in turn changes the `categories` array. We don't want to run it when `category` itself changes,
-  // as that would cause a loop or unintended resets.
+  // We only want this to run when uiType (and thus `categories`) changes.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uiType, categories]);
+  }, [uiType]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
