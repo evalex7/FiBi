@@ -92,27 +92,25 @@ export default function TransactionForm({
     .filter((c) => c.type === categoryTypeMap[uiType])
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     
-  // This effect handles the initial population of the form
+  // Effect to initialize the form state
   useEffect(() => {
     const valuesToSet = transaction || initialValues;
 
     if (valuesToSet) {
-      // Determine UI type from transaction type
+      // Step 1: Set simple values and determine the UI type
       let initialUiType: UiTransactionType = 'expense';
       if (valuesToSet.type === 'credit_purchase' || valuesToSet.type === 'credit_payment') {
         initialUiType = 'credit';
         setCreditAction(valuesToSet.type === 'credit_payment' ? 'payment' : 'purchase');
       } else if (valuesToSet.type) {
-        initialUiType = valuesToSet.type;
+        initialUiType = valuesToSet.type as UiTransactionType; // Ensure type is valid
       }
       setUiType(initialUiType);
-      
-      // Set simple values
+
       setAmount(String(valuesToSet.amount || ''));
       setDescription(valuesToSet.description || '');
       setIsPrivate(valuesToSet.isPrivate || false);
 
-      // Set date
       let transactionDate;
       if (valuesToSet.date) {
         transactionDate = valuesToSet.date instanceof Timestamp
@@ -121,11 +119,9 @@ export default function TransactionForm({
       }
       setDate(isCopy ? new Date() : transactionDate || new Date());
       
-      // Set category *after* uiType is set and categories are filtered
-      setCategory(valuesToSet.category || '');
-
+      // The category will be set in a separate effect that depends on uiType
     } else {
-      // Reset form for new transaction
+      // Reset form for a completely new transaction
       setUiType('expense');
       setCreditAction('purchase');
       setAmount('');
@@ -136,17 +132,22 @@ export default function TransactionForm({
     }
   }, [transaction, initialValues, isCopy]);
 
-  // This effect handles resetting the category ONLY when the type changes
+  // Effect to set the category *after* the uiType has been established
   useEffect(() => {
-    // Don't run on initial load when `transaction` is present
-    if (isEditMode && transaction?.type === uiType) return;
-    
-    if (category && !categories.some(c => c.name === category)) {
-      setCategory('');
+    const valuesToSet = transaction || initialValues;
+    if (valuesToSet && valuesToSet.category) {
+        // Find the category in the now-filtered list of categories for the current uiType
+        const categoryExists = categories.some(c => c.name === valuesToSet.category);
+        if (categoryExists) {
+            setCategory(valuesToSet.category);
+        } else {
+            setCategory(''); // Reset if the category is not valid for the current type
+        }
+    } else {
+       setCategory(''); // Reset for new transactions
     }
-  // We only want this to run when uiType (and thus `categories`) changes.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uiType]);
+  }, [uiType, transaction, initialValues, categories]);
+
 
 
   const handleSubmit = (e: React.FormEvent) => {
