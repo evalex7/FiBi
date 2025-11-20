@@ -46,7 +46,6 @@ import { Input } from '../ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { Calendar } from '../ui/calendar';
 
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
@@ -258,7 +257,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex w-full flex-row gap-2">
                 <Select value={filterCategory} onValueChange={setFilterCategory}>
                     <SelectTrigger>
                         <SelectValue placeholder="Категорія" />
