@@ -259,43 +259,47 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
             <div className="flex w-full flex-row gap-2">
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Категорія" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Всі категорії</SelectItem>
-                        {categories.sort((a, b) => a.name.localeCompare(b.name)).map(cat => (
-                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                        variant={'outline'}
-                        className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !filterDate && 'text-muted-foreground'
-                        )}
-                        >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filterDate ? format(filterDate, 'PPP', { locale: uk }) : <span>Фільтр по даті</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={filterDate}
-                            onSelect={setFilterDate}
-                            initialFocus
-                            locale={uk}
-                        />
-                         <div className="p-2 border-t">
-                            <Button variant="ghost" className="w-full" onClick={() => setFilterDate(undefined)}>Очистити</Button>
-                        </div>
-                    </PopoverContent>
-                </Popover>
+                <div className="w-1/2">
+                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Категорія" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Всі категорії</SelectItem>
+                            {categories.sort((a, b) => a.name.localeCompare(b.name)).map(cat => (
+                                <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="w-1/2">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant={'outline'}
+                            className={cn(
+                                'w-full justify-start text-left font-normal',
+                                !filterDate && 'text-muted-foreground'
+                            )}
+                            >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filterDate ? format(filterDate, 'PPP', { locale: uk }) : <span>Фільтр по даті</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                mode="single"
+                                selected={filterDate}
+                                onSelect={setFilterDate}
+                                initialFocus
+                                locale={uk}
+                            />
+                            <div className="p-2 border-t">
+                                <Button variant="ghost" className="w-full" onClick={() => setFilterDate(undefined)}>Очистити</Button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                </div>
             </div>
         </div>
       </CardHeader>
