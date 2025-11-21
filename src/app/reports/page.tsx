@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import {
@@ -73,7 +71,7 @@ const formatCurrencyTooltip = (amount: number) => {
 
 const barChartConfig = {
   income: { label: 'Дохід', color: 'hsl(var(--chart-2))' },
-  credit: { label: 'Кредит', color: 'hsl(27, 87%, 67%)' }, // Orange
+  credit: { label: 'Кредит', color: 'hsl(27, 87%, 67%)' },
   expenses: { label: 'Витрати', color: 'hsl(var(--chart-1))' },
   value: { label: 'Сума' },
 } satisfies ChartConfig;
@@ -216,17 +214,14 @@ export default function ReportsPage() {
     const expenses = transactionsInPeriod
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
-    
-    const creditOffset = income - credit;
 
-    return [{ 
-      name: 'Дохід', 
-      income: income, 
-      credit: credit,
-      creditOffset: creditOffset > 0 ? creditOffset : 0, // Ensure offset is not negative
-    }, { 
-      name: 'Витрати', 
-      expenses: expenses 
+    return [{
+      name: 'Дохід',
+      income: income,
+      credit: credit
+    }, {
+      name: 'Витрати',
+      expenses: expenses
     }];
 
   }, [filteredTransactions, period, isLoading, earliestTransactionDate]);
@@ -561,9 +556,9 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
                     return null;
                   }}
                 />
-                <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={80} onMouseOver={() => setBarChartHover('income')} />
-                <Bar dataKey="credit" stackId="incomeCredit" fill="var(--color-credit)" maxBarSize={80} onMouseOver={() => setBarChartHover('credit')} />
-                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={80} onMouseOver={() => setBarChartHover('expenses')} />
+                <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={80} onMouseOver={() => setBarChartHover('income')} barSize={80} />
+                <Bar dataKey="credit" fill="var(--color-credit)" radius={4} maxBarSize={80} onMouseOver={() => setBarChartHover('credit')} barSize={80} y={ (props) => { const y_income = props.background.height - (props.height || 0); return y_income; } } />
+                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={80} onMouseOver={() => setBarChartHover('expenses')} barSize={80} />
                 <ChartLegend content={<ChartLegendContent />} />
             </BarChart>
           </ResponsiveContainer>
