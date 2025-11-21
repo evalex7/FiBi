@@ -62,18 +62,38 @@ export default function TransactionForm({
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  const [uiType, setUiType] = useState<UiTransactionType>('expense');
-  const [creditAction, setCreditAction] = useState<'purchase' | 'payment'>('purchase');
+  const isEditMode = !!transaction && !isCopy;
+  const valuesToSet = isEditMode ? transaction : initialValues;
 
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [isPrivate, setIsPrivate] = useState(false);
+  const getInitialUiType = () => {
+    const type = valuesToSet?.type;
+    if (type === 'credit_purchase' || type === 'credit_payment') {
+      return 'credit';
+    }
+    return (type as UiTransactionType) || 'expense';
+  };
+  
+  const [uiType, setUiType] = useState<UiTransactionType>(getInitialUiType());
+  const [creditAction, setCreditAction] = useState<'purchase' | 'payment'>(
+    valuesToSet?.type === 'credit_payment' ? 'payment' : 'purchase'
+  );
+
+  const [date, setDate] = useState<Date | undefined>(
+      valuesToSet?.date instanceof Timestamp ? valuesToSet.date.toDate() : (valuesToSet?.date ? new Date(valuesToSet.date as any) : new Date())
+  );
+  const [amount, setAmount] = useState(String(valuesToSet?.amount || ''));
+  const [description, setDescription] = useState(valuesToSet?.description || '');
+  const [category, setCategory] = useState(valuesToSet?.category || '');
+  const [isPrivate, setIsPrivate] = useState(valuesToSet?.isPrivate || false);
+  
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const isEditMode = !!transaction && !isCopy;
+  useEffect(() => {
+    // Only reset category for NEW transactions when type changes
+    if (isEditMode || isCopy) return;
+    setCategory('');
+  }, [uiType, isEditMode, isCopy]);
   
   const getFinalTransactionType = (): Transaction['type'] => {
       if (uiType === 'credit') {
@@ -91,54 +111,6 @@ export default function TransactionForm({
   const categories = availableCategories
     .filter((c) => c.type === categoryTypeMap[uiType])
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    
-  // Effect to initialize the form state
-  useEffect(() => {
-    const valuesToSet = transaction || initialValues;
-
-    if (valuesToSet) {
-      let initialUiType: UiTransactionType = 'expense';
-      if (valuesToSet.type === 'credit_purchase' || valuesToSet.type === 'credit_payment') {
-        initialUiType = 'credit';
-        setCreditAction(valuesToSet.type === 'credit_payment' ? 'payment' : 'purchase');
-      } else if (valuesToSet.type) {
-        initialUiType = valuesToSet.type as UiTransactionType;
-      }
-      setUiType(initialUiType);
-      
-      setCategory(valuesToSet.category || '');
-      setAmount(String(valuesToSet.amount || ''));
-      setDescription(valuesToSet.description || '');
-      setIsPrivate(valuesToSet.isPrivate || false);
-
-      let transactionDate;
-      if (valuesToSet.date) {
-        transactionDate = valuesToSet.date instanceof Timestamp
-            ? valuesToSet.date.toDate()
-            : new Date(valuesToSet.date as any);
-      }
-      setDate(isCopy ? new Date() : transactionDate || new Date());
-    } else {
-      // Reset form for a completely new transaction
-      setUiType('expense');
-      setCreditAction('purchase');
-      setAmount('');
-      setDescription('');
-      setCategory('');
-      setIsPrivate(false);
-      setDate(new Date());
-    }
-  }, [transaction, initialValues, isCopy]);
-
-  // Effect to handle category reset when UI type changes
-  useEffect(() => {
-    // In edit mode, we don't want to clear the category when type changes
-    if (isEditMode) return;
-  
-    // For new or copied transactions, reset the category when the type changes
-    setCategory('');
-  }, [uiType, isEditMode]);
-
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -393,7 +365,7 @@ export default function TransactionForm({
         {uiType !== 'credit' && (
             <div className="grid gap-2">
             <Label htmlFor="category">Категорія</Label>
-            <Select required value={category} onValueChange={setCategory}>
+            <Select required={uiType !== 'credit'} value={category} onValueChange={setCategory}>
                 <SelectTrigger>
                 <SelectValue placeholder="Оберіть категорію" />
                 </SelectTrigger>

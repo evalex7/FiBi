@@ -90,6 +90,7 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
     updateTransaction,
     deleteTransaction,
     isLoading
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [transactions, isLoading, user]);
 
 
