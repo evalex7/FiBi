@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -97,16 +97,16 @@ export default function TransactionForm({
     const valuesToSet = transaction || initialValues;
 
     if (valuesToSet) {
-      // Step 1: Set simple values and determine the UI type
       let initialUiType: UiTransactionType = 'expense';
       if (valuesToSet.type === 'credit_purchase' || valuesToSet.type === 'credit_payment') {
         initialUiType = 'credit';
         setCreditAction(valuesToSet.type === 'credit_payment' ? 'payment' : 'purchase');
       } else if (valuesToSet.type) {
-        initialUiType = valuesToSet.type as UiTransactionType; // Ensure type is valid
+        initialUiType = valuesToSet.type as UiTransactionType;
       }
       setUiType(initialUiType);
-
+      
+      setCategory(valuesToSet.category || '');
       setAmount(String(valuesToSet.amount || ''));
       setDescription(valuesToSet.description || '');
       setIsPrivate(valuesToSet.isPrivate || false);
@@ -118,8 +118,6 @@ export default function TransactionForm({
             : new Date(valuesToSet.date as any);
       }
       setDate(isCopy ? new Date() : transactionDate || new Date());
-      
-      // The category will be set in a separate effect that depends on uiType
     } else {
       // Reset form for a completely new transaction
       setUiType('expense');
@@ -132,21 +130,14 @@ export default function TransactionForm({
     }
   }, [transaction, initialValues, isCopy]);
 
-  // Effect to set the category *after* the uiType has been established
+  // Effect to handle category reset when UI type changes
   useEffect(() => {
-    const valuesToSet = transaction || initialValues;
-    if (valuesToSet && valuesToSet.category) {
-        // Find the category in the now-filtered list of categories for the current uiType
-        const categoryExists = categories.some(c => c.name === valuesToSet.category);
-        if (categoryExists) {
-            setCategory(valuesToSet.category);
-        } else {
-            setCategory(''); // Reset if the category is not valid for the current type
-        }
-    } else {
-       setCategory(''); // Reset for new transactions
+    // Don't reset if it's the initial load of an existing transaction
+    if (transaction && uiType === (transaction.type?.startsWith('credit') ? 'credit' : transaction.type)) {
+      return;
     }
-  }, [uiType, transaction, initialValues, categories]);
+    setCategory('');
+  }, [uiType, transaction]);
 
 
 
