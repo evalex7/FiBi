@@ -22,6 +22,7 @@ import {
   AreaChart,
   Area,
   ReferenceArea,
+  ComposedChart,
 } from 'recharts';
 import {
   ChartContainer,
@@ -70,7 +71,7 @@ const formatCurrencyTooltip = (amount: number) => {
 };
 
 const barChartConfig = {
-  income: { label: 'Дохід', color: 'hsl(var(--chart-2))' },
+  income: { label: 'Чистий дохід', color: 'hsl(var(--chart-2))' },
   credit: { label: 'Кредит', color: 'hsl(27, 87%, 67%)' },
   expenses: { label: 'Витрати', color: 'hsl(var(--chart-1))' },
   value: { label: 'Сума' },
@@ -203,7 +204,7 @@ export default function ReportsPage() {
         return transactionDate >= startDate && transactionDate <= endDate;
     });
 
-    const income = transactionsInPeriod
+    const totalIncome = transactionsInPeriod
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
     
@@ -214,11 +215,14 @@ export default function ReportsPage() {
     const expenses = transactionsInPeriod
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
+    
+    const income = totalIncome - credit;
 
     return [{
       name: 'Дохід',
-      income: income - credit < 0 ? 0 : income - credit,
+      income: income < 0 ? 0 : income,
       credit: credit,
+      totalIncome: totalIncome,
     }, {
       name: 'Витрати',
       expenses: expenses,
@@ -523,55 +527,59 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }}>
                 <CartesianGrid vertical={false} />
-                <XAxis dataKey='name' tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} interval={0} />
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                 <ChartTooltip
                     cursor={false}
                     content={({ active, payload, label }) => {
                         if (active && payload?.length) {
-                        const data = payload[0].payload;
-                        const hoveredKey = payload[0].dataKey;
-                        
-                        let relevantPayloads = payload;
-
-                        if(label === 'Дохід') {
-                            relevantPayloads = [
-                                { name: 'income', value: data.income, color: 'hsl(var(--chart-2))' },
-                                { name: 'credit', value: data.credit, color: 'hsl(27, 87%, 67%)' },
-                            ].filter(p => p.value > 0);
-                        } else {
-                            relevantPayloads = payload.filter(p => p.dataKey === 'expenses');
-                        }
-
-
-                        return (
-                            <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
-                            <p className="font-medium">{label}</p>
-                            {relevantPayloads.map((p, index) => (
-                                <div key={index} className="flex items-center gap-2">
-                                <div
-                                    className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-                                    style={{ backgroundColor: p.color }}
-                                />
-                                <div className="flex flex-1 justify-between">
-                                    <span className="text-muted-foreground">
-                                    {barChartConfig[p.name as keyof typeof barChartConfig]?.label}
-                                    </span>
-                                    <span className="font-medium">
-                                    {formatCurrencyTooltip(p.value as number)}
-                                    </span>
-                                </div>
-                                </div>
-                            ))}
-                            </div>
-                        );
+                            const data = payload[0].payload;
+                            
+                            if (label === 'Дохід') {
+                                return (
+                                    <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                                        <p className="font-medium">Загальний дохід: {formatCurrencyTooltip(data.totalIncome)}</p>
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-2.5 w-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: barChartConfig.income.color }}/>
+                                            <div className="flex flex-1 justify-between">
+                                                <span className="text-muted-foreground">{barChartConfig.income.label}</span>
+                                                <span className="font-medium">{formatCurrencyTooltip(data.income)}</span>
+                                            </div>
+                                        </div>
+                                        {data.credit > 0 && (
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-2.5 w-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: barChartConfig.credit.color }}/>
+                                                <div className="flex flex-1 justify-between">
+                                                    <span className="text-muted-foreground">{barChartConfig.credit.label}</span>
+                                                    <span className="font-medium">{formatCurrencyTooltip(data.credit)}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            }
+                            
+                            if (label === 'Витрати') {
+                                return (
+                                     <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                                        <p className="font-medium">{label}</p>
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-2.5 w-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: barChartConfig.expenses.color }}/>
+                                            <div className="flex flex-1 justify-between">
+                                                <span className="text-muted-foreground">{barChartConfig.expenses.label}</span>
+                                                <span className="font-medium">{formatCurrencyTooltip(data.expenses)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            }
                         }
                         return null;
                     }}
                 />
-                <Bar dataKey="income" fill="var(--color-income)" stackId="a" radius={4} maxBarSize={80} />
-                <Bar dataKey="credit" fill="var(--color-credit)" stackId="a" radius={4} maxBarSize={80}/>
-                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={80} />
+                <Bar dataKey="income" fill="var(--color-income)" stackId="a" radius={[4, 4, 0, 0]} maxBarSize={80} />
+                <Bar dataKey="credit" fill="var(--color-credit)" stackId="a" radius={[4, 4, 0, 0]} maxBarSize={80}/>
+                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} maxBarSize={80} />
                 <ChartLegend content={<ChartLegendContent />} />
             </BarChart>
           </ResponsiveContainer>
@@ -844,7 +852,7 @@ const categoryTrendChart = (
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="last_3_months">Останні 3 місяці</SelectItem>
-              <SelectItem value="last_6_months">Останні 6 місяців</SelectItem>
+              <SelectItem value="last_6_months">Останні 6 місяці</SelectItem>
               <SelectItem value="last_12_months">Останні 12 місяців</SelectItem>
             </SelectContent>
           </Select>
