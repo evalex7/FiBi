@@ -132,12 +132,12 @@ export default function TransactionForm({
 
   // Effect to handle category reset when UI type changes
   useEffect(() => {
-    // Don't reset if it's the initial load of an existing transaction
-    if (transaction && uiType === (transaction.type?.startsWith('credit') ? 'credit' : transaction.type)) {
-      return;
-    }
+    // In edit mode, we don't want to clear the category when type changes
+    if (isEditMode) return;
+  
+    // For new or copied transactions, reset the category when the type changes
     setCategory('');
-  }, [uiType, transaction]);
+  }, [uiType, isEditMode]);
 
 
 
