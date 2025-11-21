@@ -217,11 +217,11 @@ export default function ReportsPage() {
 
     return [{
       name: 'Дохід',
-      income: income,
-      credit: credit
+      income: income - credit < 0 ? 0 : income - credit,
+      credit: credit,
     }, {
       name: 'Витрати',
-      expenses: expenses
+      expenses: expenses,
     }];
 
   }, [filteredTransactions, period, isLoading, earliestTransactionDate]);
@@ -526,39 +526,52 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
                 <XAxis dataKey='name' tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                 <ChartTooltip
-                  cursor={false}
-                  content={({ active, payload, label }) => {
-                    if (active && payload?.length) {
-                      const hoveredDataKey = barChartHover;
-                      const data = payload.find(p => p.dataKey === hoveredDataKey);
-                      if (!data) return null;
-        
-                      return (
-                        <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
-                          <p className="font-medium">{label}</p>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-                              style={{ backgroundColor: data.color }}
-                            />
-                            <div className="flex flex-1 justify-between">
-                              <span className="text-muted-foreground">
-                                {barChartConfig[data.dataKey as keyof typeof barChartConfig]?.label}
-                              </span>
-                              <span className="font-medium">
-                                {formatCurrencyTooltip(data.value as number)}
-                              </span>
+                    cursor={false}
+                    content={({ active, payload, label }) => {
+                        if (active && payload?.length) {
+                        const data = payload[0].payload;
+                        const hoveredKey = payload[0].dataKey;
+                        
+                        let relevantPayloads = payload;
+
+                        if(label === 'Дохід') {
+                            relevantPayloads = [
+                                { name: 'income', value: data.income, color: 'hsl(var(--chart-2))' },
+                                { name: 'credit', value: data.credit, color: 'hsl(27, 87%, 67%)' },
+                            ].filter(p => p.value > 0);
+                        } else {
+                            relevantPayloads = payload.filter(p => p.dataKey === 'expenses');
+                        }
+
+
+                        return (
+                            <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                            <p className="font-medium">{label}</p>
+                            {relevantPayloads.map((p, index) => (
+                                <div key={index} className="flex items-center gap-2">
+                                <div
+                                    className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                                    style={{ backgroundColor: p.color }}
+                                />
+                                <div className="flex flex-1 justify-between">
+                                    <span className="text-muted-foreground">
+                                    {barChartConfig[p.name as keyof typeof barChartConfig]?.label}
+                                    </span>
+                                    <span className="font-medium">
+                                    {formatCurrencyTooltip(p.value as number)}
+                                    </span>
+                                </div>
+                                </div>
+                            ))}
                             </div>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
+                        );
+                        }
+                        return null;
+                    }}
                 />
-                <Bar dataKey="income" fill="var(--color-income)" radius={4} maxBarSize={80} onMouseOver={() => setBarChartHover('income')} barSize={80} />
-                <Bar dataKey="credit" fill="var(--color-credit)" radius={4} maxBarSize={80} onMouseOver={() => setBarChartHover('credit')} barSize={80} y={ (props) => { const y_income = props.background.height - (props.height || 0); return y_income; } } />
-                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={80} onMouseOver={() => setBarChartHover('expenses')} barSize={80} />
+                <Bar dataKey="income" fill="var(--color-income)" stackId="a" radius={4} maxBarSize={80} />
+                <Bar dataKey="credit" fill="var(--color-credit)" stackId="a" radius={4} maxBarSize={80}/>
+                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} maxBarSize={80} />
                 <ChartLegend content={<ChartLegendContent />} />
             </BarChart>
           </ResponsiveContainer>
