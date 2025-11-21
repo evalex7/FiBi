@@ -316,7 +316,7 @@ export default function ReportsPage() {
       }
       if (t.type === 'income') {
         dailyTotals[dayKey].income += t.amount;
-      } else {
+      } else if (t.type === 'expense') {
         dailyTotals[dayKey].expenses += t.amount;
       }
     });
