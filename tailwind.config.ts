@@ -89,6 +89,9 @@ export default {
         },
         orange: {
           500: '#f97316'
+        },
+        teal: {
+          600: '#0d9488',
         }
       },
       borderRadius: {

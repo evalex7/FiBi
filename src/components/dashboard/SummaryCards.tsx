@@ -100,7 +100,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="text-xl font-bold text-green-600">{formattedIncome}</div>
+          <div className="text-xl font-bold text-teal-600">{formattedIncome}</div>
         </CardContent>
       </Card>
       <Card className="p-2">
