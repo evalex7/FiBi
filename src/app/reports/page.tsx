@@ -534,7 +534,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
         ) : (
         <ChartContainer config={barChartConfig} className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }} barCategoryGap="20%">
+            <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} interval={0} />
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
@@ -586,9 +586,9 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
                         return null;
                     }}
                 />
-                <Bar dataKey="income" fill="var(--color-income)" stackId="a" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="credit" fill="var(--color-credit)" stackId="a" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="income" fill="var(--color-income)" stackId="a" radius={[4, 4, 0, 0]} barSize={120} />
+                <Bar dataKey="credit" fill="var(--color-credit)" stackId="a" radius={[4, 4, 0, 0]} barSize={120} />
+                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} barSize={120} />
                 <ChartLegend content={<ChartLegendContent />} />
             </BarChart>
           </ResponsiveContainer>
@@ -915,8 +915,8 @@ const categoryTrendChart = (
 const dailyVaseExpenseChart = (
     <Card>
       <CardHeader>
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-            <div>
+        <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-2">
+            <div className='flex-1'>
                 <CardTitle>Щоденні витрати</CardTitle>
                 <CardDescription>
                     Аналіз витрат по днях за поточний місяць.
@@ -929,7 +929,7 @@ const dailyVaseExpenseChart = (
                     )}
                 </CardDescription>
             </div>
-             <div className="flex justify-center sm:justify-end">
+             <div className="flex justify-end">
                 <Button 
                   variant="outline"
                   onClick={() => setDailyVaseOrientation(prev => prev === 'vertical' ? 'horizontal' : 'vertical')}
