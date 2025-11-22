@@ -42,7 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths, subDays, eachDayOfInterval, startOfDay, endOfDay, eachMonthOfInterval, getDaysInMonth } from 'date-fns';
+import { subMonths, startOfMonth, format, getYear, endOfMonth, differenceInMonths, addMonths, subDays, eachDayOfInterval, startOfDay, endOfDay, eachMonthOfInterval, getDaysInMonth, getDate } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
 import AppLayout from '@/components/AppLayout';
@@ -424,23 +424,31 @@ const { data: categoryTrendData, config: categoryTrendConfig, categories: catego
     return { data: chartData, config, categories: sortedCategories };
 }, [filteredTransactions, isLoading, isCategoriesLoading, categories, categoryTrendPeriod]);
 
-const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo(() => {
-    if (isLoading || isCategoriesLoading) return { dailyVaseData: [], dailyVaseConfig: {}, dailyBudget: 0, maxDailyValue: 0 };
+const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDailyValue } = useMemo(() => {
+    if (isLoading || isCategoriesLoading) return { dailyVaseData: [], dailyVaseConfig: {}, dailyBudget: 0, averageDailyExpense: 0, maxDailyValue: 0 };
 
     const now = new Date();
     const startDate = startOfMonth(now);
     const endDate = endOfMonth(now);
     const daysInMonth = eachDayOfInterval({ start: startDate, end: endDate });
     const numDaysInMonth = getDaysInMonth(now);
+    const currentDayOfMonth = getDate(now);
 
-    const totalIncomeThisMonth = transactions
-        .filter(t => {
-            const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
-            return t.type === 'income' && transactionDate >= startDate && transactionDate <= endDate;
-        })
+    const transactionsThisMonth = transactions.filter(t => {
+      const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+      return transactionDate >= startDate && transactionDate <= endDate;
+    });
+
+    const totalIncomeThisMonth = transactionsThisMonth
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+    
+    const totalExpensesThisMonth = transactionsThisMonth
+        .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
     
     const dailyBudget = totalIncomeThisMonth > 0 ? totalIncomeThisMonth / numDaysInMonth : 0;
+    const averageDailyExpense = totalExpensesThisMonth > 0 && currentDayOfMonth > 0 ? totalExpensesThisMonth / currentDayOfMonth : 0;
 
     const config: ChartConfig = {};
     const categoryNames = new Set<string>();
@@ -491,9 +499,9 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, maxDailyValue } = useMemo((
         };
     });
 
-    const maxDailyValue = Math.max(maxTotal, dailyBudget) * 1.1; 
+    const maxDailyValue = Math.max(maxTotal, dailyBudget, averageDailyExpense) * 1.1; 
     
-    return { dailyVaseData: data, dailyVaseConfig: config, dailyBudget, maxDailyValue };
+    return { dailyVaseData: data, dailyVaseConfig: config, dailyBudget, averageDailyExpense, maxDailyValue };
 }, [transactions, isLoading, categories, isCategoriesLoading]);
 
 
@@ -911,7 +919,13 @@ const dailyVaseExpenseChart = (
                 <CardTitle>Щоденні витрати</CardTitle>
                 <CardDescription>
                     Аналіз витрат по днях за поточний місяць.
-                    {dailyBudget > 0 && <span> Ваш денний бюджет: <b>{formatCurrencyTooltip(dailyBudget)}</b></span>}
+                    {(dailyBudget > 0 || averageDailyExpense > 0) && (
+                      <span className="block mt-1">
+                        {dailyBudget > 0 && `Денний бюджет: <b>${formatCurrencyTooltip(dailyBudget)}</b>`}
+                        {dailyBudget > 0 && averageDailyExpense > 0 && ' | '}
+                        {averageDailyExpense > 0 && `Ø денні витрати: <b>${formatCurrencyTooltip(averageDailyExpense)}</b>`}
+                      </span>
+                    )}
                 </CardDescription>
             </div>
              <div className="w-full flex justify-center sm:justify-start sm:w-auto">
@@ -967,6 +981,27 @@ const dailyVaseExpenseChart = (
                                         setActiveTooltip({
                                             category: 'Денний бюджет',
                                             amount: dailyBudget,
+                                            top: e.clientY - rect.top,
+                                            left: e.clientX - rect.left,
+                                        });
+                                    }
+                                }}
+                                />
+                            )}
+                         </div>
+                         <div className="absolute inset-0 flex justify-center">
+                            {averageDailyExpense > 0 && (
+                                <div
+                                className="h-full bg-blue-500/20"
+                                style={{
+                                    width: `${Math.min(100, (averageDailyExpense / maxDailyValue) * 100)}%`,
+                                }}
+                                onMouseMove={(e) => {
+                                    const rect = chartContainerRef.current?.getBoundingClientRect();
+                                    if (rect) {
+                                        setActiveTooltip({
+                                            category: 'Ø денні витрати',
+                                            amount: averageDailyExpense,
                                             top: e.clientY - rect.top,
                                             left: e.clientX - rect.left,
                                         });
@@ -1082,6 +1117,23 @@ const dailyVaseExpenseChart = (
                                     setActiveTooltip({
                                         category: 'Денний бюджет',
                                         amount: dailyBudget,
+                                        top: e.clientY - rect.top,
+                                        left: e.clientX - rect.left,
+                                    });
+                                }}
+                             />
+                        )}
+                        {averageDailyExpense > 0 && (
+                             <div className="absolute left-0 right-0 z-0 bg-blue-500/20"
+                                style={{ 
+                                    height: `${Math.min(100, (averageDailyExpense / maxDailyValue) * 100)}%`,
+                                    bottom: 0
+                                }}
+                                 onMouseMove={(e) => {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setActiveTooltip({
+                                        category: 'Ø денні витрати',
+                                        amount: averageDailyExpense,
                                         top: e.clientY - rect.top,
                                         left: e.clientX - rect.left,
                                     });
