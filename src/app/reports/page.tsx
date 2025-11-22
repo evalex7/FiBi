@@ -929,7 +929,7 @@ const dailyVaseExpenseChart = (
                     )}
                 </CardDescription>
             </div>
-             <div className="flex justify-end">
+             <div className="flex justify-center">
                 <Button 
                   variant="outline"
                   onClick={() => setDailyVaseOrientation(prev => prev === 'vertical' ? 'horizontal' : 'vertical')}
