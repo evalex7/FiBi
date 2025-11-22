@@ -52,7 +52,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSettings } from '@/contexts/settings-context';
-import { FileWarning, PieChart as PieChartIcon, BarChartBig, RefreshCw } from 'lucide-react';
+import { FileWarning, PieChart as PieChartIcon, BarChartBig, BarChartHorizontal, BarChart2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const formatCurrency = (amount: number) => {
@@ -924,7 +924,7 @@ const dailyVaseExpenseChart = (
                       <span className="block mt-1" dangerouslySetInnerHTML={{
                           __html: `${dailyBudget > 0 ? `Денний бюджет: <b>${formatCurrencyTooltip(dailyBudget)}</b>` : ''}
                                    ${dailyBudget > 0 && averageDailyExpense > 0 ? ' | ' : ''}
-                                   ${averageDailyExpense > 0 ? `Середні денні витрати: <b>${formatCurrencyTooltip(averageDailyExpense)}</b>` : ''}`
+                                   ${averageDailyExpense > 0 ? `Ø денні витрати: <b>${formatCurrencyTooltip(averageDailyExpense)}</b>` : ''}`
                       }} />
                     )}
                 </CardDescription>
@@ -934,7 +934,7 @@ const dailyVaseExpenseChart = (
                   variant="outline"
                   onClick={() => setDailyVaseOrientation(prev => prev === 'vertical' ? 'horizontal' : 'vertical')}
                   >
-                    <RefreshCw className="mr-2 h-4 w-4" />
+                    {dailyVaseOrientation === 'vertical' ? <BarChartHorizontal className="mr-2 h-4 w-4" /> : <BarChart2 className="mr-2 h-4 w-4" />}
                     <span>{dailyVaseOrientation === 'vertical' ? 'Горизонтально' : 'Вертикально'}</span>
                 </Button>
             </div>
