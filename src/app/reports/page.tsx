@@ -118,7 +118,7 @@ export default function ReportsPage() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
   const [period, setPeriod] = useState('0');
-  const [categoryPeriod, setCategoryPeriod] = useState('all');
+  const [categoryPeriod, setCategoryPeriod] = useState('0');
   const [categoryChartType, setCategoryChartType] = useState<'pie' | 'bar'>('pie');
   const [trendPeriod, setTrendPeriod] = useState('daily');
   const [categoryTrendPeriod, setCategoryTrendPeriod] = useState('last_6_months');
@@ -934,7 +934,7 @@ const dailyVaseExpenseChart = (
                     )}
                 </CardDescription>
             </div>
-             <div className="w-full flex justify-center">
+             <div className="flex justify-center">
                 <Button 
                   variant="outline"
                   onClick={() => setDailyVaseOrientation(prev => prev === 'vertical' ? 'horizontal' : 'vertical')}
