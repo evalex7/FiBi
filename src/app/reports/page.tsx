@@ -920,11 +920,11 @@ const dailyVaseExpenseChart = (
                 <CardDescription>
                     Аналіз витрат по днях за поточний місяць.
                     {(dailyBudget > 0 || averageDailyExpense > 0) && (
-                      <span className="block mt-1">
-                        {dailyBudget > 0 && `Денний бюджет: <b>${formatCurrencyTooltip(dailyBudget)}</b>`}
-                        {dailyBudget > 0 && averageDailyExpense > 0 && ' | '}
-                        {averageDailyExpense > 0 && `Ø денні витрати: <b>${formatCurrencyTooltip(averageDailyExpense)}</b>`}
-                      </span>
+                      <span className="block mt-1" dangerouslySetInnerHTML={{
+                          __html: `${dailyBudget > 0 ? `Денний бюджет: <b>${formatCurrencyTooltip(dailyBudget)}</b>` : ''}
+                                   ${dailyBudget > 0 && averageDailyExpense > 0 ? ' | ' : ''}
+                                   ${averageDailyExpense > 0 ? `Ø денні витрати: <b>${formatCurrencyTooltip(averageDailyExpense)}</b>` : ''}`
+                      }} />
                     )}
                 </CardDescription>
             </div>
