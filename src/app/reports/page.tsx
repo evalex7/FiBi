@@ -924,12 +924,12 @@ const dailyVaseExpenseChart = (
                       <span className="block mt-1" dangerouslySetInnerHTML={{
                           __html: `${dailyBudget > 0 ? `Денний бюджет: <b>${formatCurrencyTooltip(dailyBudget)}</b>` : ''}
                                    ${dailyBudget > 0 && averageDailyExpense > 0 ? ' | ' : ''}
-                                   ${averageDailyExpense > 0 ? `Ø денні витрати: <b>${formatCurrencyTooltip(averageDailyExpense)}</b>` : ''}`
+                                   ${averageDailyExpense > 0 ? `Середні денні витрати: <b>${formatCurrencyTooltip(averageDailyExpense)}</b>` : ''}`
                       }} />
                     )}
                 </CardDescription>
             </div>
-             <div className="w-full flex justify-center sm:justify-start sm:w-auto">
+             <div className="flex justify-center sm:justify-end">
                 <Button 
                   variant="outline"
                   onClick={() => setDailyVaseOrientation(prev => prev === 'vertical' ? 'horizontal' : 'vertical')}
