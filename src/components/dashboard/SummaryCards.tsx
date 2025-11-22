@@ -100,7 +100,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="text-xl font-bold">{formattedIncome}</div>
+          <div className="text-xl font-bold text-green-600">{formattedIncome}</div>
         </CardContent>
       </Card>
       <Card className="p-2">
@@ -109,7 +109,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <TrendingDown className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="text-xl font-bold">{formattedExpenses}</div>
+          <div className="text-xl font-bold text-blue-600">{formattedExpenses}</div>
         </CardContent>
       </Card>
       <Card className="p-2">
@@ -132,6 +132,17 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
       <Card className="p-2">
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
+          <CardTitle className="text-xs font-medium">Власні кошти</CardTitle>
+          <Briefcase className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className={cn("text-xl font-bold text-green-600")}>
+            {formattedOwnFunds}
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="p-2">
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
           <CardTitle className="text-xs font-medium">Загальний баланс</CardTitle>
           <Scale className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -143,17 +154,6 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             )}
           >
             {formattedNetBalance}
-          </div>
-        </CardContent>
-      </Card>
-       <Card className="p-2">
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-          <CardTitle className="text-xs font-medium">Власні кошти</CardTitle>
-          <Briefcase className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className={cn("text-xl font-bold text-green-600")}>
-            {formattedOwnFunds}
           </div>
         </CardContent>
       </Card>
