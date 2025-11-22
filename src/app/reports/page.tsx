@@ -533,7 +533,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
         ) : (
         <ChartContainer config={barChartConfig} className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }}>
+            <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }} barGap={4}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} interval={0} />
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
@@ -923,7 +923,7 @@ const dailyVaseExpenseChart = (
                       <span className="block mt-1" dangerouslySetInnerHTML={{
                           __html: `${dailyBudget > 0 ? `Денний бюджет: <b>${formatCurrencyTooltip(dailyBudget)}</b>` : ''}
                                    ${dailyBudget > 0 && averageDailyExpense > 0 ? ' | ' : ''}
-                                   ${averageDailyExpense > 0 ? `Ø денні витрати: <b>${formatCurrencyTooltip(averageDailyExpense)}</b>` : ''}`
+                                   ${averageDailyExpense > 0 ? `Середні денні витрати: <b>${formatCurrencyTooltip(averageDailyExpense)}</b>` : ''}`
                       }} />
                     )}
                 </CardDescription>
@@ -1000,7 +1000,7 @@ const dailyVaseExpenseChart = (
                                     const rect = chartContainerRef.current?.getBoundingClientRect();
                                     if (rect) {
                                         setActiveTooltip({
-                                            category: 'Ø денні витрати',
+                                            category: 'Середні денні витрати',
                                             amount: averageDailyExpense,
                                             top: e.clientY - rect.top,
                                             left: e.clientX - rect.left,
@@ -1132,7 +1132,7 @@ const dailyVaseExpenseChart = (
                                  onMouseMove={(e) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
                                     setActiveTooltip({
-                                        category: 'Ø денні витрати',
+                                        category: 'Середні денні витрати',
                                         amount: averageDailyExpense,
                                         top: e.clientY - rect.top,
                                         left: e.clientX - rect.left,
