@@ -52,7 +52,8 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSettings } from '@/contexts/settings-context';
-import { FileWarning, PieChart as PieChartIcon, BarChartBig } from 'lucide-react';
+import { FileWarning, PieChart as PieChartIcon, BarChartBig, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const formatCurrency = (amount: number) => {
   if (amount >= 1000) {
@@ -533,7 +534,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
         ) : (
         <ChartContainer config={barChartConfig} className="h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }}>
+            <BarChart data={incomeVsExpenseData} margin={{ left: 0, right: 16 }} barCategoryGap="20%">
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} interval={0} />
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
@@ -585,9 +586,9 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
                         return null;
                     }}
                 />
-                <Bar dataKey="income" fill="var(--color-income)" stackId="a" radius={[4, 4, 0, 0]} maxBarSize={80} />
-                <Bar dataKey="credit" fill="var(--color-credit)" stackId="a" radius={[4, 4, 0, 0]} maxBarSize={80}/>
-                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} maxBarSize={80} />
+                <Bar dataKey="income" fill="var(--color-income)" stackId="a" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="credit" fill="var(--color-credit)" stackId="a" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} />
                 <ChartLegend content={<ChartLegendContent />} />
             </BarChart>
           </ResponsiveContainer>
@@ -929,12 +930,13 @@ const dailyVaseExpenseChart = (
                 </CardDescription>
             </div>
              <div className="w-full flex justify-center sm:justify-start sm:w-auto">
-                <Tabs value={dailyVaseOrientation} onValueChange={(value) => setDailyVaseOrientation(value as any)}>
-                    <TabsList>
-                        <TabsTrigger value="vertical">Вертикально</TabsTrigger>
-                        <TabsTrigger value="horizontal">Горизонтально</TabsTrigger>
-                    </TabsList>
-                </Tabs>
+                <Button 
+                  variant="outline"
+                  onClick={() => setDailyVaseOrientation(prev => prev === 'vertical' ? 'horizontal' : 'vertical')}
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <span>{dailyVaseOrientation === 'vertical' ? 'Горизонтально' : 'Вертикально'}</span>
+                </Button>
             </div>
         </div>
       </CardHeader>
