@@ -717,6 +717,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
                             tickMargin={10}
                             width={120}
                             fontSize={12}
+                            interval={0}
                         />
                         <ChartTooltip
                             cursor={false}
