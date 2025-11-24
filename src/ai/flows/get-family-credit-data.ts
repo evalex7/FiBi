@@ -14,8 +14,9 @@ import {
   getFirestore,
 } from 'firebase-admin/firestore';
 import { initializeApp, getApps } from 'firebase-admin/app';
-import type { FamilyMember, Transaction } from '@/lib/types';
+import type { FamilyMember } from '@/lib/types';
 import { firebaseConfig } from '@/firebase/config';
+import { FamilyCreditDataSchema, type FamilyCreditData } from '@/lib/types-ai';
 
 // Initialize Firebase Admin SDK if not already initialized
 if (!getApps().length) {
@@ -23,12 +24,6 @@ if (!getApps().length) {
 }
 
 const db = getFirestore();
-
-export const FamilyCreditDataSchema = z.object({
-  totalCreditLimit: z.number(),
-  totalCreditUsed: z.number(),
-});
-export type FamilyCreditData = z.infer<typeof FamilyCreditDataSchema>;
 
 const getFamilyCreditDataFlow = ai.defineFlow(
   {
@@ -40,11 +35,10 @@ const getFamilyCreditDataFlow = ai.defineFlow(
     let totalCreditLimit = 0;
     let totalCreditUsed = 0;
 
-    // 1. Fetch all user documents to sum up their individual credit limits from the new system
+    // 1. Fetch all user documents to sum up their individual credit limits
     const usersSnapshot = await getDocs(collection(db, 'users'));
     usersSnapshot.forEach(doc => {
       const user = doc.data() as FamilyMember;
-      // Add the limit from the user's profile if it exists (new way)
       if (user.creditLimit && typeof user.creditLimit === 'number') {
         totalCreditLimit += user.creditLimit;
       }
@@ -54,7 +48,7 @@ const getFamilyCreditDataFlow = ai.defineFlow(
     const transactionsSnapshot = await getDocs(collection(db, 'expenses'));
     const { creditPurchase, creditPayment } = transactionsSnapshot.docs.reduce(
       (acc, doc) => {
-        const transaction = doc.data() as Transaction;
+        const transaction = doc.data() as any; // Using any to avoid type conflicts with Transaction type from client
         switch (transaction.type) {
           case 'credit_purchase':
             acc.creditPurchase += transaction.amount;
