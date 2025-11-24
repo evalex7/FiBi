@@ -29,12 +29,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const firestore = useFirestore();
 
-  const usersCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'users');
-  }, [firestore]);
-
-  const { data: familyMembers, isLoading: isFamilyMembersLoading } = useCollection<FamilyMember>(usersCollectionRef);
+  const { data: familyMembers, isLoading: isFamilyMembersLoading } = {data: [], isLoading: false}; // Temporarily disable user collection fetching
 
   const [formattedIncome, setFormattedIncome] = useState('0,00 ₴');
   const [formattedExpenses, setFormattedExpenses] = useState('0,00 ₴');
@@ -93,7 +88,6 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
         }, { creditPurchase: 0, creditPayment: 0 }
     );
 
-    totalCreditLimit += creditPayment; // Old logic for credit limit
     const totalCreditUsed = Math.max(0, creditPurchase - creditPayment);
     const netBalance = ownFunds + (totalCreditLimit - totalCreditUsed);
     
