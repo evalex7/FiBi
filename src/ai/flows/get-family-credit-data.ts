@@ -9,13 +9,16 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps } from 'firebase-admin/app';
+import { initializeApp, getApps, App } from 'firebase-admin/app';
 import type { FamilyMember } from '@/lib/types';
 import { FamilyCreditDataSchema, type FamilyCreditData } from '@/lib/types-ai';
+import { firebaseConfig } from '@/firebase/config';
 
 // Initialize Firebase Admin SDK if not already initialized
 if (!getApps().length) {
-  initializeApp();
+  initializeApp({
+    projectId: firebaseConfig.projectId,
+  });
 }
 
 const db = getFirestore();
