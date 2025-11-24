@@ -40,11 +40,11 @@ const getFamilyCreditDataFlow = ai.defineFlow(
     let totalCreditLimit = 0;
     let totalCreditUsed = 0;
 
-    // 1. Fetch all user documents to sum up their individual credit limits
+    // 1. Fetch all user documents to sum up their individual credit limits from the new system
     const usersSnapshot = await getDocs(collection(db, 'users'));
     usersSnapshot.forEach(doc => {
       const user = doc.data() as FamilyMember;
-      // Add the limit from the user's profile if it exists
+      // Add the limit from the user's profile if it exists (new way)
       if (user.creditLimit && typeof user.creditLimit === 'number') {
         totalCreditLimit += user.creditLimit;
       }
@@ -68,9 +68,8 @@ const getFamilyCreditDataFlow = ai.defineFlow(
       { creditPurchase: 0, creditPayment: 0 }
     );
     
-    // An old way of setting credit limit was creating a credit_payment transaction
+    // An old way of setting credit limit was creating a credit_payment transaction.
     // Let's add it to the total limit to support both ways.
-    // The new way is to set `creditLimit` on the user document.
     totalCreditLimit += creditPayment;
     
     totalCreditUsed = Math.max(0, creditPurchase - creditPayment);
