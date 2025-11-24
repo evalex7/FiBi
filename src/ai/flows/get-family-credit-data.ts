@@ -12,7 +12,6 @@ import {
   collection,
   getDocs,
   getFirestore,
-  initializeFirestore,
 } from 'firebase-admin/firestore';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import type { FamilyMember, Transaction } from '@/lib/types';
