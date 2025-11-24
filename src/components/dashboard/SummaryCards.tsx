@@ -6,6 +6,10 @@ import { useTransactions } from '@/contexts/transactions-context';
 import { useState, useEffect } from 'react';
 import { startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { FamilyMember } from '@/lib/types';
+
 
 const formatCurrency = (amount: number) => {
     if (isNaN(amount)) {
@@ -23,6 +27,14 @@ type SummaryCardsProps = {
 
 export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
+  const firestore = useFirestore();
+
+  const usersCollectionRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
+
+  const { data: familyMembers, isLoading: isMembersLoading } = useCollection<FamilyMember>(usersCollectionRef);
 
   const [formattedIncome, setFormattedIncome] = useState('0,00 ₴');
   const [formattedExpenses, setFormattedExpenses] = useState('0,00 ₴');
@@ -33,7 +45,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const [netBalance, setNetBalance] = useState(0);
   const [formattedNetBalance, setFormattedNetBalance] = useState('0,00 ₴');
   
-  const isLoading = isTransactionsLoading;
+  const isLoading = isTransactionsLoading || isMembersLoading;
 
   useEffect(() => {
     if (isLoading) return;
@@ -47,49 +59,51 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       periodEnd = endOfMonth(periodDate);
     }
 
-    const { income, expenses, creditPurchase, creditPayment } = transactions.reduce(
-      (acc, transaction) => {
-        const transactionDate = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
-        
-        const inPeriod = !periodStart || !periodEnd || (transactionDate >= periodStart && transactionDate <= periodEnd);
+    const relevantTransactions = transactions.filter(transaction => {
+      if (selectedPeriod === 'all') return true;
+      const transactionDate = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
+      return transactionDate >= periodStart! && transactionDate <= periodEnd!;
+    });
 
-        if (inPeriod) {
-            switch(transaction.type) {
-                case 'income':
-                    acc.income += transaction.amount;
-                    break;
-                case 'expense':
-                    acc.expenses += transaction.amount;
-                    break;
-                case 'credit_purchase':
-                    acc.creditPurchase += transaction.amount;
-                    break;
-                case 'credit_payment':
-                    acc.creditPayment += transaction.amount;
-                    break;
-            }
-        }
-        return acc;
-      },
-      { income: 0, expenses: 0, creditPurchase: 0, creditPayment: 0 }
-    );
+    const income = relevantTransactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const expenses = relevantTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // Calculate total credit limit from all sources
+    const transactionBasedLimit = transactions
+      .filter(t => t.type === 'credit_payment')
+      .reduce((sum, t) => sum + t.amount, 0);
+      
+    const profileBasedLimit = familyMembers
+      ?.reduce((sum, member) => sum + (member.creditLimit || 0), 0) ?? 0;
+      
+    const totalCreditLimit = transactionBasedLimit + profileBasedLimit;
+
+    // Calculate used credit
+    const creditPurchases = transactions
+      .filter(t => t.type === 'credit_purchase')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalCreditUsed = Math.max(0, creditPurchases - transactionBasedLimit);
+
+    const ownFunds = Math.max(0, income - expenses);
+    const netBalance = ownFunds + (totalCreditLimit - totalCreditUsed);
     
-    const creditLimit = creditPurchase - creditPayment;
-    const ownFunds = Math.max(0, income - creditLimit - expenses);
-    const creditUsed = Math.max(0, expenses - Math.max(0, income - creditLimit));
-    const totalAvailable = ownFunds + (creditLimit - creditUsed);
-    
-    setNetBalance(totalAvailable);
-    setFormattedNetBalance(formatCurrency(totalAvailable));
+    setNetBalance(netBalance);
+    setFormattedNetBalance(formatCurrency(netBalance));
 
     setFormattedIncome(formatCurrency(income));
     setFormattedExpenses(formatCurrency(expenses));
     
     setFormattedOwnFunds(formatCurrency(ownFunds));
-    setFormattedCreditUsed(formatCurrency(creditUsed));
-    setFormattedCreditLimit(formatCurrency(creditLimit));
+    setFormattedCreditUsed(formatCurrency(totalCreditUsed));
+    setFormattedCreditLimit(formatCurrency(totalCreditLimit));
 
-  }, [transactions, selectedPeriod, isLoading]);
+  }, [transactions, selectedPeriod, isLoading, familyMembers]);
 
 
   return (
