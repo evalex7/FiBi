@@ -8,19 +8,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import type { FamilyMember, Transaction } from '@/lib/types';
-import { Loader2, TrendingDown, TrendingUp } from 'lucide-react';
+import type { FamilyMember } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import TransactionForm from '../dashboard/TransactionForm';
 
 export default function CreditLimitSettings() {
     const { user } = useUser();
@@ -36,9 +28,6 @@ export default function CreditLimitSettings() {
     
     const [creditLimit, setCreditLimit] = useState('');
     const [isSaving, setIsSaving] = useState(false);
-    
-    const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
-    const [formInitialValues, setFormInitialValues] = useState<Partial<Transaction> | undefined>();
 
     useEffect(() => {
         if (familyMember && familyMember.creditLimit !== undefined) {
@@ -89,18 +78,13 @@ export default function CreditLimitSettings() {
         e.preventDefault();
         handleSave();
     };
-
-    const handleCreditAction = (type: 'credit_purchase' | 'credit_payment') => {
-        setFormInitialValues({ type, category: 'Кредитна операція' });
-        setIsTransactionFormOpen(true);
-    };
     
     if (isMemberLoading) {
         return (
             <Card>
                 <CardHeader>
                     <CardTitle>Кредитний ліміт</CardTitle>
-                    <CardDescription>Керуйте своїм кредитним лімітом та операціями.</CardDescription>
+                    <CardDescription>Керуйте своїм кредитним лімітом.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center p-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -110,11 +94,10 @@ export default function CreditLimitSettings() {
     }
 
     return (
-        <>
         <Card>
             <CardHeader>
                 <CardTitle>Кредитний ліміт</CardTitle>
-                <CardDescription>Керуйте своїм кредитним лімітом та операціями.</CardDescription>
+                <CardDescription>Керуйте своїм кредитним лімітом.</CardDescription>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleFormSubmit} className="space-y-4 max-w-sm">
@@ -136,20 +119,5 @@ export default function CreditLimitSettings() {
                 </form>
             </CardContent>
         </Card>
-        <Dialog open={isTransactionFormOpen} onOpenChange={setIsTransactionFormOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Кредитна операція</DialogTitle>
-                    <DialogDescription>
-                        Запишіть операцію з вашим кредитним боргом.
-                    </DialogDescription>
-                </DialogHeader>
-                <TransactionForm
-                    onSave={() => setIsTransactionFormOpen(false)}
-                    initialValues={formInitialValues}
-                />
-            </DialogContent>
-        </Dialog>
-        </>
     );
 }
