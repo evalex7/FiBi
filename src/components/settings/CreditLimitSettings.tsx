@@ -135,16 +135,6 @@ export default function CreditLimitSettings() {
                     </Button>
                 </form>
             </CardContent>
-            <CardFooter className="flex flex-col sm:flex-row gap-2 border-t px-6 py-4">
-                 <Button variant="outline" className="w-full" onClick={() => handleCreditAction('credit_purchase')}>
-                    <TrendingDown className="mr-2 h-4 w-4 text-red-500" />
-                    Збільшити борг (покупка)
-                </Button>
-                 <Button variant="outline" className="w-full" onClick={() => handleCreditAction('credit_payment')}>
-                    <TrendingUp className="mr-2 h-4 w-4 text-green-500" />
-                    Зменшити борг (погашення)
-                </Button>
-            </CardFooter>
         </Card>
         <Dialog open={isTransactionFormOpen} onOpenChange={setIsTransactionFormOpen}>
             <DialogContent>
