@@ -8,14 +8,9 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import {
-  collection,
-  getDocs,
-  getFirestore,
-} from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import type { FamilyMember } from '@/lib/types';
-import { firebaseConfig } from '@/firebase/config';
 import { FamilyCreditDataSchema, type FamilyCreditData } from '@/lib/types-ai';
 
 // Initialize Firebase Admin SDK if not already initialized
@@ -36,7 +31,7 @@ const getFamilyCreditDataFlow = ai.defineFlow(
     let totalCreditUsed = 0;
 
     // 1. Fetch all user documents to sum up their individual credit limits
-    const usersSnapshot = await getDocs(collection(db, 'users'));
+    const usersSnapshot = await db.collection('users').get();
     usersSnapshot.forEach(doc => {
       const user = doc.data() as FamilyMember;
       if (user.creditLimit && typeof user.creditLimit === 'number') {
@@ -45,7 +40,7 @@ const getFamilyCreditDataFlow = ai.defineFlow(
     });
 
     // 2. Fetch all transactions to calculate credit usage and old-style limits
-    const transactionsSnapshot = await getDocs(collection(db, 'expenses'));
+    const transactionsSnapshot = await db.collection('expenses').get();
     const { creditPurchase, creditPayment } = transactionsSnapshot.docs.reduce(
       (acc, doc) => {
         const transaction = doc.data() as any; // Using any to avoid type conflicts with Transaction type from client
