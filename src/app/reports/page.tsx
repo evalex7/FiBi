@@ -1078,7 +1078,7 @@ const dailyVaseExpenseChart = (
                 </div>
             ) : (
               <ScrollArea className="w-full whitespace-nowrap">
-                <div className="flex flex-col w-max pr-4">
+                <div className="flex flex-col w-max pr-4 h-[400px]">
                     <div className="flex-grow relative flex items-end">
                         {[...dailyVaseData].sort((a,b) => a.date.getTime() - b.date.getTime()).map((dayData, dayIndex) => (
                             <div key={dayData.date.toISOString()} className="flex-1 h-full flex flex-col-reverse items-center px-px min-w-[20px]">
