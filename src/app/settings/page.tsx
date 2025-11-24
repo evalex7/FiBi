@@ -6,11 +6,13 @@ import CategoriesSettings from '@/components/settings/CategoriesSettings';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import ThemeSettings from '@/components/settings/ThemeSettings';
 import ChartSettings from '@/components/settings/ChartSettings';
+import CreditLimitSettings from '@/components/settings/CreditLimitSettings';
 
 export default function SettingsPage() {
   return (
     <AppLayout pageTitle="Налаштування">
       <div className="space-y-6">
+        <CreditLimitSettings />
         <CategoriesSettings />
         <ThemeSettings />
         <ChartSettings />
