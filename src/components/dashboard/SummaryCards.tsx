@@ -3,10 +3,12 @@
 import { TrendingUp, TrendingDown, Scale, CreditCard, Landmark, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTransactions } from '@/contexts/transactions-context';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { getFamilyCreditData } from '@/ai/flows/get-family-credit-data';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { FamilyMember } from '@/lib/types';
 
 
 const formatCurrency = (amount: number) => {
@@ -25,7 +27,15 @@ type SummaryCardsProps = {
 
 export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
-  
+  const firestore = useFirestore();
+
+  const usersCollectionRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
+
+  const { data: familyMembers, isLoading: isFamilyMembersLoading } = useCollection<FamilyMember>(usersCollectionRef);
+
   const [formattedIncome, setFormattedIncome] = useState('0,00 ₴');
   const [formattedExpenses, setFormattedExpenses] = useState('0,00 ₴');
   
@@ -35,12 +45,10 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const [netBalance, setNetBalance] = useState(0);
   const [formattedNetBalance, setFormattedNetBalance] = useState('0,00 ₴');
   
-  const [isCreditLoading, setIsCreditLoading] = useState(true);
-
-  const isLoading = isTransactionsLoading || isCreditLoading;
+  const isLoading = isTransactionsLoading || isFamilyMembersLoading;
 
   useEffect(() => {
-    if (isTransactionsLoading) return;
+    if (isLoading) return;
 
     let periodStart: Date | null = null;
     let periodEnd: Date | null = null;
@@ -70,24 +78,32 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     setFormattedIncome(formatCurrency(income));
     setFormattedExpenses(formatCurrency(expenses));
     setFormattedOwnFunds(formatCurrency(ownFunds));
+
+    // Calculate credit data
+    let totalCreditLimit = 0;
+    if (familyMembers) {
+        totalCreditLimit = familyMembers.reduce((sum, member) => sum + (member.creditLimit || 0), 0);
+    }
     
-    // Fetch credit data from the flow
-    setIsCreditLoading(true);
-    getFamilyCreditData().then(creditData => {
-        const netBalance = ownFunds + (creditData.totalCreditLimit - creditData.totalCreditUsed);
-        
-        setNetBalance(netBalance);
-        setFormattedNetBalance(formatCurrency(netBalance));
-        setFormattedCreditUsed(formatCurrency(creditData.totalCreditUsed));
-        setFormattedCreditLimit(formatCurrency(creditData.totalCreditLimit));
-        setIsCreditLoading(false);
-    }).catch(err => {
-        console.error("Error fetching family credit data:", err);
-        setIsCreditLoading(false);
-    });
+    const { creditPurchase, creditPayment } = transactions.reduce(
+        (acc, t) => {
+            if (t.type === 'credit_purchase') acc.creditPurchase += t.amount;
+            if (t.type === 'credit_payment') acc.creditPayment += t.amount;
+            return acc;
+        }, { creditPurchase: 0, creditPayment: 0 }
+    );
+
+    totalCreditLimit += creditPayment; // Old logic for credit limit
+    const totalCreditUsed = Math.max(0, creditPurchase - creditPayment);
+    const netBalance = ownFunds + (totalCreditLimit - totalCreditUsed);
+    
+    setNetBalance(netBalance);
+    setFormattedNetBalance(formatCurrency(netBalance));
+    setFormattedCreditUsed(formatCurrency(totalCreditUsed));
+    setFormattedCreditLimit(formatCurrency(totalCreditLimit));
 
 
-  }, [transactions, selectedPeriod, isTransactionsLoading]);
+  }, [transactions, selectedPeriod, isLoading, familyMembers]);
 
 
   return (
