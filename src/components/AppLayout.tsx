@@ -48,8 +48,12 @@ const menuItems = [
 
 export default function AppLayout({
   children,
+  pageTitle,
+  onAddTransaction,
 }: {
   children: React.ReactNode;
+  pageTitle?: string;
+  onAddTransaction?: (payment?: Partial<RecurringPayment & { remainingAmount: number }>) => void;
 }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
@@ -85,15 +89,15 @@ export default function AppLayout({
   
   useEffect(() => {
     const handleScroll = () => {
-      // Only run this logic on mobile
       if (!isMobile) return;
 
       const currentScrollY = window.scrollY;
+      // Hide header
       if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
-        // Scrolling down
         setIsHeaderVisible(false);
-      } else {
-        // Scrolling up
+      }
+      // Show header
+      else if (currentScrollY < lastScrollY.current) {
         setIsHeaderVisible(true);
       }
       lastScrollY.current = currentScrollY;
@@ -102,7 +106,7 @@ export default function AppLayout({
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobile]); // Dependency on isMobile is correct here
+  }, [isMobile]);
 
   const handleLogout = () => {
     auth.signOut();
@@ -116,17 +120,20 @@ export default function AppLayout({
   };
 
   const handleOpenTransactionForm = (payment?: Partial<RecurringPayment & { remainingAmount: number }>) => {
-    if (payment) {
-        setPrefilledTransaction({
-            amount: payment.remainingAmount,
-            description: payment.description,
-            category: payment.category,
-            type: 'expense'
-        });
-    } else {
-        setPrefilledTransaction(undefined);
-    }
-    setIsAddTransactionOpen(true);
+    const transactionHandler = onAddTransaction || ((p) => {
+        if (p) {
+            setPrefilledTransaction({
+                amount: p.remainingAmount,
+                description: p.description,
+                category: p.category,
+                type: 'expense'
+            });
+        } else {
+            setPrefilledTransaction(undefined);
+        }
+        setIsAddTransactionOpen(true);
+    });
+    transactionHandler(payment);
   };
   
   const handleSettingsToggle = () => {
