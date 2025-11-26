@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard,
+  Home,
   Target,
   Repeat,
   AreaChart,
@@ -40,7 +40,7 @@ import HeaderPaymentReminders from './dashboard/HeaderPaymentReminders';
 import SettingsForm from './settings/SettingsForm';
 
 const menuItems = [
-  { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Головна', icon: Home },
   { href: '/budgets', label: 'Бюджети', icon: Target },
   { href: '/payments', label: 'Рахунки', icon: Receipt },
   { href: '/reports', label: 'Звіти', icon: AreaChart },
