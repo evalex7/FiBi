@@ -2,45 +2,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(doc) {
-      return request.auth.uid == doc.familyMemberId;
-    }
-
-    match /users/{userId} {
-      allow read: if isSignedIn();
-      allow write: if request.auth.uid == userId;
-    }
-
-    match /categories/{categoryId} {
-      allow read: if isSignedIn() && (resource.data.isPrivate == false || resource.data.familyMemberId == request.auth.uid);
-      allow create: if isSignedIn() && isOwner(request.resource.data);
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn() && isOwner(resource.data);
-    }
-
-    match /expenses/{expenseId} {
-      allow read: if isSignedIn() && (resource.data.isPrivate == false || resource.data.familyMemberId == request.auth.uid);
-      allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
-    }
-
-    match /budgets/{budgetId} {
-      allow list, read: if isSignedIn();
-      allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
-    }
-
-    match /payments/{paymentId} {
-      allow list, read: if isSignedIn();
-      allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
-    }
-
-    match /todos/{todoId} {
-      allow list, read: if isSignedIn();
-      allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
