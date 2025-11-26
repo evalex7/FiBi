@@ -115,7 +115,7 @@ export default function HeaderTodos() {
               <span className="absolute top-1.5 right-1.5 inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
             </>
           )}
-          <Bell className="relative h-5 w-5 text-foreground" />
+          <Bell className="relative h-5 w-5 text-white" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[calc(100vw-2rem)] sm:w-80 shadow-lg border-0 sm:border" align="end">
