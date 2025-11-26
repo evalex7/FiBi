@@ -39,7 +39,8 @@ service cloud.firestore {
     }
 
     match /todos/{todoId} {
-      allow read, write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
   }
 }
