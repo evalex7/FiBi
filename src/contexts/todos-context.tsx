@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import type { Todo } from '@/lib/types';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, query, where } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -23,12 +23,12 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
   const { user } = useUser();
 
-  const todosCollectionRef = useMemoFirebase(() => {
+  const todosQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, 'todos');
+    return query(collection(firestore, 'todos'), where('familyMemberId', '==', user.uid));
   }, [firestore, user]);
 
-  const { data: todos, isLoading } = useCollection<Todo>(todosCollectionRef);
+  const { data: todos, isLoading } = useCollection<Todo>(todosQuery);
 
   const addTodo = (todoData: Omit<Todo, 'id' | 'familyMemberId' | 'completed'>) => {
     if (!firestore || !user) return;
