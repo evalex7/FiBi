@@ -696,7 +696,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
                   <Cell key={`cell-${entry.name}`} fill={pieChartConfig[entry.name]?.color} />
                 ))}
                 </Pie>
-                <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
+                <ChartLegend content={<ChartLegendContent nameKey="name" className="flex flex-wrap justify-center" />} />
               </PieChart>
             </ResponsiveContainer>
           </ChartContainer>
