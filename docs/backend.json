@@ -1,5 +1,40 @@
 {
   "entities": {
+    "Todo": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Todo",
+      "type": "object",
+      "description": "Represents a single task or reminder.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the todo."
+        },
+        "title": {
+          "type": "string",
+          "description": "The content of the task."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the task is completed."
+        },
+        "dueDate": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "Optional due date for the task."
+        },
+        "familyMemberId": {
+          "type": "string",
+          "description": "The UID of the family member who created the task."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "completed",
+        "familyMemberId"
+      ]
+    },
     "FamilyMember": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "FamilyMember",
@@ -288,6 +323,22 @@
             {
               "name": "paymentId",
               "description": "The unique ID of the recurring payment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/todos/{todoId}",
+        "definition": {
+          "entityName": "Todo",
+          "schema": {
+            "$ref": "#/backend/entities/Todo"
+          },
+          "description": "Stores all todo items. The 'familyMemberId' field indicates the owner.",
+          "params": [
+            {
+              "name": "todoId",
+              "description": "The unique ID of the todo item."
             }
           ]
         }

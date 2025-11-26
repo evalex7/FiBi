@@ -38,6 +38,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import TransactionForm from './dashboard/TransactionForm';
 import HeaderPaymentReminders from './dashboard/HeaderPaymentReminders';
 import SettingsForm from './settings/SettingsForm';
+import HeaderTodos from './dashboard/HeaderTodos';
 
 const menuItems = [
   { href: '/dashboard', label: 'Панель', icon: LayoutDashboard },
@@ -261,6 +262,7 @@ export default function AppLayout({
             <div className="flex w-full flex-1 md:w-auto md:flex-initial justify-end items-center gap-2">
                 
                 <HeaderPaymentReminders onPayClick={handleOpenTransactionForm} />
+                <HeaderTodos />
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

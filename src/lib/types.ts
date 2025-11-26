@@ -54,3 +54,11 @@ export type CreditSettings = {
     familyMemberId: string;
     creditLimit: number;
 }
+
+export type Todo = {
+  id: string;
+  title: string;
+  completed: boolean;
+  dueDate?: Date | Timestamp | null;
+  familyMemberId?: string;
+};
