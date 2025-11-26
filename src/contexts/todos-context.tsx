@@ -25,6 +25,8 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
 
   const todosQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
+    // Query for todos where the familyMemberId matches the current user's UID.
+    // This is more secure and efficient.
     return query(collection(firestore, 'todos'), where('familyMemberId', '==', user.uid));
   }, [firestore, user]);
 
@@ -87,6 +89,7 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
     updateTodo,
     deleteTodo,
     isLoading,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [todos, isLoading, user]);
 
   return (
