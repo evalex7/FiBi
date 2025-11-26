@@ -29,17 +29,17 @@ service cloud.firestore {
     }
 
     match /budgets/{budgetId} {
-      allow read: if isSignedIn();
+      allow list, read: if isSignedIn();
       allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
 
     match /payments/{paymentId} {
-      allow read: if isSignedIn();
+      allow list, read: if isSignedIn();
       allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
 
     match /todos/{todoId} {
-      allow read: if isSignedIn();
+      allow list, read: if isSignedIn();
       allow write: if isSignedIn() && (isOwner(request.resource.data) || isOwner(resource.data));
     }
   }
