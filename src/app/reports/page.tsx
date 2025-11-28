@@ -73,8 +73,9 @@ const formatCurrencyTooltip = (amount: number) => {
 
 const barChartConfig = {
   income: { label: 'Чистий дохід', color: 'hsl(var(--chart-2))' },
-  credit: { label: 'Кредитні покупки', color: 'hsl(var(--chart-5))' },
+  credit: { label: 'Кредит', color: 'hsl(var(--chart-5))' },
   expenses: { label: 'Витрати', color: 'hsl(var(--chart-1))' },
+  totalIncome: { label: 'Загальний дохід' },
   value: { label: 'Сума' },
 } satisfies ChartConfig;
 
@@ -220,9 +221,8 @@ export default function ReportsPage() {
     return [{
       name: 'Дохід',
       income: income,
-    }, {
-      name: 'Кредит',
       credit: credit,
+      totalIncome: income + credit,
     }, {
       name: 'Витрати',
       expenses: expenses,
@@ -536,32 +536,55 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
             <BarChart 
                 data={incomeVsExpenseData} 
                 margin={{ left: 0, right: 16 }}
-                barCategoryGap="20%"
+                barCategoryGap="25%"
             >
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} interval={0} />
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                 <ChartTooltip
                     cursor={false}
-                    content={<ChartTooltipContent 
-                      indicator='dot'
-                      formatter={(value, name, item) => (
-                        <div className="flex w-full items-center gap-2">
-                          <div className="w-2.5 h-2.5 rounded-sm" style={{backgroundColor: item.fill}} />
-                          <div className="flex flex-1 justify-between">
-                            <span className="text-muted-foreground">
-                              {barChartConfig[name as keyof typeof barChartConfig]?.label}
-                            </span>
-                            <span className="font-bold">
-                              {formatCurrencyTooltip(value as number)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    />}
+                    content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          const chartItems = [];
+
+                          if (data.totalIncome) {
+                            chartItems.push({ name: 'totalIncome', value: data.totalIncome, color: '' });
+                          }
+                          if (data.income) {
+                             chartItems.push({ name: 'income', value: data.income, color: 'var(--color-income)' });
+                          }
+                          if (data.credit) {
+                             chartItems.push({ name: 'credit', value: data.credit, color: 'var(--color-credit)' });
+                          }
+                           if (data.expenses) {
+                             chartItems.push({ name: 'expenses', value: data.expenses, color: 'var(--color-expenses)' });
+                          }
+
+                          return (
+                            <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                              <div className="font-bold">{label}</div>
+                              {chartItems.map(item => (
+                                <div key={item.name} className="flex w-full items-center gap-2">
+                                  {item.color && <div className="w-2.5 h-2.5 rounded-sm" style={{backgroundColor: item.color}} />}
+                                  <div className="flex flex-1 justify-between">
+                                    <span className="text-muted-foreground">
+                                      {barChartConfig[item.name as keyof typeof barChartConfig]?.label}
+                                    </span>
+                                    <span className="font-bold">
+                                      {formatCurrencyTooltip(item.value as number)}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
                 />
-                <Bar dataKey="income" fill="var(--color-income)" radius={[4, 4, 0, 0]} barSize={60} />
-                <Bar dataKey="credit" fill="var(--color-credit)" radius={[4, 4, 0, 0]} barSize={60} />
+                <Bar dataKey="income" stackId="a" fill="var(--color-income)" radius={[4, 4, 0, 0]} barSize={60} />
+                <Bar dataKey="credit" stackId="a" fill="var(--color-credit)" radius={[4, 4, 0, 0]} barSize={60} />
                 <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} barSize={60} />
             </BarChart>
           </ResponsiveContainer>
