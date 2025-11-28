@@ -6,8 +6,8 @@ import { useTransactions } from '@/contexts/transactions-context';
 import { useState, useEffect, useMemo } from 'react';
 import { startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase, useUser } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import type { FamilyMember } from '@/lib/types';
 
 
@@ -28,13 +28,14 @@ type SummaryCardsProps = {
 export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const firestore = useFirestore();
+  const { user } = useUser();
   
-  const familyMembersCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'users');
-  }, [firestore]);
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
 
-  const { data: familyMembers, isLoading: isFamilyMembersLoading } = useCollection<FamilyMember>(familyMembersCollectionRef);
+  const { data: familyMember, isLoading: isFamilyMembersLoading } = useDoc<FamilyMember>(userDocRef);
 
   const [formattedIncome, setFormattedIncome] = useState('0,00 ₴');
   const [formattedExpenses, setFormattedExpenses] = useState('0,00 ₴');
@@ -80,10 +81,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     setFormattedOwnFunds(formatCurrency(ownFunds));
 
     // Calculate credit data
-    let totalCreditLimit = 0;
-    if (familyMembers) {
-        totalCreditLimit = familyMembers.reduce((sum, member) => sum + (member.creditLimit || 0), 0);
-    }
+    let totalCreditLimit = familyMember?.creditLimit || 0;
     
     const { creditPurchase, creditPayment } = transactions.reduce(
         (acc, t) => {
@@ -102,7 +100,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     setFormattedCreditLimit(formatCurrency(totalCreditLimit));
 
 
-  }, [transactions, selectedPeriod, isLoading, familyMembers]);
+  }, [transactions, selectedPeriod, isLoading, familyMember]);
 
 
   return (
