@@ -26,7 +26,7 @@ import {
   DialogClose,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock, TrendingUp, TrendingDown } from 'lucide-react';
+import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock, TrendingUp, TrendingDown, Landmark } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -88,11 +88,12 @@ export default function TransactionForm({
     setCategory('');
   }, [type, isEditMode, isCopy]);
   
-  const categoryTypeMap: Record<Transaction['type'], 'income' | 'expense' | 'credit'> = {
+  const categoryTypeMap: Record<Transaction['type'], 'income' | 'expense' | 'credit' | 'credit_limit'> = {
     income: 'income',
     expense: 'expense',
     credit_purchase: 'credit',
-    credit_payment: 'credit'
+    credit_payment: 'credit',
+    credit_limit: 'credit',
   };
 
   const categories = availableCategories
@@ -174,7 +175,7 @@ export default function TransactionForm({
     );
   };
   
-  const isCreditType = type === 'credit_payment' || type === 'credit_purchase';
+  const isCreditType = type === 'credit_payment' || type === 'credit_purchase' || type === 'credit_limit';
 
   return (
     <form onSubmit={handleSubmit}>
@@ -182,8 +183,8 @@ export default function TransactionForm({
         <div className="flex justify-between items-center">
             {isCreditType ? (
                 <div className="flex items-center gap-2 font-semibold">
-                    {type === 'credit_purchase' ? <TrendingDown className="h-5 w-5 text-red-500"/> : <TrendingUp className="h-5 w-5 text-green-500"/>}
-                    {type === 'credit_purchase' ? 'Збільшення боргу (покупка)' : 'Зменшення боргу (погашення)'}
+                    {type === 'credit_purchase' ? <TrendingDown className="h-5 w-5 text-red-500"/> : type === 'credit_payment' ? <TrendingUp className="h-5 w-5 text-green-500"/> : <Landmark className="h-5 w-5 text-blue-500" />}
+                    {type === 'credit_purchase' ? 'Збільшення боргу (покупка)' : type === 'credit_payment' ? 'Зменшення боргу (погашення)' : 'Встановити/Оновити ліміт'}
                 </div>
             ) : (
                 <div className="grid gap-2">
