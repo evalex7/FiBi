@@ -33,7 +33,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import TransactionForm from './dashboard/TransactionForm';
 import HeaderPaymentReminders from './dashboard/HeaderPaymentReminders';
@@ -245,12 +245,14 @@ export default function AppLayout({
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0">
-                    <div className="flex h-16 items-center border-b px-6">
+                    <SheetHeader className="border-b">
+                      <SheetTitle className="p-6">
                         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                             <Logo className="h-6 w-6" />
                             <span>Сімейні фінанси</span>
                         </Link>
-                    </div>
+                      </SheetTitle>
+                    </SheetHeader>
                     <nav className="grid gap-2 p-4">
                         {menuItems.map(item => (
                             <Link
