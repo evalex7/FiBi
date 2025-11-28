@@ -84,7 +84,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     // Calculate credit data
     const { creditLimit, creditPurchase, creditPayment } = transactions.reduce(
         (acc, t) => {
-            if (t.type === 'credit_limit') acc.creditLimit += t.amount;
+            if (t.type === 'credit_limit') acc.creditLimit = t.amount; // Use the latest limit, not sum
             if (t.type === 'credit_purchase') acc.creditPurchase += t.amount;
             if (t.type === 'credit_payment') acc.creditPayment += t.amount;
             return acc;

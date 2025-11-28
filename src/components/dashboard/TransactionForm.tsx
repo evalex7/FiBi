@@ -132,7 +132,10 @@ export default function TransactionForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!amount || !description || !category || !date) {
+    const isCreditLimit = type === 'credit_limit';
+    const finalCategory = isCreditLimit ? 'Кредитні операції' : category;
+
+    if (!amount || !description || (!isCreditLimit && !finalCategory) || !date) {
       toast({
         variant: 'destructive',
         title: 'Помилка',
@@ -145,7 +148,7 @@ export default function TransactionForm({
       description,
       amount: parseFloat(amount),
       type: type,
-      category,
+      category: finalCategory,
       date,
       isPrivate,
     };
@@ -388,27 +391,29 @@ export default function TransactionForm({
         </div>
 
         
-        <div className="grid gap-2">
-        <Label htmlFor="category">Категорія</Label>
-        <Select required value={category} onValueChange={setCategory}>
-            <SelectTrigger>
-            <SelectValue placeholder="Оберіть категорію" />
-            </SelectTrigger>
-            <SelectContent>
-            {categories.map((cat) => {
-                const Icon = categoryIcons[cat.icon];
-                return (
-                <SelectItem key={cat.id} value={cat.name}>
-                    <div className="flex items-center gap-2">
-                    {Icon && <Icon className="h-4 w-4" />}
-                    {cat.name}
-                    </div>
-                </SelectItem>
-                );
-            })}
-            </SelectContent>
-        </Select>
-        </div>
+        {type !== 'credit_limit' && (
+          <div className="grid gap-2">
+            <Label htmlFor="category">Категорія</Label>
+            <Select required={type !== 'credit_limit'} value={category} onValueChange={setCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Оберіть категорію" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => {
+                  const Icon = categoryIcons[cat.icon];
+                  return (
+                    <SelectItem key={cat.id} value={cat.name}>
+                      <div className="flex items-center gap-2">
+                        {Icon && <Icon className="h-4 w-4" />}
+                        {cat.name}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <Button type="submit" className="w-full">
