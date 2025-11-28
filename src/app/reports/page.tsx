@@ -205,7 +205,7 @@ export default function ReportsPage() {
         return transactionDate >= startDate && transactionDate <= endDate;
     });
 
-    const totalIncome = transactionsInPeriod
+    const income = transactionsInPeriod
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
     
@@ -216,14 +216,13 @@ export default function ReportsPage() {
     const expenses = transactionsInPeriod
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
-    
-    const income = totalIncome;
 
     return [{
       name: 'Дохід',
-      income: income < 0 ? 0 : income,
+      income: income,
+    }, {
+      name: 'Кредит',
       credit: credit,
-      totalIncome: totalIncome + credit,
     }, {
       name: 'Витрати',
       expenses: expenses,
@@ -537,64 +536,33 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
             <BarChart 
                 data={incomeVsExpenseData} 
                 margin={{ left: 0, right: 16 }}
-                barGap={-20}
-                barCategoryGap="5%"
+                barCategoryGap="20%"
             >
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} interval={0} />
                 <YAxis tickFormatter={formatCurrency} tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={12} />
                 <ChartTooltip
                     cursor={false}
-                    content={({ active, payload, label }) => {
-                        if (active && payload?.length) {
-                            const data = payload[0].payload;
-                            
-                            if (label === 'Дохід') {
-                                return (
-                                    <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
-                                        <p className="font-medium">Загальний дохід: {formatCurrencyTooltip(data.totalIncome)}</p>
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-2.5 w-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: barChartConfig.income.color }}/>
-                                            <div className="flex flex-1 justify-between">
-                                                <span className="text-muted-foreground">{barChartConfig.income.label}</span>
-                                                <span className="font-medium">{formatCurrencyTooltip(data.income)}</span>
-                                            </div>
-                                        </div>
-                                        {data.credit > 0 && (
-                                            <div className="flex items-center gap-2">
-                                                <div className="h-2.5 w-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: barChartConfig.credit.color }}/>
-                                                <div className="flex flex-1 justify-between">
-                                                    <span className="text-muted-foreground">{barChartConfig.credit.label}</span>
-                                                    <span className="font-medium">{formatCurrencyTooltip(data.credit)}</span>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            }
-                            
-                            if (label === 'Витрати') {
-                                return (
-                                     <div className="grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
-                                        <p className="font-medium">{label}</p>
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-2.5 w-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: barChartConfig.expenses.color }}/>
-                                            <div className="flex flex-1 justify-between">
-                                                <span className="text-muted-foreground">{barChartConfig.expenses.label}</span>
-                                                <span className="font-medium">{formatCurrencyTooltip(data.expenses)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            }
-                        }
-                        return null;
-                    }}
+                    content={<ChartTooltipContent 
+                      indicator='dot'
+                      formatter={(value, name, item) => (
+                        <div className="flex w-full items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-sm" style={{backgroundColor: item.fill}} />
+                          <div className="flex flex-1 justify-between">
+                            <span className="text-muted-foreground">
+                              {barChartConfig[name as keyof typeof barChartConfig]?.label}
+                            </span>
+                            <span className="font-bold">
+                              {formatCurrencyTooltip(value as number)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    />}
                 />
-                <Bar dataKey="income" fill="var(--color-income)" stackId="a" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="credit" fill="var(--color-credit)" stackId="a" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="income" fill="var(--color-income)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="credit" fill="var(--color-credit)" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} />
-                <ChartLegend content={<ChartLegendContent />} />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
