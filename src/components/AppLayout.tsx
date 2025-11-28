@@ -65,6 +65,7 @@ export default function AppLayout({
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [prefilledTransaction, setPrefilledTransaction] = useState<Partial<Transaction> | undefined>(undefined);
   const lastScrollY = useRef(0);
 
@@ -134,14 +135,6 @@ export default function AppLayout({
         setIsAddTransactionOpen(true);
     });
     transactionHandler(payment);
-  };
-  
-  const handleSettingsToggle = () => {
-    if (pathname === '/settings') {
-      router.back();
-    } else {
-      router.push('/settings');
-    }
   };
 
   if (isMobile === null) {
@@ -244,11 +237,40 @@ export default function AppLayout({
           isMobile && !isHeaderVisible && "-translate-y-full"
         )}>
            <div className="flex items-center gap-2">
-               <Button variant="ghost" size="icon" onClick={handleSettingsToggle}>
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Відкрити/закрити налаштування</span>
-              </Button>
-              <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+              <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
+                <SheetTrigger asChild>
+                   <Button variant="ghost" size="icon" className="md:hidden">
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Відкрити меню</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0">
+                    <div className="flex h-16 items-center border-b px-6">
+                        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+                            <Logo className="h-6 w-6" />
+                            <span>Сімейні фінанси</span>
+                        </Link>
+                    </div>
+                    <nav className="grid gap-2 p-4">
+                        {menuItems.map(item => (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => setIsMobileSheetOpen(false)}
+                                className={cn(
+                                    "flex items-center gap-4 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                                    getIsActive(item.href) && "bg-muted text-primary"
+                                )}
+                            >
+                                <item.icon className="h-4 w-4" />
+                                {item.label}
+                            </Link>
+                        ))}
+                    </nav>
+                </SheetContent>
+              </Sheet>
+              
+              <Link href="/dashboard" className="hidden items-center gap-2 font-semibold md:flex">
                 <Logo className="h-6 w-6" />
                 <span className={cn("text-lg", isMobile && "hidden sm:inline")}>Сімейні фінанси</span>
               </Link>
@@ -268,12 +290,21 @@ export default function AppLayout({
                       <UserAvatar />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-80 p-4" align="end">
-                    <DropdownMenuLabel>
-                      Профіль
+                  <DropdownMenuContent className="w-64" align="end">
+                    <DropdownMenuLabel onClick={() => setIsProfileOpen(true)} className="cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <UserAvatar className="h-6 w-6" />
+                        <div className="flex flex-col">
+                            <span className="font-semibold">{familyMember?.name || 'Профіль'}</span>
+                            <span className="text-xs text-muted-foreground">{familyMember?.email}</span>
+                        </div>
+                      </div>
                     </DropdownMenuLabel>
-                     <DropdownMenuSeparator />
-                     <SettingsForm />
+                    <DropdownMenuSeparator />
+                     <DropdownMenuItem onSelect={() => router.push('/settings')}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Налаштування</span>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="focus:bg-destructive/80 focus:text-destructive-foreground">
                       <LogOut className="mr-2 h-4 w-4" />
@@ -288,6 +319,16 @@ export default function AppLayout({
             {children}
         </main>
         {isMobile && <MobileBottomNav />}
+
+        <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Профіль</DialogTitle>
+                    <DialogDescription>Керуйте налаштуваннями вашого профілю.</DialogDescription>
+                </DialogHeader>
+                <SettingsForm />
+            </DialogContent>
+        </Dialog>
 
         <Dialog open={isAddTransactionOpen} onOpenChange={setIsAddTransactionOpen}>
             <DialogContent>

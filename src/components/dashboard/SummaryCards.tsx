@@ -28,8 +28,13 @@ type SummaryCardsProps = {
 export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const firestore = useFirestore();
+  
+  const familyMembersCollectionRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
 
-  const { data: familyMembers, isLoading: isFamilyMembersLoading } = {data: [], isLoading: false}; // Temporarily disable user collection fetching
+  const { data: familyMembers, isLoading: isFamilyMembersLoading } = useCollection<FamilyMember>(familyMembersCollectionRef);
 
   const [formattedIncome, setFormattedIncome] = useState('0,00 ₴');
   const [formattedExpenses, setFormattedExpenses] = useState('0,00 ₴');
