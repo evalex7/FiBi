@@ -73,7 +73,7 @@ const formatCurrencyTooltip = (amount: number) => {
 
 const barChartConfig = {
   income: { label: 'Чистий дохід', color: 'hsl(var(--chart-2))' },
-  credit: { label: 'Кредит', color: 'hsl(27, 87%, 67%)' },
+  credit: { label: 'Кредитні покупки', color: 'hsl(27, 87%, 67%)' },
   expenses: { label: 'Витрати', color: 'hsl(var(--chart-1))' },
   value: { label: 'Сума' },
 } satisfies ChartConfig;
@@ -217,13 +217,13 @@ export default function ReportsPage() {
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
     
-    const income = totalIncome - credit;
+    const income = totalIncome;
 
     return [{
       name: 'Дохід',
       income: income < 0 ? 0 : income,
       credit: credit,
-      totalIncome: totalIncome,
+      totalIncome: totalIncome + credit,
     }, {
       name: 'Витрати',
       expenses: expenses,
@@ -259,7 +259,7 @@ export default function ReportsPage() {
     const dataMap: { [key: string]: number } = {};
     filteredTransactions
       .filter((t) => {
-        if (t.type !== 'expense') return false;
+        if (t.type !== 'expense' && t.type !== 'credit_purchase') return false;
         if (startDate && endDate) {
              const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
              return transactionDate >= startDate && transactionDate <= endDate;
@@ -317,7 +317,7 @@ export default function ReportsPage() {
       }
       if (t.type === 'income') {
         dailyTotals[dayKey].income += t.amount;
-      } else if (t.type === 'expense') {
+      } else if (t.type === 'expense' || t.type === 'credit_purchase') {
         dailyTotals[dayKey].expenses += t.amount;
       }
     });
@@ -389,7 +389,7 @@ const { data: categoryTrendData, config: categoryTrendConfig, categories: catego
     });
   
     filteredTransactions.forEach(t => {
-        if (t.type === 'expense') {
+        if (t.type === 'expense' || t.type === 'credit_purchase') {
             const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
             if (transactionDate >= startDate && transactionDate <= endDate) {
                 const monthKey = format(transactionDate, 'yyyy-MM');
@@ -445,8 +445,8 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
         .reduce((sum, t) => sum + t.amount, 0);
     
     const totalExpensesThisMonth = transactionsThisMonth
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
+      .filter(t => t.type === 'expense' || t.type === 'credit_purchase')
+      .reduce((sum, t) => sum + t.amount, 0);
     
     const dailyBudget = totalIncomeThisMonth > 0 ? totalIncomeThisMonth / numDaysInMonth : 0;
     const averageDailyExpense = totalExpensesThisMonth > 0 && currentDayOfMonth > 0 ? totalExpensesThisMonth / currentDayOfMonth : 0;
@@ -471,7 +471,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
         const expensesForDay = transactions
             .filter(t => {
                 const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
-                return t.type === 'expense' && startOfDay(transactionDate).getTime() === startOfDay(day).getTime();
+                return (t.type === 'expense' || t.type === 'credit_purchase') && startOfDay(transactionDate).getTime() === startOfDay(day).getTime();
             });
 
         const dailyExpensesByCategory = expensesForDay.reduce((acc, t) => {

@@ -83,6 +83,11 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     // Calculate credit data
     let totalCreditLimit = familyMember?.creditLimit || 0;
     
+    // Credit used for the selected period
+    const creditUsedInPeriod = relevantTransactions
+        .filter(t => t.type === 'credit_purchase')
+        .reduce((sum, t) => sum + t.amount, 0);
+    
     const { creditPurchase, creditPayment } = transactions.reduce(
         (acc, t) => {
             if (t.type === 'credit_purchase') acc.creditPurchase += t.amount;
@@ -90,13 +95,13 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             return acc;
         }, { creditPurchase: 0, creditPayment: 0 }
     );
-
-    const totalCreditUsed = Math.max(0, creditPurchase - creditPayment);
-    const netBalance = ownFunds + (totalCreditLimit - totalCreditUsed);
+    
+    const totalCreditBalance = Math.max(0, creditPurchase - creditPayment); // Total outstanding debt
+    const netBalance = ownFunds + (totalCreditLimit - totalCreditBalance);
     
     setNetBalance(netBalance);
     setFormattedNetBalance(formatCurrency(netBalance));
-    setFormattedCreditUsed(formatCurrency(totalCreditUsed));
+    setFormattedCreditUsed(formatCurrency(creditUsedInPeriod));
     setFormattedCreditLimit(formatCurrency(totalCreditLimit));
 
 
@@ -134,7 +139,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       </Card>
       <Card className="p-2">
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-          <CardTitle className="text-xs font-medium">Використано кредиту</CardTitle>
+          <CardTitle className="text-xs font-medium">Кредитні покупки</CardTitle>
           <CreditCard className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
