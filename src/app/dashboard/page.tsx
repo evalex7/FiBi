@@ -45,7 +45,7 @@ export default function DashboardPage() {
                 <MonthSelector selectedPeriod={period} onPeriodChange={setPeriod} />
             </div>
         </div>
-        <SummaryCards selectedPeriod={period} onCreditAction={handleOpenTransactionDialog} />
+        <SummaryCards selectedPeriod={period} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 order-2 lg:order-1 space-y-6">
              <RecentTransactions selectedPeriod={period} onAddTransaction={() => handleOpenTransactionDialog()} />
@@ -57,7 +57,7 @@ export default function DashboardPage() {
             <DialogHeader>
                 <DialogTitle>Додати транзакцію</DialogTitle>
                 <DialogDescription>
-                Запишіть новий дохід або витрату до вашого рахунку.
+                Запишіть новий дохід, витрату або кредитну операцію.
                 </DialogDescription>
             </DialogHeader>
             <TransactionForm 

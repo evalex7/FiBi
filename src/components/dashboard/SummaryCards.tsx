@@ -24,10 +24,9 @@ const formatCurrency = (amount: number) => {
 
 type SummaryCardsProps = {
     selectedPeriod: string;
-    onCreditAction: (type: Transaction['type']) => void;
 };
 
-export default function SummaryCards({ selectedPeriod, onCreditAction }: SummaryCardsProps) {
+export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const firestore = useFirestore();
   const { user } = useUser();
@@ -174,17 +173,6 @@ export default function SummaryCards({ selectedPeriod, onCreditAction }: Summary
             </div>
           </CardContent>
         </Card>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-        <Button variant="outline" onClick={() => onCreditAction('credit_purchase')} className="border-dashed">
-            <PlusCircle className="mr-2 h-4 w-4 text-red-500"/> Збільшити борг
-        </Button>
-        <Button variant="outline" onClick={() => onCreditAction('credit_payment')} className="border-dashed">
-            <MinusCircle className="mr-2 h-4 w-4 text-green-500"/> Погасити борг
-        </Button>
-        <Button variant="outline" onClick={() => onCreditAction('credit_limit')} className="col-span-2 md:col-span-1 border-dashed">
-             <Landmark className="mr-2 h-4 w-4 text-blue-500"/> Встановити ліміт
-        </Button>
       </div>
     </>
   );

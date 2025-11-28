@@ -26,7 +26,7 @@ import {
   DialogClose,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock, TrendingUp, TrendingDown, Landmark } from 'lucide-react';
+import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock, TrendingUp, TrendingDown, Landmark, CreditCard } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -48,6 +48,8 @@ type TransactionFormProps = {
   isCopy?: boolean;
 };
 
+type TransactionTypeGroup = 'income' | 'expense' | 'credit';
+
 export default function TransactionForm({
   transaction,
   onSave,
@@ -61,13 +63,21 @@ export default function TransactionForm({
 
   const isEditMode = !!transaction && !isCopy;
   
-  const getInitialType = () => {
+  const getInitialType = (): Transaction['type'] => {
     if (initialValues?.type) return initialValues.type;
     if (isEditMode && transaction?.type) return transaction.type;
     return 'expense';
   };
+  
+  const getInitialTypeGroup = (): TransactionTypeGroup => {
+    const currentType = getInitialType();
+    if (currentType === 'income') return 'income';
+    if (currentType === 'expense') return 'expense';
+    return 'credit';
+  }
 
   const [type, setType] = useState<Transaction['type']>(getInitialType());
+  const [typeGroup, setTypeGroup] = useState<TransactionTypeGroup>(getInitialTypeGroup());
   
   const valuesToSet = isEditMode ? transaction : (isCopy ? transaction : initialValues);
 
@@ -83,17 +93,28 @@ export default function TransactionForm({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
-    // When initialValues are provided (e.g., from credit buttons), set the type
+    // When initialValues are provided, set the type and group
     if (initialValues?.type) {
       setType(initialValues.type);
+      if (['credit_purchase', 'credit_payment', 'credit_limit'].includes(initialValues.type)) {
+        setTypeGroup('credit');
+      } else {
+        setTypeGroup(initialValues.type as TransactionTypeGroup);
+      }
     }
   }, [initialValues]);
 
   useEffect(() => {
-    // Only reset category for NEW transactions when type changes
+    // When type group changes, reset specific type and category
     if (isEditMode || isCopy) return;
+    
+    if (typeGroup === 'credit') {
+        setType('credit_purchase'); // Default to credit purchase
+    } else {
+        setType(typeGroup);
+    }
     setCategory('');
-  }, [type, isEditMode, isCopy]);
+  }, [typeGroup, isEditMode, isCopy]);
   
   const categoryTypeMap: Record<Transaction['type'], 'income' | 'expense' | 'credit'> = {
     income: 'income',
@@ -182,36 +203,17 @@ export default function TransactionForm({
     );
   };
   
-  const isCreditType = type === 'credit_payment' || type === 'credit_purchase' || type === 'credit_limit';
-
-  const formTitle = useMemo(() => {
-    if (isCreditType) {
-        if (type === 'credit_purchase') return 'Збільшення боргу (покупка)';
-        if (type === 'credit_payment') return 'Зменшення боргу (погашення)';
-        if (type === 'credit_limit') return 'Встановити/Оновити ліміт';
-    }
-    return 'Додати транзакцію';
-  }, [type, isCreditType]);
-
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
         <div className="flex justify-between items-center">
-            {isCreditType ? (
-                <div className="flex items-center gap-2 font-semibold text-lg">
-                    {type === 'credit_purchase' && <TrendingDown className="h-5 w-5 text-red-500"/>}
-                    {type === 'credit_payment' && <TrendingUp className="h-5 w-5 text-green-500"/>}
-                    {type === 'credit_limit' && <Landmark className="h-5 w-5 text-blue-500" />}
-                    <span>{formTitle}</span>
-                </div>
-            ) : (
-                <div className="grid gap-2">
-                    <Label>Тип</Label>
-                    <RadioGroup
-                    className="flex gap-2 sm:gap-4 flex-wrap"
-                    value={type}
-                    onValueChange={(value: 'income' | 'expense') => setType(value)}
-                    >
+            <div className="grid gap-2 w-full">
+                <Label>Тип</Label>
+                <RadioGroup
+                className="flex gap-2 sm:gap-4 flex-wrap"
+                value={typeGroup}
+                onValueChange={(value: TransactionTypeGroup) => setTypeGroup(value)}
+                >
                     <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
                         <RadioGroupItem value="expense" />
                         <span>Витрата</span>
@@ -220,19 +222,55 @@ export default function TransactionForm({
                         <RadioGroupItem value="income" />
                         <span>Дохід</span>
                     </Label>
-                    </RadioGroup>
-                </div>
-            )}
-            <div className="flex items-center space-x-2">
-                {isPrivate ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                <Label htmlFor="is-private">Особиста</Label>
-                <Switch
-                id="is-private"
-                checked={isPrivate}
-                onCheckedChange={setIsPrivate}
-                />
+                    <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
+                        <RadioGroupItem value="credit" />
+                        <span>Кредит</span>
+                    </Label>
+                </RadioGroup>
             </div>
         </div>
+
+        {typeGroup === 'credit' && (
+            <div className="grid gap-2">
+                <Label htmlFor="credit-type">Тип кредитної операції</Label>
+                <Select required value={type} onValueChange={(value: Transaction['type']) => setType(value)}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Оберіть тип операції" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="credit_purchase">
+                           <div className="flex items-center gap-2">
+                                <TrendingDown className="h-4 w-4 text-red-500" />
+                                <span>Покупка в кредит</span>
+                            </div>
+                        </SelectItem>
+                        <SelectItem value="credit_payment">
+                             <div className="flex items-center gap-2">
+                                <TrendingUp className="h-4 w-4 text-green-500" />
+                                <span>Погашення боргу</span>
+                            </div>
+                        </SelectItem>
+                        <SelectItem value="credit_limit">
+                             <div className="flex items-center gap-2">
+                                <Landmark className="h-4 w-4 text-blue-500" />
+                                <span>Встановити/Оновити ліміт</span>
+                            </div>
+                        </SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+        )}
+
+        <div className="flex items-center space-x-2">
+            {isPrivate ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+            <Label htmlFor="is-private">Особиста</Label>
+            <Switch
+            id="is-private"
+            checked={isPrivate}
+            onCheckedChange={setIsPrivate}
+            />
+        </div>
+
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="grid gap-2">
@@ -342,7 +380,7 @@ export default function TransactionForm({
           <Label htmlFor="description">Опис</Label>
           <Input
             id="description"
-            placeholder={isCreditType ? 'напр., Монобанк' : 'напр., Щотижневі продукти'}
+            placeholder={typeGroup === 'credit' ? 'напр., Монобанк' : 'напр., Щотижневі продукти'}
             required
             value={description}
             onChange={(e) => setDescription(e.target.value)}
