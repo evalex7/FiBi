@@ -73,7 +73,7 @@ const formatCurrencyTooltip = (amount: number) => {
 
 const barChartConfig = {
   income: { label: 'Чистий дохід', color: 'hsl(var(--chart-2))' },
-  credit: { label: 'Кредитні покупки', color: 'hsl(27, 87%, 67%)' },
+  credit: { label: 'Кредитні покупки', color: 'hsl(var(--chart-5))' },
   expenses: { label: 'Витрати', color: 'hsl(var(--chart-1))' },
   value: { label: 'Сума' },
 } satisfies ChartConfig;
@@ -560,9 +560,9 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
                       )}
                     />}
                 />
-                <Bar dataKey="income" fill="var(--color-income)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="credit" fill="var(--color-credit)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="income" fill="var(--color-income)" radius={[4, 4, 0, 0]} barSize={60} />
+                <Bar dataKey="credit" fill="var(--color-credit)" radius={[4, 4, 0, 0]} barSize={60} />
+                <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} barSize={60} />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
