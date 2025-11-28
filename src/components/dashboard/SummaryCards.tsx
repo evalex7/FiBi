@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Scale, CreditCard, Landmark, Briefcase } from 'lucide-react';
+import { TrendingUp, TrendingDown, Scale, CreditCard, Landmark, Briefcase, PlusCircle, MinusCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTransactions } from '@/contexts/transactions-context';
 import { useState, useEffect, useMemo } from 'react';
@@ -8,7 +8,8 @@ import { startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useFirestore, useDoc, useMemoFirebase, useUser } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import type { FamilyMember } from '@/lib/types';
+import type { FamilyMember, Transaction } from '@/lib/types';
+import { Button } from '../ui/button';
 
 
 const formatCurrency = (amount: number) => {
@@ -23,9 +24,10 @@ const formatCurrency = (amount: number) => {
 
 type SummaryCardsProps = {
     selectedPeriod: string;
+    onCreditAction: (type: Transaction['type']) => void;
 };
 
-export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
+export default function SummaryCards({ selectedPeriod, onCreditAction }: SummaryCardsProps) {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const firestore = useFirestore();
   const { user } = useUser();
@@ -107,70 +109,83 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
 
 
   return (
-    <div className="grid gap-2 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-      <Card className="p-2">
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-          <CardTitle className="text-xs font-medium">Дохід</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="text-xl font-bold text-teal-600">{formattedIncome}</div>
-        </CardContent>
-      </Card>
-      <Card className="p-2">
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-          <CardTitle className="text-xs font-medium">Витрати</CardTitle>
-          <TrendingDown className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="text-xl font-bold text-blue-600">{formattedExpenses}</div>
-        </CardContent>
-      </Card>
-      <Card className="p-2">
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-          <CardTitle className="text-xs font-medium">Кредитний ліміт</CardTitle>
-          <Landmark className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="text-xl font-bold text-orange-500">{formattedCreditLimit}</div>
-        </CardContent>
-      </Card>
-      <Card className="p-2">
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-          <CardTitle className="text-xs font-medium">Кредитні покупки</CardTitle>
-          <CreditCard className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="text-xl font-bold text-orange-500">{formattedCreditUsed}</div>
-        </CardContent>
-      </Card>
-      <Card className="p-2">
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-          <CardTitle className="text-xs font-medium">Загальний баланс</CardTitle>
-          <Scale className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className={cn(
-            "text-xl font-bold",
-            netBalance >= 0 && "text-green-600",
-            netBalance < 0 && "text-red-600"
-            )}
-          >
-            {formattedNetBalance}
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="p-2">
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-          <CardTitle className="text-xs font-medium">Власні кошти</CardTitle>
-          <Briefcase className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className={cn("text-xl font-bold text-green-600")}>
-            {formattedOwnFunds}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <>
+      <div className="grid gap-2 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <Card className="p-2">
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
+            <CardTitle className="text-xs font-medium">Дохід</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="text-xl font-bold text-teal-600">{formattedIncome}</div>
+          </CardContent>
+        </Card>
+        <Card className="p-2">
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
+            <CardTitle className="text-xs font-medium">Витрати</CardTitle>
+            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="text-xl font-bold text-blue-600">{formattedExpenses}</div>
+          </CardContent>
+        </Card>
+        <Card className="p-2">
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
+            <CardTitle className="text-xs font-medium">Кредитний ліміт</CardTitle>
+            <Landmark className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="text-xl font-bold text-orange-500">{formattedCreditLimit}</div>
+          </CardContent>
+        </Card>
+        <Card className="p-2">
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
+            <CardTitle className="text-xs font-medium">Кредитні покупки</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="text-xl font-bold text-orange-500">{formattedCreditUsed}</div>
+          </CardContent>
+        </Card>
+        <Card className="p-2">
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
+            <CardTitle className="text-xs font-medium">Загальний баланс</CardTitle>
+            <Scale className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className={cn(
+              "text-xl font-bold",
+              netBalance >= 0 && "text-green-600",
+              netBalance < 0 && "text-red-600"
+              )}
+            >
+              {formattedNetBalance}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="p-2">
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
+            <CardTitle className="text-xs font-medium">Власні кошти</CardTitle>
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className={cn("text-xl font-bold text-green-600")}>
+              {formattedOwnFunds}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <Button variant="outline" onClick={() => onCreditAction('credit_purchase')} className="border-dashed">
+            <PlusCircle className="mr-2 h-4 w-4 text-red-500"/> Збільшити борг
+        </Button>
+        <Button variant="outline" onClick={() => onCreditAction('credit_payment')} className="border-dashed">
+            <MinusCircle className="mr-2 h-4 w-4 text-green-500"/> Погасити борг
+        </Button>
+        <Button variant="outline" onClick={() => onCreditAction('credit_limit')} className="col-span-2 md:col-span-1 border-dashed">
+             <Landmark className="mr-2 h-4 w-4 text-blue-500"/> Встановити ліміт
+        </Button>
+      </div>
+    </>
   );
 }

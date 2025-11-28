@@ -60,10 +60,17 @@ export default function TransactionForm({
   const isMobile = useIsMobile();
 
   const isEditMode = !!transaction && !isCopy;
-  const valuesToSet = isEditMode ? transaction : initialValues;
-
-  const [type, setType] = useState<Transaction['type']>(valuesToSet?.type || 'expense');
   
+  const getInitialType = () => {
+    if (initialValues?.type) return initialValues.type;
+    if (isEditMode && transaction?.type) return transaction.type;
+    return 'expense';
+  };
+
+  const [type, setType] = useState<Transaction['type']>(getInitialType());
+  
+  const valuesToSet = isEditMode ? transaction : (isCopy ? transaction : initialValues);
+
   const [date, setDate] = useState<Date | undefined>(
       valuesToSet?.date instanceof Timestamp ? valuesToSet.date.toDate() : (valuesToSet?.date ? new Date(valuesToSet.date as any) : new Date())
   );
@@ -88,7 +95,7 @@ export default function TransactionForm({
     setCategory('');
   }, [type, isEditMode, isCopy]);
   
-  const categoryTypeMap: Record<Transaction['type'], 'income' | 'expense' | 'credit' | 'credit_limit'> = {
+  const categoryTypeMap: Record<Transaction['type'], 'income' | 'expense' | 'credit'> = {
     income: 'income',
     expense: 'expense',
     credit_purchase: 'credit',
@@ -177,14 +184,25 @@ export default function TransactionForm({
   
   const isCreditType = type === 'credit_payment' || type === 'credit_purchase' || type === 'credit_limit';
 
+  const formTitle = useMemo(() => {
+    if (isCreditType) {
+        if (type === 'credit_purchase') return 'Збільшення боргу (покупка)';
+        if (type === 'credit_payment') return 'Зменшення боргу (погашення)';
+        if (type === 'credit_limit') return 'Встановити/Оновити ліміт';
+    }
+    return 'Додати транзакцію';
+  }, [type, isCreditType]);
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
         <div className="flex justify-between items-center">
             {isCreditType ? (
-                <div className="flex items-center gap-2 font-semibold">
-                    {type === 'credit_purchase' ? <TrendingDown className="h-5 w-5 text-red-500"/> : type === 'credit_payment' ? <TrendingUp className="h-5 w-5 text-green-500"/> : <Landmark className="h-5 w-5 text-blue-500" />}
-                    {type === 'credit_purchase' ? 'Збільшення боргу (покупка)' : type === 'credit_payment' ? 'Зменшення боргу (погашення)' : 'Встановити/Оновити ліміт'}
+                <div className="flex items-center gap-2 font-semibold text-lg">
+                    {type === 'credit_purchase' && <TrendingDown className="h-5 w-5 text-red-500"/>}
+                    {type === 'credit_payment' && <TrendingUp className="h-5 w-5 text-green-500"/>}
+                    {type === 'credit_limit' && <Landmark className="h-5 w-5 text-blue-500" />}
+                    <span>{formTitle}</span>
                 </div>
             ) : (
                 <div className="grid gap-2">
