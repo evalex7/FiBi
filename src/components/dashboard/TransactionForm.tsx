@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -132,10 +133,10 @@ export default function TransactionForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const isCreditLimit = type === 'credit_limit';
-    const finalCategory = isCreditLimit ? 'Кредитні операції' : category;
+    const isCreditOperation = typeGroup === 'credit';
+    const finalCategory = isCreditOperation ? 'Кредитні операції' : category;
 
-    if (!amount || !description || (!isCreditLimit && !finalCategory) || !date) {
+    if (!amount || !description || (!isCreditOperation && !finalCategory) || !date) {
       toast({
         variant: 'destructive',
         title: 'Помилка',
@@ -391,10 +392,10 @@ export default function TransactionForm({
         </div>
 
         
-        {type !== 'credit_limit' && (
+        {typeGroup !== 'credit' && (
           <div className="grid gap-2">
             <Label htmlFor="category">Категорія</Label>
-            <Select required={type !== 'credit_limit'} value={category} onValueChange={setCategory}>
+            <Select required={typeGroup !== 'credit'} value={category} onValueChange={setCategory}>
               <SelectTrigger>
                 <SelectValue placeholder="Оберіть категорію" />
               </SelectTrigger>
