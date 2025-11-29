@@ -39,13 +39,19 @@ import TransactionForm from './dashboard/TransactionForm';
 import HeaderPaymentReminders from './dashboard/HeaderPaymentReminders';
 import SettingsForm from './settings/SettingsForm';
 
-const menuItems = [
+const mainMenuItems = [
   { href: '/dashboard', label: 'Головна', icon: Home },
   { href: '/budgets', label: 'Бюджети', icon: Target },
   { href: '/payments', label: 'Рахунки', icon: Receipt },
   { href: '/reports', label: 'Звіти', icon: AreaChart },
-  { href: '/settings', label: 'Налаштування', icon: Settings },
 ];
+
+const secondaryMenuItems = [
+    { href: '/settings', label: 'Налаштування', icon: Settings },
+    { href: '/profile', label: 'Профіль', icon: UserIcon },
+];
+
+const allMenuItems = [...mainMenuItems, ...secondaryMenuItems.filter(item => item.href !== '/profile')];
 
 export default function AppLayout({
   children,
@@ -191,7 +197,7 @@ export default function AppLayout({
 
   const DesktopNav = () => (
      <nav className="hidden md:flex items-center gap-1 rounded-lg bg-muted p-1">
-      {menuItems.map((item) => (
+      {allMenuItems.map((item) => (
         <Link 
           key={item.href} 
           href={item.href}
@@ -212,8 +218,8 @@ export default function AppLayout({
           "md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t transition-transform duration-300",
           isHeaderVisible ? "translate-y-0" : "translate-y-full"
       )}>
-        <div className="grid h-full grid-cols-5 mx-auto font-medium">
-          {menuItems.map((item) => (
+        <div className="grid h-full grid-cols-4 mx-auto font-medium">
+          {mainMenuItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -255,7 +261,7 @@ export default function AppLayout({
                       </SheetTitle>
                     </SheetHeader>
                     <nav className="grid gap-2 p-4">
-                        {menuItems.map(item => (
+                        {secondaryMenuItems.map(item => (
                             <Link
                                 key={item.href}
                                 href={item.href}
