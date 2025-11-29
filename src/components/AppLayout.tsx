@@ -34,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
 import TransactionForm from './dashboard/TransactionForm';
 import HeaderPaymentReminders from './dashboard/HeaderPaymentReminders';
 import SettingsForm from './settings/SettingsForm';
@@ -264,34 +264,9 @@ export default function AppLayout({
                 
                 <HeaderPaymentReminders onPayClick={handleOpenTransactionForm} />
                 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                     <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
-                      <UserAvatar />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-64" align="end">
-                    <DropdownMenuLabel onClick={() => setIsProfileOpen(true)} className="cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <UserAvatar className="h-6 w-6" />
-                        <div className="flex flex-col">
-                            <span className="font-semibold">{familyMember?.name || 'Профіль'}</span>
-                            <span className="text-xs text-muted-foreground">{familyMember?.email}</span>
-                        </div>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                     <DropdownMenuItem onSelect={() => router.push('/profile')}>
-                      <UserIcon className="mr-2 h-4 w-4" />
-                      <span>Профіль</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="focus:bg-destructive/80 focus:text-destructive-foreground">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Вийти</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => setIsProfileOpen(true)}>
+                  <UserAvatar />
+                </Button>
             </div>
         </header>
 
@@ -307,6 +282,12 @@ export default function AppLayout({
                     <DialogDescription>Керуйте налаштуваннями вашого профілю.</DialogDescription>
                 </DialogHeader>
                 <SettingsForm />
+                <DialogFooter>
+                    <Button variant="outline" onClick={handleLogout} className="w-full">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Вийти
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
 
