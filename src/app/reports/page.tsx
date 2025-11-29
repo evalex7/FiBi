@@ -315,9 +315,9 @@ export default function ReportsPage() {
       if (!dailyTotals[dayKey]) {
         dailyTotals[dayKey] = { income: 0, expenses: 0 };
       }
-      if (t.type === 'income') {
+      if (t.type === 'income' || t.type === 'credit_purchase') {
         dailyTotals[dayKey].income += t.amount;
-      } else if (t.type === 'expense') { // Only count 'expense' for this chart now
+      } else if (t.type === 'expense') {
         dailyTotals[dayKey].expenses += t.amount;
       }
     });
