@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -316,7 +317,7 @@ export default function ReportsPage() {
       }
       if (t.type === 'income') {
         dailyTotals[dayKey].income += t.amount;
-      } else if (t.type === 'expense' || t.type === 'credit_purchase') {
+      } else if (t.type === 'expense') { // Only count 'expense' for this chart now
         dailyTotals[dayKey].expenses += t.amount;
       }
     });
