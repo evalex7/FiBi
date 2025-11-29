@@ -44,6 +44,7 @@ const menuItems = [
   { href: '/budgets', label: 'Бюджети', icon: Target },
   { href: '/payments', label: 'Рахунки', icon: Receipt },
   { href: '/reports', label: 'Звіти', icon: AreaChart },
+  { href: '/settings', label: 'Налаштування', icon: Settings },
 ];
 
 export default function AppLayout({
@@ -211,7 +212,7 @@ export default function AppLayout({
           "md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-background border-t transition-transform duration-300",
           isHeaderVisible ? "translate-y-0" : "translate-y-full"
       )}>
-        <div className="grid h-full grid-cols-4 mx-auto font-medium">
+        <div className="grid h-full grid-cols-5 mx-auto font-medium">
           {menuItems.map((item) => (
             <Link
               key={item.href}
@@ -303,9 +304,9 @@ export default function AppLayout({
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                     <DropdownMenuItem onSelect={() => router.push('/settings')}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Налаштування</span>
+                     <DropdownMenuItem onSelect={() => router.push('/profile')}>
+                      <UserIcon className="mr-2 h-4 w-4" />
+                      <span>Профіль</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="focus:bg-destructive/80 focus:text-destructive-foreground">
