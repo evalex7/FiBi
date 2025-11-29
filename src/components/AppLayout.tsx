@@ -243,40 +243,12 @@ export default function AppLayout({
           isMobile && !isHeaderVisible && "-translate-y-full"
         )}>
            <div className="flex items-center gap-2">
-              <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
-                <SheetTrigger asChild>
-                   <Button variant="ghost" size="icon" className="md:hidden">
-                    <Menu className="h-5 w-5" />
-                    <span className="sr-only">Відкрити меню</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="p-0">
-                    <SheetHeader className="border-b">
-                      <SheetTitle className="p-6">
-                        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-                            <Logo className="h-6 w-6" />
-                            <span>Сімейні фінанси</span>
-                        </Link>
-                      </SheetTitle>
-                    </SheetHeader>
-                    <nav className="grid gap-2 p-4">
-                        {secondaryMenuItems.map(item => (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={() => setIsMobileSheetOpen(false)}
-                                className={cn(
-                                    "flex items-center gap-4 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                                    getIsActive(item.href) && "bg-muted text-primary"
-                                )}
-                            >
-                                <item.icon className="h-4 w-4" />
-                                {item.label}
-                            </Link>
-                        ))}
-                    </nav>
-                </SheetContent>
-              </Sheet>
+              <Button asChild variant="ghost" size="icon" className="md:hidden">
+                <Link href="/settings">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Налаштування</span>
+                </Link>
+              </Button>
               
               <Link href="/dashboard" className="hidden items-center gap-2 font-semibold md:flex">
                 <Logo className="h-6 w-6" />
