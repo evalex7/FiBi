@@ -48,10 +48,9 @@ const mainMenuItems = [
 
 const secondaryMenuItems = [
     { href: '/settings', label: 'Налаштування', icon: Settings },
-    { href: '/profile', label: 'Профіль', icon: UserIcon },
 ];
 
-const allMenuItems = [...mainMenuItems, ...secondaryMenuItems.filter(item => item.href !== '/profile')];
+const allMenuItems = [...mainMenuItems, ...secondaryMenuItems];
 
 export default function AppLayout({
   children,
