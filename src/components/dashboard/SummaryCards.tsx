@@ -1,3 +1,4 @@
+
 'use client';
 
 import { TrendingUp, TrendingDown, Scale, CreditCard, Landmark, Briefcase, PlusCircle, MinusCircle } from 'lucide-react';
@@ -38,18 +39,32 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
 
   const { data: familyMember, isLoading: isFamilyMembersLoading } = useDoc<FamilyMember>(userDocRef);
 
-  const [formattedIncome, setFormattedIncome] = useState('0,00 ₴');
-  const [formattedExpenses, setFormattedExpenses] = useState('0,00 ₴');
-  
-  const [formattedOwnFunds, setFormattedOwnFunds] = useState('0,00 ₴');
-  const [formattedCreditUsed, setFormattedCreditUsed] = useState('0,00 ₴');
-  const [formattedCreditLimit, setFormattedCreditLimit] = useState('0,00 ₴');
-  const [formattedNetBalance, setFormattedNetBalance] = useState('0,00 ₴');
-  
   const isLoading = isTransactionsLoading || isFamilyMembersLoading;
 
-  useEffect(() => {
-    if (isLoading) return;
+  const {
+    formattedIncome,
+    formattedExpenses,
+    formattedOwnFunds,
+    formattedCreditUsed,
+    formattedCreditLimit,
+    formattedNetBalance,
+    ownFunds,
+    creditLimit,
+    creditUsed
+  } = useMemo(() => {
+    if (isLoading) {
+      return {
+        formattedIncome: '0,00 ₴',
+        formattedExpenses: '0,00 ₴',
+        formattedOwnFunds: '0,00 ₴',
+        formattedCreditUsed: '0,00 ₴',
+        formattedCreditLimit: '0,00 ₴',
+        formattedNetBalance: '0,00 ₴',
+        ownFunds: 0,
+        creditLimit: 0,
+        creditUsed: 0,
+      };
+    }
 
     // Period-specific calculations for income/expenses cards
     let periodStart: Date | null = null;
@@ -74,9 +89,6 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     const expensesInPeriod = transactionsInPeriod
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
-      
-    setFormattedIncome(formatCurrency(incomeInPeriod));
-    setFormattedExpenses(formatCurrency(expensesInPeriod));
 
     // All-time calculations for balances
     const allTimeTransactions = transactions;
@@ -98,13 +110,18 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     const creditUsed = pureBalance < 0 ? Math.abs(pureBalance) : 0;
     
     const totalBalance = ownFunds + (creditLimit - creditUsed);
-    
-    setFormattedOwnFunds(formatCurrency(ownFunds));
-    setFormattedCreditUsed(formatCurrency(creditUsed));
-    setFormattedCreditLimit(formatCurrency(creditLimit));
-    setFormattedNetBalance(formatCurrency(totalBalance));
 
-
+    return {
+      formattedIncome: formatCurrency(incomeInPeriod),
+      formattedExpenses: formatCurrency(expensesInPeriod),
+      formattedOwnFunds: formatCurrency(ownFunds),
+      formattedCreditUsed: formatCurrency(creditUsed),
+      formattedCreditLimit: formatCurrency(creditLimit),
+      formattedNetBalance: formatCurrency(totalBalance),
+      ownFunds,
+      creditLimit,
+      creditUsed,
+    };
   }, [transactions, selectedPeriod, isLoading, familyMember]);
 
 
