@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -223,10 +224,8 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
         return 'text-green-600';
       case 'expense':
         return 'text-blue-600';
-      case 'credit_purchase':
-        return 'text-red-600';
-      case 'credit_payment':
-        return 'text-red-600';
+      case 'credit_limit':
+        return 'text-orange-500';
       default:
         return 'text-foreground';
     }
@@ -335,7 +334,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                                 isMasked && 'font-mono'
                             )}
                             >
-                            {!isMasked && (transaction.type === 'income' ? '+' : '-')}
+                            {!isMasked && (transaction.type === 'income' ? '+' : (transaction.type === 'expense' ? '-' : ''))}
                             {amountDisplay}
                         </div>
                         <TransactionActions transaction={transaction} />
@@ -391,7 +390,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                             isMasked && 'font-mono'
                           )}
                         >
-                          {!isMasked && (transaction.type === 'income' ? '+' : '-')}
+                          {!isMasked && (transaction.type === 'income' ? '+' : (transaction.type === 'expense' ? '-' : ''))}
                           {amountDisplay}
                         </TableCell>
                         <TableCell>

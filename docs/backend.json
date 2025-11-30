@@ -103,7 +103,7 @@
         },
         "type": {
             "type": "string",
-            "enum": ["income", "expense", "credit_purchase", "credit_payment", "credit_limit"]
+            "enum": ["income", "expense", "credit_limit"]
         }
       },
       "required": [

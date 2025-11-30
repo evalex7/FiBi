@@ -5,7 +5,7 @@ export type Transaction = {
   date: Date | Timestamp;
   description: string;
   amount: number;
-  type: 'income' | 'expense' | 'credit_purchase' | 'credit_payment' | 'credit_limit';
+  type: 'income' | 'expense' | 'credit_limit';
   category: string;
   familyMemberId?: string;
   isPrivate?: boolean;

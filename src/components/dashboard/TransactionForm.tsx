@@ -97,7 +97,7 @@ export default function TransactionForm({
     // When initialValues are provided, set the type and group
     if (initialValues?.type) {
       setType(initialValues.type);
-      if (['credit_purchase', 'credit_payment', 'credit_limit'].includes(initialValues.type)) {
+      if (['credit_limit'].includes(initialValues.type)) {
         setTypeGroup('credit');
       } else {
         setTypeGroup(initialValues.type as TransactionTypeGroup);
@@ -110,7 +110,7 @@ export default function TransactionForm({
     if (isEditMode || isCopy) return;
     
     if (typeGroup === 'credit') {
-        setType('credit_purchase'); // Default to credit purchase
+        setType('credit_limit'); // Default to credit limit
     } else {
         setType(typeGroup);
     }
@@ -120,8 +120,6 @@ export default function TransactionForm({
   const categoryTypeMap: Record<Transaction['type'], 'income' | 'expense' | 'credit'> = {
     income: 'income',
     expense: 'expense',
-    credit_purchase: 'credit',
-    credit_payment: 'credit',
     credit_limit: 'credit',
   };
 
@@ -237,23 +235,11 @@ export default function TransactionForm({
         {typeGroup === 'credit' && (
             <div className="grid gap-2">
                 <Label htmlFor="credit-type">Тип кредитної операції</Label>
-                <Select required value={type} onValueChange={(value: Transaction['type']) => setType(value)}>
+                 <Select required value={type} onValueChange={(value: Transaction['type']) => setType(value)} disabled>
                     <SelectTrigger>
                         <SelectValue placeholder="Оберіть тип операції" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="credit_purchase">
-                           <div className="flex items-center gap-2">
-                                <TrendingDown className="h-4 w-4 text-red-500" />
-                                <span>Покупка в кредит</span>
-                            </div>
-                        </SelectItem>
-                        <SelectItem value="credit_payment">
-                             <div className="flex items-center gap-2">
-                                <TrendingUp className="h-4 w-4 text-green-500" />
-                                <span>Погашення боргу</span>
-                            </div>
-                        </SelectItem>
                         <SelectItem value="credit_limit">
                              <div className="flex items-center gap-2">
                                 <Landmark className="h-4 w-4 text-blue-500" />

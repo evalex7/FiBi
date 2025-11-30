@@ -1,3 +1,4 @@
+
 'use client';
 
 import { TrendingUp, TrendingDown, Scale, CreditCard, Landmark, Briefcase, PlusCircle, MinusCircle } from 'lucide-react';
@@ -66,42 +67,45 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       const transactionDate = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
       return transactionDate >= periodStart! && transactionDate <= periodEnd!;
     });
+    
+    const allTimeTransactions = transactions;
 
-    const income = relevantTransactions
+    // Period-specific calculations
+    const incomeInPeriod = relevantTransactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const expenses = relevantTransactions
+    const expensesInPeriod = relevantTransactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
-    
-    const ownFunds = Math.max(0, income - expenses);
-    
-    setFormattedIncome(formatCurrency(income));
-    setFormattedExpenses(formatCurrency(expenses));
-    setFormattedOwnFunds(formatCurrency(ownFunds));
+      
+    setFormattedIncome(formatCurrency(incomeInPeriod));
+    setFormattedExpenses(formatCurrency(expensesInPeriod));
 
-    // Calculate credit data
-    const { creditLimit, creditPurchase, creditPayment } = transactions.reduce(
-        (acc, t) => {
-            if (t.type === 'credit_limit') acc.creditLimit = t.amount; // Use the latest limit, not sum
-            if (t.type === 'credit_purchase') acc.creditPurchase += t.amount;
-            if (t.type === 'credit_payment') acc.creditPayment += t.amount;
-            return acc;
-        }, { creditLimit: 0, creditPurchase: 0, creditPayment: 0 }
-    );
-    
-    const creditUsedInPeriod = relevantTransactions
-        .filter(t => t.type === 'credit_purchase')
+    // All-time calculations for balances
+    const totalIncomeAllTime = allTimeTransactions
+        .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
     
-    const totalCreditBalance = Math.max(0, creditPurchase - creditPayment); // Total outstanding debt
-    const netBalance = ownFunds + (creditLimit - totalCreditBalance);
+    const totalExpensesAllTime = allTimeTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+      
+    const creditLimitTransactions = allTimeTransactions.filter(t => t.type === 'credit_limit').sort((a,b) => (b.date as any).toDate() - (a.date as any).toDate());
+    const creditLimit = creditLimitTransactions.length > 0 ? creditLimitTransactions[0].amount : 0;
     
-    setNetBalance(netBalance);
-    setFormattedNetBalance(formatCurrency(netBalance));
-    setFormattedCreditUsed(formatCurrency(creditUsedInPeriod));
+    const ownFundsBalance = totalIncomeAllTime - totalExpensesAllTime;
+    
+    const ownFunds = Math.max(0, ownFundsBalance);
+    const creditUsed = ownFundsBalance < 0 ? Math.abs(ownFundsBalance) : 0;
+    
+    const totalBalance = ownFunds + (creditLimit - creditUsed);
+    
+    setFormattedOwnFunds(formatCurrency(ownFunds));
+    setFormattedCreditUsed(formatCurrency(creditUsed));
     setFormattedCreditLimit(formatCurrency(creditLimit));
+    setNetBalance(totalBalance);
+    setFormattedNetBalance(formatCurrency(totalBalance));
 
 
   }, [transactions, selectedPeriod, isLoading, familyMember]);
@@ -112,7 +116,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       <div className="grid gap-2 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card className="p-2">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-            <CardTitle className="text-xs font-medium">Дохід</CardTitle>
+            <CardTitle className="text-xs font-medium">Дохід (за період)</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-0">
@@ -121,7 +125,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
         </Card>
         <Card className="p-2">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-            <CardTitle className="text-xs font-medium">Витрати</CardTitle>
+            <CardTitle className="text-xs font-medium">Витрати (за період)</CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-0">
@@ -139,7 +143,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
         </Card>
         <Card className="p-2">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-            <CardTitle className="text-xs font-medium">Кредитні покупки</CardTitle>
+            <CardTitle className="text-xs font-medium">Використано кредиту</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-0">
