@@ -1,4 +1,3 @@
-
 'use client';
 
 import { TrendingUp, TrendingDown, Scale, CreditCard, Landmark, Briefcase, PlusCircle, MinusCircle } from 'lucide-react';
