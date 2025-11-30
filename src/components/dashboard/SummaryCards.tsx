@@ -152,7 +152,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
         </Card>
         <Card className="p-2">
           <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 p-0">
-            <CardTitle className="text-xs font-medium">Загальний баланс</CardTitle>
+            <CardTitle className="text-xs font-medium">Загальний залишок</CardTitle>
             <Scale className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-0">
