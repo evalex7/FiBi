@@ -44,7 +44,6 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const [formattedOwnFunds, setFormattedOwnFunds] = useState('0,00 ₴');
   const [formattedCreditUsed, setFormattedCreditUsed] = useState('0,00 ₴');
   const [formattedCreditLimit, setFormattedCreditLimit] = useState('0,00 ₴');
-  const [netBalance, setNetBalance] = useState(0);
   const [formattedNetBalance, setFormattedNetBalance] = useState('0,00 ₴');
   
   const isLoading = isTransactionsLoading || isFamilyMembersLoading;
@@ -103,7 +102,6 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     setFormattedOwnFunds(formatCurrency(ownFunds));
     setFormattedCreditUsed(formatCurrency(creditUsed));
     setFormattedCreditLimit(formatCurrency(creditLimit));
-    setNetBalance(totalBalance);
     setFormattedNetBalance(formatCurrency(totalBalance));
 
 
@@ -157,8 +155,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <CardContent className="p-0">
             <div className={cn(
               "text-xl font-bold",
-              netBalance >= 0 && "text-green-600",
-              netBalance < 0 && "text-red-600"
+              (ownFunds + (creditLimit - creditUsed)) >= 0 ? "text-green-600" : "text-red-600"
               )}
             >
               {formattedNetBalance}
