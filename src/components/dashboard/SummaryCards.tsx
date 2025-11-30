@@ -94,10 +94,10 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     const creditLimitTransactions = allTimeTransactions.filter(t => t.type === 'credit_limit').sort((a,b) => (b.date as any).toDate() - (a.date as any).toDate());
     const creditLimit = creditLimitTransactions.length > 0 ? creditLimitTransactions[0].amount : 0;
     
-    const ownFundsBalance = totalIncomeAllTime - totalExpensesAllTime;
+    const pureBalance = totalIncomeAllTime - totalExpensesAllTime;
     
-    const ownFunds = Math.max(0, ownFundsBalance);
-    const creditUsed = ownFundsBalance < 0 ? Math.min(creditLimit, Math.abs(ownFundsBalance)) : 0;
+    const ownFunds = Math.max(0, pureBalance);
+    const creditUsed = pureBalance < 0 ? Math.abs(pureBalance) : 0;
     
     const totalBalance = ownFunds + (creditLimit - creditUsed);
     

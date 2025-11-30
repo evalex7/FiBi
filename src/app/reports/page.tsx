@@ -227,10 +227,14 @@ export default function ReportsPage() {
       })
       .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
     
-    const ownFundsAtStart = Math.max(0, balanceBeforePeriod);
+    const ownFundsAtStartOfPeriod = Math.max(0, balanceBeforePeriod);
     
-    const creditSpentInPeriod = Math.max(0, expenses - (income + ownFundsAtStart));
-    const incomeUsedForSpending = Math.min(expenses, income + ownFundsAtStart);
+    // Calculate how much of this period's expenses were covered by income from this period + funds from before
+    const fundsAvailableForSpending = income + ownFundsAtStartOfPeriod;
+    const expensesCoveredByOwnFunds = Math.min(expenses, fundsAvailableForSpending);
+    
+    // Credit spent is the remainder of expenses
+    const creditSpentInPeriod = Math.max(0, expenses - fundsAvailableForSpending);
 
     return [{
       name: 'Дохід',
@@ -302,29 +306,31 @@ export default function ReportsPage() {
   }, [filteredTransactions, isLoading, categoryPeriod, categories]);
 
   const trendData = useMemo(() => {
-    if (isLoading || transactions.length < 2) return [];
-
+    if (isLoading || transactions.length < 1) return [];
+  
+    const now = new Date();
+    const allTimeStartDate = earliestTransactionDate ? startOfMonth(earliestTransactionDate) : startOfMonth(now);
+  
     let startDate: Date;
-    let endDate: Date;
-    let intervalDays: Date[];
-
+    let endDate: Date = endOfMonth(now);
+  
     if (trendPeriod === 'daily') {
-      const now = new Date();
       startDate = startOfMonth(now);
-      endDate = endOfMonth(now);
-      intervalDays = eachDayOfInterval({ start: startDate, end: endDate });
     } else { // monthly
-      startDate = earliestTransactionDate ? startOfMonth(earliestTransactionDate) : startOfMonth(new Date());
-      endDate = endOfMonth(new Date());
-       intervalDays = eachDayOfInterval({ start: startDate, end: endDate });
+      startDate = allTimeStartDate;
     }
-
+  
+    const intervalDays = eachDayOfInterval({ start: startDate, end: endDate });
+  
     const dailyTotals: { [key: string]: { income: number, expenses: number } } = {};
     
-    transactions.forEach(t => {
+    const relevantTransactions = transactions.filter(t => {
       const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
-      const dayKey = format(transactionDate, 'yyyy-MM-dd');
+      return transactionDate >= startDate && transactionDate <= endDate;
+    });
 
+    relevantTransactions.forEach(t => {
+      const dayKey = format(t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date), 'yyyy-MM-dd');
       if (!dailyTotals[dayKey]) {
         dailyTotals[dayKey] = { income: 0, expenses: 0 };
       }
@@ -334,46 +340,43 @@ export default function ReportsPage() {
         dailyTotals[dayKey].expenses += t.amount;
       }
     });
-    
-    const creditLimitTransactions = transactions.filter(t => t.type === 'credit_limit').sort((a,b) => (b.date as any).toDate() - (a.date as any).toDate());
-    const creditLimit = creditLimitTransactions.length > 0 ? creditLimitTransactions[0].amount : 0;
-    
-    let cumulativeBalance = 0;
-    let cumulativeCreditUsed = 0;
 
+    const balanceBeforePeriod = transactions
+      .filter(t => {
+        const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+        return transactionDate < startDate && (t.type === 'income' || t.type === 'expense');
+      })
+      .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
+    
+    let cumulativeBalance = balanceBeforePeriod;
+  
     const chartData = intervalDays.map(day => {
         const dayKey = format(day, 'yyyy-MM-dd');
-        let dailyIncome = 0;
-        let dailyExpenses = 0;
-
-        if (dailyTotals[dayKey]) {
-            dailyIncome = dailyTotals[dayKey].income;
-            dailyExpenses = dailyTotals[dayKey].expenses;
-        }
-
-        const balanceBeforeDay = cumulativeBalance;
-        const potentialBalance = balanceBeforeDay + dailyIncome - dailyExpenses;
+        const dailyIncome = dailyTotals[dayKey]?.income || 0;
+        const dailyExpenses = dailyTotals[dayKey]?.expenses || 0;
+  
+        const balanceBeforeToday = cumulativeBalance;
+        const ownFundsAvailable = balanceBeforeToday > 0 ? balanceBeforeToday + dailyIncome : dailyIncome;
         
-        const creditUsedToday = potentialBalance < 0 ? Math.abs(potentialBalance) - cumulativeCreditUsed : 0;
-
-        cumulativeBalance = potentialBalance;
-        cumulativeCreditUsed = cumulativeBalance < 0 ? Math.abs(cumulativeBalance) : 0;
-
+        const creditUsedToday = Math.max(0, dailyExpenses - ownFundsAvailable);
+  
+        cumulativeBalance += dailyIncome - dailyExpenses;
+  
         let dateLabel: string;
          if (trendPeriod === 'daily') {
             dateLabel = format(day, 'd LLL', { locale: uk });
         } else {
              dateLabel = format(day, 'LLL yy', { locale: uk });
         }
-
+  
         return {
             date: day,
             dateLabel,
-            income: dailyIncome + Math.max(0, creditUsedToday), // Total funds available today
+            income: dailyIncome + creditUsedToday, // Total funds available to spend today (own + new credit)
             expenses: dailyExpenses,
         };
     });
-
+  
     if (trendPeriod === 'monthly') {
         const monthlyData: { [key: string]: { date: Date, dateLabel: string, income: number, expenses: number } } = {};
         chartData.forEach(data => {
@@ -386,9 +389,9 @@ export default function ReportsPage() {
         });
         return Object.values(monthlyData).sort((a,b) => a.date.getTime() - b.date.getTime());
     }
-
+  
     return chartData;
-}, [transactions, isLoading, trendPeriod, earliestTransactionDate]);
+  }, [transactions, isLoading, trendPeriod, earliestTransactionDate]);
 
 const { data: categoryTrendData, config: categoryTrendConfig, categories: categoryTrendCategories } = useMemo(() => {
     if (isLoading || isCategoriesLoading) return { data: [], config: {}, categories: [] };
