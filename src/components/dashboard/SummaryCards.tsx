@@ -97,7 +97,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     const ownFundsBalance = totalIncomeAllTime - totalExpensesAllTime;
     
     const ownFunds = Math.max(0, ownFundsBalance);
-    const creditUsed = ownFundsBalance < 0 ? Math.abs(ownFundsBalance) : 0;
+    const creditUsed = ownFundsBalance < 0 ? Math.min(creditLimit, Math.abs(ownFundsBalance)) : 0;
     
     const totalBalance = ownFunds + (creditLimit - creditUsed);
     
