@@ -214,10 +214,6 @@ export default function ReportsPage() {
     const expenses = transactionsInPeriod
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
-
-    // New logic for overdraft model
-    const creditLimitTransactions = transactions.filter(t => t.type === 'credit_limit').sort((a,b) => (b.date as any).toDate() - (a.date as any).toDate());
-    const creditLimit = creditLimitTransactions.length > 0 ? creditLimitTransactions[0].amount : 0;
     
     const balanceBeforePeriod = transactions
       .filter(t => {
@@ -229,11 +225,8 @@ export default function ReportsPage() {
     
     const ownFundsAtStartOfPeriod = Math.max(0, balanceBeforePeriod);
     
-    // Calculate how much of this period's expenses were covered by income from this period + funds from before
     const fundsAvailableForSpending = income + ownFundsAtStartOfPeriod;
-    const expensesCoveredByOwnFunds = Math.min(expenses, fundsAvailableForSpending);
     
-    // Credit spent is the remainder of expenses
     const creditSpentInPeriod = Math.max(0, expenses - fundsAvailableForSpending);
 
     return [{
@@ -356,7 +349,7 @@ export default function ReportsPage() {
         const dailyExpenses = dailyTotals[dayKey]?.expenses || 0;
   
         const balanceBeforeToday = cumulativeBalance;
-        const ownFundsAvailable = balanceBeforeToday > 0 ? balanceBeforeToday + dailyIncome : dailyIncome;
+        const ownFundsAvailable = Math.max(0, balanceBeforeToday) + dailyIncome;
         
         const creditUsedToday = Math.max(0, dailyExpenses - ownFundsAvailable);
   

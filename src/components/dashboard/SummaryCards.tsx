@@ -53,6 +53,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   useEffect(() => {
     if (isLoading) return;
 
+    // Period-specific calculations for income/expenses cards
     let periodStart: Date | null = null;
     let periodEnd: Date | null = null;
     
@@ -62,20 +63,17 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       periodEnd = endOfMonth(periodDate);
     }
 
-    const relevantTransactions = transactions.filter(transaction => {
+    const transactionsInPeriod = transactions.filter(transaction => {
       if (selectedPeriod === 'all') return true;
       const transactionDate = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
       return transactionDate >= periodStart! && transactionDate <= periodEnd!;
     });
     
-    const allTimeTransactions = transactions;
-
-    // Period-specific calculations
-    const incomeInPeriod = relevantTransactions
+    const incomeInPeriod = transactionsInPeriod
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const expensesInPeriod = relevantTransactions
+    const expensesInPeriod = transactionsInPeriod
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
       
@@ -83,6 +81,8 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     setFormattedExpenses(formatCurrency(expensesInPeriod));
 
     // All-time calculations for balances
+    const allTimeTransactions = transactions;
+
     const totalIncomeAllTime = allTimeTransactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
