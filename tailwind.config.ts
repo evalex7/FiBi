@@ -17,7 +17,7 @@ export default {
     },
     extend: {
       boxShadow: {
-        'glow-gold': 'inset 0 0 15px 2px hsl(48 96% 85% / 0.7)',
+        'glow-gold': 'inset 0 0 15px 2px hsl(48 96% 70% / 0.7)',
         'glow-primary': 'inset 0 0 20px 5px hsl(var(--primary) / 0.7)',
         'glow-accent': 'inset 0 0 20px 5px hsl(var(--accent) / 0.7)',
         'glow-teal': 'inset 0 0 15px 2px #0d9488',
