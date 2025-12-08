@@ -124,7 +124,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={cn("text-xl font-bold", incomeInPeriod > 0 && "text-green-600")}>{formatCurrency(incomeInPeriod)}</div>
+            <div className={cn("text-xl font-bold", "text-green-600")}>{formatCurrency(incomeInPeriod)}</div>
           </CardContent>
         </Card>
         <Card className="shadow-glow-gold">
@@ -133,7 +133,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={cn("text-xl font-bold", expensesInPeriod > 0 && "text-blue-600")}>{formatCurrency(expensesInPeriod)}</div>
+            <div className={cn("text-xl font-bold", "text-blue-600")}>{formatCurrency(expensesInPeriod)}</div>
           </CardContent>
         </Card>
         <Card className="shadow-glow-gold">
@@ -142,7 +142,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <Landmark className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={cn("text-xl font-bold", creditLimit > 0 && "text-orange-500")}>{formatCurrency(creditLimit)}</div>
+            <div className={cn("text-xl font-bold", "text-orange-500")}>{formatCurrency(creditLimit)}</div>
           </CardContent>
         </Card>
         <Card className="shadow-glow-gold">
@@ -151,7 +151,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={cn("text-xl font-bold", creditUsed > 0 && "text-orange-500")}>{formatCurrency(creditUsed)}</div>
+            <div className={cn("text-xl font-bold", "text-orange-500")}>{formatCurrency(creditUsed)}</div>
           </CardContent>
         </Card>
         <Card className="shadow-glow-gold">
@@ -160,7 +160,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <Scale className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={cn("text-xl font-bold", totalBalance >= 0 && "text-green-600")}>
+            <div className={cn("text-xl font-bold", "text-green-600")}>
               {formatCurrency(totalBalance)}
             </div>
           </CardContent>
@@ -171,7 +171,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={cn("text-xl font-bold", ownFunds > 0 && "text-green-600")}>
+            <div className={cn("text-xl font-bold", "text-green-600")}>
               {formatCurrency(ownFunds)}
             </div>
           </CardContent>
