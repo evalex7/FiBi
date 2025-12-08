@@ -16,6 +16,10 @@ export default {
       },
     },
     extend: {
+      boxShadow: {
+        'glow-primary': '0 0 15px 2px hsl(var(--primary) / 0.4)',
+        'glow-accent': '0 0 15px 2px hsl(var(--accent) / 0.4)',
+      },
       fontFamily: {
         body: ['PT Sans', 'sans-serif'],
         headline: ['PT Sans', 'sans-serif'],
