@@ -40,7 +40,7 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useCategories } from '@/contexts/categories-context';
 import TransactionUserAvatar from './TransactionUserAvatar';
 import { Input } from '../ui/input';
@@ -48,7 +48,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { collection } from 'firebase/firestore';
 import TransactionListItem from './TransactionListItem';
 
 
@@ -63,7 +62,6 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   const { transactions, deleteTransaction, isLoading } = useTransactions();
   const { categories } = useCategories();
   const { user } = useUser();
-  const firestore = useFirestore();
   const isMobile = useIsMobile();
   
   const [sortedTransactions, setSortedTransactions] = useState<FormattedTransaction[]>([]);
@@ -76,13 +74,6 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterDate, setFilterDate] = useState<Date | undefined>();
   
-  const usersCollectionRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'users');
-  }, [firestore]);
-
-  const { data: familyMembers } = useCollection<FamilyMember>(usersCollectionRef);
-
   const canEditOrDelete = (transaction: Transaction) => {
     return transaction.familyMemberId === user?.uid;
   };
@@ -325,12 +316,10 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
             <div className="md:hidden">
               <div className="space-y-2">
                 {sortedTransactions.map((transaction) => {
-                  const member = familyMembers?.find(m => m.id === transaction.familyMemberId);
                   return (
                     <TransactionListItem
                       key={transaction.id}
                       transaction={transaction}
-                      member={member}
                       onEdit={handleEdit}
                       onCopy={handleCopy}
                       onDelete={setTransactionToDelete}

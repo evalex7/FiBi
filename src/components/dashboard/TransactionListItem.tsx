@@ -1,15 +1,16 @@
+
 'use client';
 
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import type { Transaction, FamilyMember } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
 import TransactionUserAvatar from './TransactionUserAvatar';
 import { useUser } from '@/firebase';
 
 type TransactionListItemProps = {
   transaction: Transaction & { formattedAmount: string };
-  member: FamilyMember | null | undefined;
   onEdit: (transaction: Transaction) => void;
   onCopy: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
@@ -18,11 +19,11 @@ type TransactionListItemProps = {
 
 export default function TransactionListItem({
   transaction,
-  member,
   children,
 }: TransactionListItemProps) {
   const { user } = useUser();
   const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
+  const [memberColor, setMemberColor] = useState('hsl(var(--primary))');
   
   const isOwner = transaction.familyMemberId === user?.uid;
   const { description, amountDisplay, isMasked } = getTransactionInfo(transaction);
@@ -57,7 +58,6 @@ export default function TransactionListItem({
     };
   };
 
-  const memberColor = member?.color || 'hsl(var(--primary))';
   // Convert HSL string to H, S, L values for CSS variables
   const hslValues = memberColor.match(/\d+/g)?.join(', ');
 
@@ -71,7 +71,7 @@ export default function TransactionListItem({
         borderColor: 'hsla(var(--glow-color), 0.4)',
       }}
     >
-      <TransactionUserAvatar userId={transaction.familyMemberId} />
+      <TransactionUserAvatar userId={transaction.familyMemberId} onColorLoad={setMemberColor} />
       <div className="flex-grow space-y-1 min-w-0">
         <p className="font-medium truncate">{description}</p>
         <p className="text-xs text-muted-foreground">
