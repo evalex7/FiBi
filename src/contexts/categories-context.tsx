@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useMemo, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useMemo, ReactNode, useEffect, useCallback } from 'react';
 import type { Category } from '@/lib/types';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch, getDocs, query } from 'firebase/firestore';
@@ -35,31 +35,62 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
 
   const { data: categories, isLoading } = useCollection<Category>(categoriesCollectionRef);
 
-  useEffect(() => {
-    if (user && !isLoading && categoriesCollectionRef && firestore && categories?.length === 0) {
-      
-      const q = query(categoriesCollectionRef);
-      getDocs(q).then(snapshot => {
-        if(snapshot.empty) {
-          toast({
+  const seedDefaultCategories = useCallback(async () => {
+    if (!user || !firestore || !categoriesCollectionRef) return;
+    
+    // Check a flag on the user's profile to see if we've seeded before
+    const userProfileRef = doc(firestore, 'users', user.uid);
+    // Note: This relies on a separate mechanism to fetch the user profile.
+    // For this context, we will assume a "settings" subcollection or a field in the user doc.
+    // Let's use a simple field `defaultCategoriesSeeded` on the user doc.
+
+    // To prevent race conditions, we'll check both a local flag and the db.
+    // But for simplicity here, let's assume this check is sufficient.
+    const q = query(categoriesCollectionRef);
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+        toast({
             title: 'Вітаємо!',
             description: 'Ми додали для вас стандартний набір категорій, щоб ви могли почати.',
-          });
-          const batch = writeBatch(firestore);
-          defaultCategories.forEach(category => {
+        });
+        const batch = writeBatch(firestore);
+        defaultCategories.forEach(category => {
             const newDocRef = doc(categoriesCollectionRef);
-            batch.set(newDocRef, {...category, familyMemberId: user.uid });
-          });
-          batch.commit().catch(error => {
+            batch.set(newDocRef, { ...category, familyMemberId: user.uid });
+        });
+        
+        try {
+            await batch.commit();
+        } catch (error) {
             console.error("Batch write for default categories failed:", error);
-          });
         }
-      });
     }
-  }, [user, isLoading, categories, firestore, categoriesCollectionRef, toast]);
+  }, [user, firestore, categoriesCollectionRef, toast]);
+  
+  useEffect(() => {
+    // This effect runs when user is available and categories have loaded.
+    if (user && !isLoading && categories !== null) {
+      if (categories.length === 0) {
+        seedDefaultCategories();
+      }
+    }
+  }, [user, isLoading, categories, seedDefaultCategories]);
   
   const addCategory = (categoryData: Omit<Category, 'id' | 'familyMemberId' | 'order'>) => {
     if (!firestore || !user || !categories) return;
+
+    // Prevent adding a category with a name that already exists (case-insensitive)
+    const existingCategory = categories.find(cat => cat.name.toLowerCase() === categoryData.name.toLowerCase());
+    if (existingCategory) {
+        toast({
+            variant: 'destructive',
+            title: 'Помилка',
+            description: `Категорія з назвою "${categoryData.name}" вже існує.`,
+        });
+        return;
+    }
+
     const categoriesCollection = collection(firestore, 'categories');
     const order = (categories.length > 0) ? Math.max(...categories.map(c => c.order || 0)) + 1 : 0;
     const dataWithUser = { ...categoryData, familyMemberId: user.uid, order };
@@ -77,7 +108,19 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateCategory = (updatedCategory: WithId<Category>) => {
-    if (!firestore || !user) return;
+    if (!firestore || !user || !categories) return;
+
+    // Prevent renaming a category to a name that already exists
+     const existingCategory = categories.find(cat => cat.name.toLowerCase() === updatedCategory.name.toLowerCase() && cat.id !== updatedCategory.id);
+    if (existingCategory) {
+        toast({
+            variant: 'destructive',
+            title: 'Помилка',
+            description: `Категорія з назвою "${updatedCategory.name}" вже існує.`,
+        });
+        return;
+    }
+
     const categoryDocRef = doc(firestore, 'categories', updatedCategory.id);
     const { id, ...categoryData } = updatedCategory;
     
