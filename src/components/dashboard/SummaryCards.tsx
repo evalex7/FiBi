@@ -42,21 +42,21 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const isLoading = isTransactionsLoading || isFamilyMembersLoading;
 
   const {
-    formattedIncome,
-    formattedExpenses,
-    formattedOwnFunds,
-    formattedCreditUsed,
-    formattedCreditLimit,
-    formattedNetBalance,
+    incomeInPeriod,
+    expensesInPeriod,
+    ownFunds,
+    creditUsed,
+    creditLimit,
+    totalBalance,
   } = useMemo(() => {
     if (isLoading) {
       return {
-        formattedIncome: '0,00 ₴',
-        formattedExpenses: '0,00 ₴',
-        formattedOwnFunds: '0,00 ₴',
-        formattedCreditUsed: '0,00 ₴',
-        formattedCreditLimit: '0,00 ₴',
-        formattedNetBalance: '0,00 ₴',
+        incomeInPeriod: 0,
+        expensesInPeriod: 0,
+        ownFunds: 0,
+        creditUsed: 0,
+        creditLimit: 0,
+        totalBalance: 0,
       };
     }
 
@@ -106,12 +106,12 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     const totalBalance = ownFunds + (creditLimit - creditUsed);
 
     return {
-      formattedIncome: formatCurrency(incomeInPeriod),
-      formattedExpenses: formatCurrency(expensesInPeriod),
-      formattedOwnFunds: formatCurrency(ownFunds),
-      formattedCreditUsed: formatCurrency(creditUsed),
-      formattedCreditLimit: formatCurrency(creditLimit),
-      formattedNetBalance: formatCurrency(totalBalance),
+      incomeInPeriod,
+      expensesInPeriod,
+      ownFunds,
+      creditUsed,
+      creditLimit,
+      totalBalance,
     };
   }, [transactions, selectedPeriod, isLoading, familyMember]);
 
@@ -125,7 +125,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-xl font-bold">{formattedIncome}</div>
+            <div className={cn("text-xl font-bold", incomeInPeriod > 0 && "text-green-600")}>{formatCurrency(incomeInPeriod)}</div>
           </CardContent>
         </Card>
         <Card className="p-2 shadow-glow-gold">
@@ -134,7 +134,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-xl font-bold">{formattedExpenses}</div>
+            <div className={cn("text-xl font-bold", expensesInPeriod > 0 && "text-blue-600")}>{formatCurrency(expensesInPeriod)}</div>
           </CardContent>
         </Card>
         <Card className="p-2 shadow-glow-gold">
@@ -143,7 +143,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <Landmark className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-xl font-bold">{formattedCreditLimit}</div>
+            <div className={cn("text-xl font-bold", creditLimit > 0 && "text-orange-500")}>{formatCurrency(creditLimit)}</div>
           </CardContent>
         </Card>
         <Card className="p-2 shadow-glow-gold">
@@ -152,7 +152,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-xl font-bold">{formattedCreditUsed}</div>
+            <div className={cn("text-xl font-bold", creditUsed > 0 && "text-orange-500")}>{formatCurrency(creditUsed)}</div>
           </CardContent>
         </Card>
         <Card className="p-2 shadow-glow-gold">
@@ -162,7 +162,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-xl font-bold">
-              {formattedNetBalance}
+              {formatCurrency(totalBalance)}
             </div>
           </CardContent>
         </Card>
@@ -172,8 +172,8 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-xl font-bold">
-              {formattedOwnFunds}
+            <div className={cn("text-xl font-bold", ownFunds > 0 && "text-green-600")}>
+              {formatCurrency(ownFunds)}
             </div>
           </CardContent>
         </Card>
