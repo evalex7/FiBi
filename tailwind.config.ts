@@ -17,13 +17,13 @@ export default {
     },
     extend: {
       boxShadow: {
-        'glow-gold': '0 0 15px 2px hsl(43 74% 66% / 0.5)',
-        'glow-primary': '0 0 20px 5px hsl(var(--primary) / 0.7)',
-        'glow-accent': '0 0 20px 5px hsl(var(--accent) / 0.7)',
-        'glow-teal': '0 0 15px 2px #0d9488',
-        'glow-blue': '0 0 15px 2px #2563eb',
-        'glow-orange': '0 0 15px 2px #f97316',
-        'glow-green': '0 0 15px 2px #16a34a',
+        'glow-gold': 'inset 0 0 15px 2px hsl(43 74% 66% / 0.5)',
+        'glow-primary': 'inset 0 0 20px 5px hsl(var(--primary) / 0.7)',
+        'glow-accent': 'inset 0 0 20px 5px hsl(var(--accent) / 0.7)',
+        'glow-teal': 'inset 0 0 15px 2px #0d9488',
+        'glow-blue': 'inset 0 0 15px 2px #2563eb',
+        'glow-orange': 'inset 0 0 15px 2px #f97316',
+        'glow-green': 'inset 0 0 15px 2px #16a34a',
       },
       fontFamily: {
         body: ['PT Sans', 'sans-serif'],
