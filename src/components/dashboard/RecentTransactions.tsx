@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -233,7 +234,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   };
 
   return (
-    <Card>
+    <Card className="bg-card/50 backdrop-blur-sm shadow-glow" style={{ '--glow-color': 'hsl(var(--card))' } as React.CSSProperties}>
       <CardHeader>
         <div className="flex justify-between items-center">
             <div>
@@ -320,9 +321,6 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                     <TransactionListItem
                       key={transaction.id}
                       transaction={transaction}
-                      onEdit={handleEdit}
-                      onCopy={handleCopy}
-                      onDelete={setTransactionToDelete}
                     >
                       <TransactionActions transaction={transaction} />
                     </TransactionListItem>
@@ -425,3 +423,5 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
     </Card>
   );
 }
+
+    

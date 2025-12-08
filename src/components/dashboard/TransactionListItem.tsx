@@ -66,10 +66,11 @@ export default function TransactionListItem({
   return (
     <div
       className="relative flex items-center gap-3 px-1 sm:px-3 py-3 rounded-lg border bg-card/50 backdrop-blur-sm transition-all shadow-glow"
-      style={{
-        // @ts-ignore
-        '--glow-color': member?.color || 'hsl(var(--primary))',
-      }}
+      style={
+        {
+          '--glow-color': member?.color || 'hsl(var(--primary))',
+        } as React.CSSProperties
+      }
     >
       <TransactionUserAvatar member={member} />
       <div className="flex-grow space-y-1 min-w-0">
@@ -94,3 +95,5 @@ export default function TransactionListItem({
     </div>
   );
 }
+
+    
