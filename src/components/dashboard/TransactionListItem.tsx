@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -12,9 +12,6 @@ import { doc } from 'firebase/firestore';
 
 type TransactionListItemProps = {
   transaction: Transaction & { formattedAmount: string };
-  onEdit: (transaction: Transaction) => void;
-  onCopy: (transaction: Transaction) => void;
-  onDelete: (transaction: Transaction) => void;
   children: React.ReactNode;
 };
 
@@ -35,20 +32,6 @@ export default function TransactionListItem({
   const { data: member } = useDoc<FamilyMember>(memberDocRef);
 
   const isOwner = transaction.familyMemberId === user?.uid;
-  const { description, amountDisplay, isMasked } = getTransactionInfo(transaction);
-
-  const getAmountColor = (type: Transaction['type']) => {
-    switch (type) {
-      case 'income':
-        return 'text-green-600';
-      case 'expense':
-        return 'text-blue-600';
-      case 'credit_limit':
-        return 'text-orange-500';
-      default:
-        return 'text-foreground';
-    }
-  };
 
   function getTransactionInfo(transaction: Transaction & { formattedAmount: string }) {
     if (transaction.isPrivate && transaction.familyMemberId !== user?.uid) {
@@ -66,9 +49,25 @@ export default function TransactionListItem({
       isMasked: false
     };
   };
+  
+  const { description, amountDisplay, isMasked } = getTransactionInfo(transaction);
+
+  const getAmountColor = (type: Transaction['type']) => {
+    switch (type) {
+      case 'income':
+        return 'text-green-600';
+      case 'expense':
+        return 'text-blue-600';
+      case 'credit_limit':
+        return 'text-orange-500';
+      default:
+        return 'text-foreground';
+    }
+  };
 
   const hslValues = useMemo(() => {
     if (!member?.color) return 'hsl(var(--primary))';
+    // Extracts the HSL numbers (e.g., "221, 83%, 53%") from a string like "hsl(221, 83%, 53%)"
     return member.color.match(/\d+/g)?.join(', ') || 'hsl(var(--primary))';
   }, [member?.color]);
 
