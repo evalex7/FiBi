@@ -160,7 +160,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
             <Scale className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">
+            <div className={cn("text-xl font-bold", totalBalance >= 0 && "text-green-600")}>
               {formatCurrency(totalBalance)}
             </div>
           </CardContent>
