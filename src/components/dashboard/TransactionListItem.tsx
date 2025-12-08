@@ -21,8 +21,6 @@ export default function TransactionListItem({
   const { user } = useUser();
   const firestore = useFirestore();
   
-  const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
-  
   const memberDocRef = useMemoFirebase(() => {
     if (!firestore || !transaction.familyMemberId) return null;
     return doc(firestore, 'users', transaction.familyMemberId);
@@ -64,27 +62,20 @@ export default function TransactionListItem({
     }
   };
 
-  const hslValues = useMemo(() => {
-    if (!member?.color) return 'hsl(var(--primary))';
-    // Extracts the HSL numbers (e.g., "221, 83%, 53%") from a string like "hsl(221, 83%, 53%)"
-    return member.color.match(/\d+/g)?.join(', ') || 'hsl(var(--primary))';
-  }, [member?.color]);
-
 
   return (
     <div
-      className="relative flex items-center gap-3 px-1 sm:px-3 py-3 rounded-lg border bg-card/50 backdrop-blur-sm transition-all"
+      className="relative flex items-center gap-3 px-1 sm:px-3 py-3 rounded-lg border bg-card/50 backdrop-blur-sm transition-all shadow-glow"
       style={{
         // @ts-ignore
-        '--glow-color': hslValues,
-        boxShadow: '0 0 15px 1px hsla(var(--glow-color), 0.3)',
+        '--glow-color': member?.color || 'hsl(var(--primary))',
       }}
     >
       <TransactionUserAvatar member={member} />
       <div className="flex-grow space-y-1 min-w-0">
         <p className="font-medium truncate">{description}</p>
         <p className="text-xs text-muted-foreground">
-          {format(date, 'dd.MM.yy', { locale: uk })}
+          {format(transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date), 'dd.MM.yy', { locale: uk })}
         </p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
