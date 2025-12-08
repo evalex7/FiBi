@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -163,84 +164,74 @@ export default function ReportsPage() {
   const filteredTransactions = transactions;
 
   const incomeVsExpenseData = useMemo(() => {
-    if (isLoading || filteredTransactions.length === 0) return [];
+    if (isLoading) return [];
 
     let startDate: Date | null = null;
     let endDate: Date | null = null;
-    
+
+    const allTimeIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+    const allTimeExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    const pureBalance = allTimeIncome - allTimeExpenses;
+
     switch (period) {
-        case '0':
-            startDate = startOfMonth(new Date());
+      case '0':
+        startDate = startOfMonth(new Date());
+        endDate = endOfMonth(new Date());
+        break;
+      case 'last_3_months':
+        startDate = startOfMonth(subMonths(new Date(), 2));
+        endDate = endOfMonth(new Date());
+        break;
+      case 'last_6_months':
+        startDate = startOfMonth(subMonths(new Date(), 5));
+        endDate = endOfMonth(new Date());
+        break;
+      case 'last_12_months':
+        startDate = startOfMonth(subMonths(new Date(), 11));
+        endDate = endOfMonth(new Date());
+        break;
+      case 'prev_month':
+        const prevMonth = subMonths(new Date(), 1);
+        startDate = startOfMonth(prevMonth);
+        endDate = endOfMonth(prevMonth);
+        break;
+      case 'all':
+        if (earliestTransactionDate) {
+            startDate = earliestTransactionDate;
             endDate = endOfMonth(new Date());
-            break;
-        case 'prev_month':
-            const prevMonth = subMonths(new Date(), 1);
-            startDate = startOfMonth(prevMonth);
-            endDate = endOfMonth(prevMonth);
-            break;
-        case 'last_3_months':
-            startDate = startOfMonth(subMonths(new Date(), 2));
-            endDate = endOfMonth(new Date());
-            break;
-        case 'last_6_months':
-            startDate = startOfMonth(subMonths(new Date(), 5));
-            endDate = endOfMonth(new Date());
-            break;
-        case 'last_12_months':
-            startDate = startOfMonth(subMonths(new Date(), 11));
-            endDate = endOfMonth(new Date());
-            break;
-        case 'all':
-            if (earliestTransactionDate) {
-              startDate = earliestTransactionDate;
-              endDate = endOfMonth(new Date());
-            }
-            break;
-        default:
-            startDate = startOfMonth(new Date());
-            endDate = endOfMonth(new Date());
+        }
+        break;
+      default:
+        startDate = startOfMonth(new Date());
+        endDate = endOfMonth(new Date());
     }
 
-    const transactionsInPeriod = filteredTransactions.filter(t => {
-        if (!startDate || !endDate) return true; // 'all' might not have dates if no transactions exist
-        const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
-        return transactionDate >= startDate && transactionDate <= endDate;
+    const transactionsInPeriod = transactions.filter(t => {
+      if (!startDate || !endDate) return true;
+      const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+      return transactionDate >= startDate && transactionDate <= endDate;
     });
 
-    const income = transactionsInPeriod
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0);
+    const incomeInPeriod = transactionsInPeriod
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
 
-    const expenses = transactionsInPeriod
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
-    
-    const balanceBeforePeriod = transactions
-      .filter(t => {
-        if (!startDate) return false;
-        const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
-        return transactionDate < startDate && (t.type === 'income' || t.type === 'expense');
-      })
-      .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
-    
-    const ownFundsAtStartOfPeriod = Math.max(0, balanceBeforePeriod);
-    
-    const fundsAvailableForSpending = income + ownFundsAtStartOfPeriod;
-    
-    const creditSpentInPeriod = Math.max(0, expenses - fundsAvailableForSpending);
+    const expensesInPeriod = transactionsInPeriod
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const creditSpentInPeriod = Math.max(0, expensesInPeriod - (incomeInPeriod + Math.max(0, pureBalance - incomeInPeriod + expensesInPeriod)));
 
     return [{
       name: 'Дохід',
-      income: income,
+      income: incomeInPeriod,
       credit: creditSpentInPeriod,
-      totalIncome: income + creditSpentInPeriod,
+      totalIncome: incomeInPeriod + creditSpentInPeriod,
     }, {
       name: 'Витрати',
-      expenses: expenses,
+      expenses: expensesInPeriod,
     }];
-
   }, [filteredTransactions, period, isLoading, earliestTransactionDate]);
-
   
   const { data: categoryData, config: pieChartConfig } = useMemo(() => {
     if (isLoading) return { data: [], config: {} };
@@ -300,89 +291,83 @@ export default function ReportsPage() {
 
   const trendData = useMemo(() => {
     if (isLoading || transactions.length < 1) return [];
-  
+
     const now = new Date();
-    const allTimeStartDate = earliestTransactionDate ? startOfMonth(earliestTransactionDate) : startOfMonth(now);
-  
     let startDate: Date;
     let endDate: Date = endOfMonth(now);
-  
+
     if (trendPeriod === 'daily') {
-      startDate = startOfMonth(now);
+        startDate = startOfMonth(now);
     } else { // monthly
-      startDate = allTimeStartDate;
+        startDate = earliestTransactionDate ? startOfMonth(earliestTransactionDate) : startOfMonth(now);
     }
-  
-    const intervalDays = eachDayOfInterval({ start: startDate, end: endDate });
-  
-    const dailyTotals: { [key: string]: { income: number, expenses: number } } = {};
     
     const relevantTransactions = transactions.filter(t => {
       const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
       return transactionDate >= startDate && transactionDate <= endDate;
     });
 
-    relevantTransactions.forEach(t => {
-      const dayKey = format(t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date), 'yyyy-MM-dd');
-      if (!dailyTotals[dayKey]) {
-        dailyTotals[dayKey] = { income: 0, expenses: 0 };
-      }
-      if (t.type === 'income') {
-        dailyTotals[dayKey].income += t.amount;
-      } else if (t.type === 'expense') {
-        dailyTotals[dayKey].expenses += t.amount;
-      }
-    });
-
-    const balanceBeforePeriod = transactions
-      .filter(t => {
-        const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
-        return transactionDate < startDate && (t.type === 'income' || t.type === 'expense');
-      })
-      .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
-    
-    let cumulativeBalance = balanceBeforePeriod;
-  
-    const chartData = intervalDays.map(day => {
-        const dayKey = format(day, 'yyyy-MM-dd');
-        const dailyIncome = dailyTotals[dayKey]?.income || 0;
-        const dailyExpenses = dailyTotals[dayKey]?.expenses || 0;
-  
-        const balanceBeforeToday = cumulativeBalance;
-        const ownFundsAvailable = Math.max(0, balanceBeforeToday) + dailyIncome;
-        
-        const creditUsedToday = Math.max(0, dailyExpenses - ownFundsAvailable);
-  
-        cumulativeBalance += dailyIncome - dailyExpenses;
-  
-        let dateLabel: string;
-         if (trendPeriod === 'daily') {
-            dateLabel = format(day, 'd LLL', { locale: uk });
-        } else {
-             dateLabel = format(day, 'LLL yy', { locale: uk });
-        }
-  
-        return {
-            date: day,
-            dateLabel,
-            income: dailyIncome + creditUsedToday, // Total funds available to spend today (own + new credit)
-            expenses: dailyExpenses,
-        };
-    });
-  
     if (trendPeriod === 'monthly') {
         const monthlyData: { [key: string]: { date: Date, dateLabel: string, income: number, expenses: number } } = {};
-        chartData.forEach(data => {
-            const monthKey = format(data.date, 'yyyy-MM');
-            if (!monthlyData[monthKey]) {
-                monthlyData[monthKey] = { date: data.date, dateLabel: format(data.date, 'LLL yy', {locale: uk}), income: 0, expenses: 0 };
+        eachMonthOfInterval({ start: startDate, end: endDate }).forEach(monthDate => {
+            const monthKey = format(monthDate, 'yyyy-MM');
+            monthlyData[monthKey] = {
+                date: monthDate,
+                dateLabel: format(monthDate, 'LLL yy', { locale: uk }),
+                income: 0,
+                expenses: 0
+            };
+        });
+
+        relevantTransactions.forEach(t => {
+            if (t.type === 'income' || t.type === 'expense') {
+                const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
+                const monthKey = format(transactionDate, 'yyyy-MM');
+                if (monthlyData[monthKey]) {
+                    if (t.type === 'income') {
+                        monthlyData[monthKey].income += t.amount;
+                    } else {
+                        monthlyData[monthKey].expenses += t.amount;
+                    }
+                }
             }
-            monthlyData[monthKey].income += data.income;
-            monthlyData[monthKey].expenses += data.expenses;
         });
         return Object.values(monthlyData).sort((a,b) => a.date.getTime() - b.date.getTime());
     }
-  
+
+    // Daily cumulative logic
+    let cumulativeIncome = 0;
+    let cumulativeExpenses = 0;
+    const intervalDays = eachDayOfInterval({ start: startDate, end: endDate });
+
+    const dailyTotals: { [key: string]: { income: number, expenses: number } } = {};
+    relevantTransactions.forEach(t => {
+        if (t.type === 'income' || t.type === 'expense') {
+            const dayKey = format(t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date), 'yyyy-MM-dd');
+            if (!dailyTotals[dayKey]) {
+                dailyTotals[dayKey] = { income: 0, expenses: 0 };
+            }
+            if (t.type === 'income') {
+                dailyTotals[dayKey].income += t.amount;
+            } else {
+                dailyTotals[dayKey].expenses += t.amount;
+            }
+        }
+    });
+
+    const chartData = intervalDays.map(day => {
+        const dayKey = format(day, 'yyyy-MM-dd');
+        cumulativeIncome += dailyTotals[dayKey]?.income || 0;
+        cumulativeExpenses += dailyTotals[dayKey]?.expenses || 0;
+
+        return {
+            date: day,
+            dateLabel: format(day, 'd LLL', { locale: uk }),
+            income: cumulativeIncome,
+            expenses: cumulativeExpenses,
+        };
+    });
+
     return chartData;
   }, [transactions, isLoading, trendPeriod, earliestTransactionDate]);
 
