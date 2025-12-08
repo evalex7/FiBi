@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       boxShadow: {
-        'glow-primary': '0 0 15px 2px hsl(var(--primary) / 0.5)',
-        'glow-accent': '0 0 15px 2px hsl(var(--accent) / 0.5)',
+        'glow-primary': '0 0 20px 5px hsl(var(--primary) / 0.7)',
+        'glow-accent': '0 0 20px 5px hsl(var(--accent) / 0.7)',
         'glow-teal': '0 0 15px 2px #0d9488',
         'glow-blue': '0 0 15px 2px #2563eb',
         'glow-orange': '0 0 15px 2px #f97316',

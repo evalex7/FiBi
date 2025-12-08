@@ -48,6 +48,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { collection } from 'firebase/firestore';
+import TransactionListItem from './TransactionListItem';
 
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
@@ -61,6 +63,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   const { transactions, deleteTransaction, isLoading } = useTransactions();
   const { categories } = useCategories();
   const { user } = useUser();
+  const firestore = useFirestore();
   const isMobile = useIsMobile();
   
   const [sortedTransactions, setSortedTransactions] = useState<FormattedTransaction[]>([]);
@@ -72,6 +75,13 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterDate, setFilterDate] = useState<Date | undefined>();
+  
+  const usersCollectionRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
+
+  const { data: familyMembers } = useCollection<FamilyMember>(usersCollectionRef);
 
   const canEditOrDelete = (transaction: Transaction) => {
     return transaction.familyMemberId === user?.uid;
@@ -90,7 +100,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
     return {
       description: transaction.description,
       category: transaction.category,
-      amountDisplay: transaction.formattedAmount,
+      amountDisplay: (transaction as FormattedTransaction).formattedAmount,
       isMasked: false
     };
   };
@@ -315,31 +325,18 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
             <div className="md:hidden">
               <div className="space-y-2">
                 {sortedTransactions.map((transaction) => {
-                  const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
-                  const { description, amountDisplay, isMasked } = getTransactionInfo(transaction);
+                  const member = familyMembers?.find(m => m.id === transaction.familyMemberId);
                   return (
-                    <div key={transaction.id} className="flex items-center gap-3 px-1 sm:px-3 py-3 rounded-lg border">
-                      <TransactionUserAvatar userId={transaction.familyMemberId} />
-                      <div className="flex-grow space-y-1 min-w-0">
-                          <p className="font-medium truncate">{description}</p>
-                          <p className="text-xs text-muted-foreground">
-                          {format(date, 'dd.MM.yy', { locale: uk })}
-                          </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <div
-                            className={cn(
-                                'font-medium text-base whitespace-nowrap',
-                                !isMasked && getAmountColor(transaction.type),
-                                isMasked && 'font-mono'
-                            )}
-                            >
-                            {!isMasked && (transaction.type === 'income' ? '+' : (transaction.type === 'expense' ? '-' : ''))}
-                            {amountDisplay}
-                        </div>
-                        <TransactionActions transaction={transaction} />
-                      </div>
-                    </div>
+                    <TransactionListItem
+                      key={transaction.id}
+                      transaction={transaction}
+                      member={member}
+                      onEdit={handleEdit}
+                      onCopy={handleCopy}
+                      onDelete={setTransactionToDelete}
+                    >
+                      <TransactionActions transaction={transaction} />
+                    </TransactionListItem>
                   );
                 })}
               </div>
