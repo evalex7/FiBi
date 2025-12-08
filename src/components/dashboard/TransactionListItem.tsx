@@ -1,13 +1,14 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import type { Transaction } from '@/lib/types';
+import type { Transaction, FamilyMember } from '@/lib/types';
 import TransactionUserAvatar from './TransactionUserAvatar';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 type TransactionListItemProps = {
   transaction: Transaction & { formattedAmount: string };
@@ -22,9 +23,17 @@ export default function TransactionListItem({
   children,
 }: TransactionListItemProps) {
   const { user } = useUser();
-  const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
-  const [memberColor, setMemberColor] = useState('hsl(var(--primary))');
+  const firestore = useFirestore();
   
+  const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
+  
+  const memberDocRef = useMemoFirebase(() => {
+    if (!firestore || !transaction.familyMemberId) return null;
+    return doc(firestore, 'users', transaction.familyMemberId);
+  }, [firestore, transaction.familyMemberId]);
+
+  const { data: member } = useDoc<FamilyMember>(memberDocRef);
+
   const isOwner = transaction.familyMemberId === user?.uid;
   const { description, amountDisplay, isMasked } = getTransactionInfo(transaction);
 
@@ -58,8 +67,11 @@ export default function TransactionListItem({
     };
   };
 
-  // Convert HSL string to H, S, L values for CSS variables
-  const hslValues = memberColor.match(/\d+/g)?.join(', ');
+  const hslValues = useMemo(() => {
+    if (!member?.color) return 'hsl(var(--primary))';
+    return member.color.match(/\d+/g)?.join(', ') || 'hsl(var(--primary))';
+  }, [member?.color]);
+
 
   return (
     <div
@@ -68,10 +80,9 @@ export default function TransactionListItem({
         // @ts-ignore
         '--glow-color': hslValues,
         boxShadow: '0 0 15px 1px hsla(var(--glow-color), 0.3)',
-        borderColor: 'hsla(var(--glow-color), 0.4)',
       }}
     >
-      <TransactionUserAvatar userId={transaction.familyMemberId} onColorLoad={setMemberColor} />
+      <TransactionUserAvatar member={member} />
       <div className="flex-grow space-y-1 min-w-0">
         <p className="font-medium truncate">{description}</p>
         <p className="text-xs text-muted-foreground">
