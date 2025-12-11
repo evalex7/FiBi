@@ -90,6 +90,13 @@ const getPeriodDates = (budget: Budget) => {
     return { start, end };
 }
 
+const getDateFromTransaction = (date: Date | Timestamp): Date => {
+    if (date instanceof Timestamp) {
+        return date.toDate();
+    }
+    return date;
+}
+
 export default function BudgetList() {
   const { transactions } = useTransactions();
   const { budgets, isLoading, deleteBudget } = useBudgets();
@@ -106,7 +113,7 @@ export default function BudgetList() {
       const { start, end } = getPeriodDates(budget);
 
       const spent = transactions.reduce((acc, t) => {
-        const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
+        const transactionDate = getDateFromTransaction(t.date);
         if (t.type === 'expense' && t.category === budget.category && transactionDate >= start && transactionDate <= end) {
           acc += t.amount;
         }
