@@ -1,52 +1,50 @@
 'use client';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
-import TransactionForm from './TransactionForm';
-import { useState } from 'react';
 
+interface TransactionFormProps {
+  onSave: () => void;
+  initialAmount?: number; // <- додано, щоб уникнути помилки типів
+}
 
-export default function AddTransactionForm() {
-  const [open, setOpen] = useState(false);
-  const [initialAmount, setInitialAmount] = useState<number | undefined>();
+export default function TransactionForm({ onSave, initialAmount }: TransactionFormProps) {
+  const [amount, setAmount] = useState<number | undefined>(initialAmount);
+  const [description, setDescription] = useState<string>('');
 
-  const handleOpen = (amount?: number) => {
-    setInitialAmount(amount);
-    setOpen(true);
-  }
+  // Якщо initialAmount змінюється зовні, оновлюємо стан
+  useEffect(() => {
+    setAmount(initialAmount);
+  }, [initialAmount]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Тут можна додати логіку збереження транзакції
+    console.log('Збережено:', { amount, description });
+    onSave();
+    setAmount(undefined);
+    setDescription('');
+  };
 
   return (
-    <>
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="w-full" onClick={() => handleOpen()}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Додати транзакцію
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Додати транзакцію</DialogTitle>
-            <DialogDescription>
-              Запишіть новий дохід або витрату до вашого рахунку.
-            </DialogDescription>
-          </DialogHeader>
-          <TransactionForm 
-            onSave={() => setOpen(false)} 
-            initialAmount={initialAmount} 
-          />
-          <DialogFooter></DialogFooter>
-      </DialogContent>
-    </Dialog>
-    </>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+      <Input
+        type="number"
+        value={amount ?? ''}
+        onChange={(e) => setAmount(Number(e.target.value))}
+        placeholder="Сума"
+        required
+      />
+      <Input
+        type="text"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="Опис"
+      />
+      <Button type="submit" className="mt-2">
+        Зберегти
+      </Button>
+    </form>
   );
 }
