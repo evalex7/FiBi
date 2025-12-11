@@ -1,83 +1,76 @@
 'use client';
 
-import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
+import { categoryIcons } from '@/lib/category-icons';
+import type { Transaction } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import type { Transaction, FamilyMember } from '@/lib/types';
-import TransactionUserAvatar from './TransactionUserAvatar';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { Lock } from 'lucide-react';
 
-type TransactionListItemProps = {
-  transaction: Transaction & { formattedAmount: string };
-  children: React.ReactNode;
+// Хелпер — гарантує, що в формат() передається Date
+function toDate(value: Date | Timestamp | undefined | null): Date {
+  if (!value) return new Date();
+  if (value instanceof Date) return value;
+  if ('toDate' in value) return value.toDate();
+  return new Date(value);
+}
+
+type Props = {
+  transaction: Transaction;
+  onClick?: () => void;
 };
 
-export default function TransactionListItem({
-  transaction,
-  children,
-}: TransactionListItemProps) {
-  const { user } = useUser();
+export default function TransactionListItem({ transaction, onClick }: Props) {
+  const {
+    description,
+    amount,
+    type,
+    category,
+    date,
+    isPrivate,
+  } = transaction;
 
-  const isOwner = transaction.familyMemberId === user?.uid;
+  const Icon = categoryIcons[transaction.icon || 'other'];
 
-  function getTransactionInfo(transaction: Transaction & { formattedAmount: string }) {
-    if (transaction.isPrivate && transaction.familyMemberId !== user?.uid) {
-      return {
-        description: '***',
-        category: null,
-        amountDisplay: '***',
-        isMasked: true
-      };
-    }
-    return {
-      description: transaction.description,
-      category: transaction.category,
-      amountDisplay: transaction.formattedAmount,
-      isMasked: false
-    };
-  };
-  
-  const { description, amountDisplay, isMasked } = getTransactionInfo(transaction);
-
-  const getAmountColor = (type: Transaction['type']) => {
-    switch (type) {
-      case 'income':
-        return 'text-green-600';
-      case 'expense':
-        return 'text-blue-600';
-      case 'credit_limit':
-        return 'text-orange-500';
-      default:
-        return 'text-foreground';
-    }
-  };
-
+  const formattedDate = format(toDate(date), 'dd.MM.yy', { locale: uk });
 
   return (
     <div
-      className="relative flex items-center gap-3 px-1 sm:px-3 py-3 rounded-lg border bg-card"
+      onClick={onClick}
+      className={cn(
+        "flex items-center justify-between py-3 px-4 border-b last:border-b-0 cursor-pointer hover:bg-muted/30 transition"
+      )}
     >
-      {transaction.familyMemberId && <TransactionUserAvatar userId={transaction.familyMemberId} />}
-      <div className="flex-grow space-y-1 min-w-0">
-        <p className="font-medium truncate">{description}</p>
-        <p className="text-xs text-muted-foreground">
-          {format(transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date), 'dd.MM.yy', { locale: uk })}
-        </p>
+      <div className="flex items-center gap-3 overflow-hidden">
+        {Icon && <Icon className="h-5 w-5 flex-shrink-0 text-primary" />}
+
+        <div className="overflow-hidden">
+          <p className="font-medium truncate flex items-center gap-1">
+            {description}
+            {isPrivate && <Lock className="h-3 w-3 text-muted-foreground" />}
+          </p>
+
+          <p className="text-xs text-muted-foreground">{formattedDate}</p>
+        </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <div
+
+      <div className="text-right flex-shrink-0">
+        <p
           className={cn(
-            'font-medium text-base whitespace-nowrap',
-            !isMasked && getAmountColor(transaction.type),
-            isMasked && 'font-mono'
+            "font-semibold",
+            type === 'income' && "text-green-600",
+            type === 'expense' && "text-red-600",
+            type === 'credit_limit' && "text-blue-600"
           )}
         >
-          {!isMasked && (transaction.type === 'income' ? '+' : (transaction.type === 'expense' ? '-' : ''))}
-          {amountDisplay}
-        </div>
-        {children}
+          {type === 'expense' ? '-' : '+'}
+          {amount.toFixed(2)}
+        </p>
+
+        {category && type !== 'credit_limit' && (
+          <p className="text-xs text-muted-foreground">{category}</p>
+        )}
       </div>
     </div>
   );

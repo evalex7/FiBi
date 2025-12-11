@@ -41,6 +41,13 @@ import ReceiptCalculator from './ReceiptCalculator';
 import { Switch } from '../ui/switch';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+// Хелпер для безпечного перетворення у Date
+const toDate = (value?: Date | Timestamp | null): Date => {
+  if (!value) return new Date();
+  if ('toDate' in value) return value.toDate();
+  return value;
+};
+
 type TransactionFormProps = {
   transaction?: Transaction;
   onSave?: () => void;
@@ -74,20 +81,14 @@ export default function TransactionForm({
     if (currentType === 'income') return 'income';
     if (currentType === 'expense') return 'expense';
     return 'credit';
-  }
+  };
 
   const [type, setType] = useState<Transaction['type']>(getInitialType());
   const [typeGroup, setTypeGroup] = useState<TransactionTypeGroup>(getInitialTypeGroup());
 
   const valuesToSet = isEditMode ? transaction : (isCopy ? transaction : initialValues);
 
-  const [date, setDate] = useState<Date>(
-    valuesToSet?.date instanceof Timestamp
-      ? valuesToSet.date.toDate()
-      : valuesToSet?.date
-        ? new Date(valuesToSet.date as any)
-        : new Date()
-  );
+  const [date, setDate] = useState<Date>(toDate(valuesToSet?.date));
   const [amount, setAmount] = useState(String(valuesToSet?.amount || ''));
   const [description, setDescription] = useState(valuesToSet?.description || '');
   const [category, setCategory] = useState(valuesToSet?.category || '');
@@ -311,10 +312,7 @@ export default function TransactionForm({
                     <Calendar
                       mode="single"
                       selected={date}
-                      onSelect={(selectedDate?: Date) => {
-                        if (selectedDate) setDate(selectedDate);
-                        setIsCalendarOpen(false);
-                      }}
+                      onSelect={(d) => d && setDate(d)}
                       initialFocus
                       locale={uk}
                     />
@@ -342,10 +340,7 @@ export default function TransactionForm({
                   <Calendar
                     mode="single"
                     selected={date}
-                    onSelect={(selectedDate?: Date) => {
-                      if (selectedDate) setDate(selectedDate);
-                      setIsCalendarOpen(false);
-                    }}
+                    onSelect={(d) => d && setDate(d)}
                     initialFocus
                     locale={uk}
                   />
