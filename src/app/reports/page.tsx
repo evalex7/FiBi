@@ -137,7 +137,10 @@ export default function ReportsPage() {
   useEffect(() => {
     if (transactions.length > 0) {
       const earliestDate = transactions.reduce((earliest, t) => {
-        const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
+        const transactionDate =
+  t.date instanceof Timestamp
+    ? t.date.toDate()
+    : new Date(t.date);
         return transactionDate < earliest ? transactionDate : earliest;
       }, new Date());
       setEarliestTransactionDate(startOfMonth(earliestDate));
