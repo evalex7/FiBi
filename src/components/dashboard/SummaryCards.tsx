@@ -1,29 +1,34 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Scale, CreditCard, Landmark, Briefcase, PlusCircle, MinusCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Scale, CreditCard, Landmark, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTransactions } from '@/contexts/transactions-context';
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useFirestore, useDoc, useMemoFirebase, useUser } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, Timestamp } from 'firebase/firestore';
 import type { FamilyMember, Transaction } from '@/lib/types';
-import { Button } from '../ui/button';
 
+// Функція для безпечного конвертування у Date
+function toDate(value: Date | Timestamp | undefined): Date {
+  if (!value) return new Date();
+  if (value instanceof Timestamp) return value.toDate();
+  return value;
+}
 
 const formatCurrency = (amount: number) => {
-    if (isNaN(amount)) {
-      return '0,00 ₴';
-    }
-    return new Intl.NumberFormat('uk-UA', {
-      style: 'currency',
-      currency: 'UAH',
-    }).format(amount);
-  };
+  if (isNaN(amount)) {
+    return '0,00 ₴';
+  }
+  return new Intl.NumberFormat('uk-UA', {
+    style: 'currency',
+    currency: 'UAH',
+  }).format(amount);
+};
 
 type SummaryCardsProps = {
-    selectedPeriod: string;
+  selectedPeriod: string;
 };
 
 export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
@@ -59,7 +64,6 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       };
     }
 
-    // Period-specific calculations for income/expenses cards
     let periodStart: Date | null = null;
     let periodEnd: Date | null = null;
     
@@ -71,7 +75,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
 
     const transactionsInPeriod = transactions.filter(transaction => {
       if (selectedPeriod === 'all') return true;
-      const transactionDate = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
+      const transactionDate = toDate(transaction.date);
       return transactionDate >= periodStart! && transactionDate <= periodEnd!;
     });
     
@@ -84,17 +88,17 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
       .reduce((sum, t) => sum + t.amount, 0);
 
     // All-time calculations for balances
-    const allTimeTransactions = transactions;
-
-    const totalIncomeAllTime = allTimeTransactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0);
+    const totalIncomeAllTime = transactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
     
-    const totalExpensesAllTime = allTimeTransactions
+    const totalExpensesAllTime = transactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
       
-    const creditLimitTransactions = allTimeTransactions.filter(t => t.type === 'credit_limit').sort((a,b) => (b.date as any).toDate() - (a.date as any).toDate());
+    const creditLimitTransactions = transactions
+      .filter(t => t.type === 'credit_limit')
+      .sort((a, b) => toDate(b.date).getTime() - toDate(a.date).getTime());
     const creditLimit = creditLimitTransactions.length > 0 ? creditLimitTransactions[0].amount : 0;
     
     const pureBalance = totalIncomeAllTime - totalExpensesAllTime;
@@ -114,69 +118,62 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     };
   }, [transactions, selectedPeriod, isLoading, familyMember]);
 
-
   return (
-    <>
-      <div className="grid gap-2 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <Card className="shadow-glass-button">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
-            <CardTitle className="text-xs font-medium">Дохід (за період)</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-2 pt-0">
-            <div className={cn("text-xl font-bold", "text-green-600")}>{formatCurrency(incomeInPeriod)}</div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-glass-button">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
-            <CardTitle className="text-xs font-medium">Витрати (за період)</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-2 pt-0">
-            <div className={cn("text-xl font-bold", "text-blue-600")}>{formatCurrency(expensesInPeriod)}</div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-glass-button">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
-            <CardTitle className="text-xs font-medium">Кредитний ліміт</CardTitle>
-            <Landmark className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-2 pt-0">
-            <div className={cn("text-xl font-bold", "text-orange-500")}>{formatCurrency(creditLimit)}</div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-glass-button">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
-            <CardTitle className="text-xs font-medium">Використано кредиту</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-2 pt-0">
-            <div className={cn("text-xl font-bold", "text-orange-500")}>{formatCurrency(creditUsed)}</div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-glass-button">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
-            <CardTitle className="text-xs font-medium">Загальний залишок</CardTitle>
-            <Scale className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-2 pt-0">
-            <div className={cn("text-xl font-bold", "text-green-600")}>
-              {formatCurrency(totalBalance)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-glass-button">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
-            <CardTitle className="text-xs font-medium">Власні кошти</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-2 pt-0">
-            <div className={cn("text-xl font-bold", "text-green-600")}>
-              {formatCurrency(ownFunds)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </>
+    <div className="grid gap-2 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <Card className="shadow-glass-button">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
+          <CardTitle className="text-xs font-medium">Дохід (за період)</CardTitle>
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="p-2 pt-0">
+          <div className={cn("text-xl font-bold", "text-green-600")}>{formatCurrency(incomeInPeriod)}</div>
+        </CardContent>
+      </Card>
+      <Card className="shadow-glass-button">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
+          <CardTitle className="text-xs font-medium">Витрати (за період)</CardTitle>
+          <TrendingDown className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="p-2 pt-0">
+          <div className={cn("text-xl font-bold", "text-blue-600")}>{formatCurrency(expensesInPeriod)}</div>
+        </CardContent>
+      </Card>
+      <Card className="shadow-glass-button">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
+          <CardTitle className="text-xs font-medium">Кредитний ліміт</CardTitle>
+          <Landmark className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="p-2 pt-0">
+          <div className={cn("text-xl font-bold", "text-orange-500")}>{formatCurrency(creditLimit)}</div>
+        </CardContent>
+      </Card>
+      <Card className="shadow-glass-button">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
+          <CardTitle className="text-xs font-medium">Використано кредиту</CardTitle>
+          <CreditCard className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="p-2 pt-0">
+          <div className={cn("text-xl font-bold", "text-orange-500")}>{formatCurrency(creditUsed)}</div>
+        </CardContent>
+      </Card>
+      <Card className="shadow-glass-button">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
+          <CardTitle className="text-xs font-medium">Загальний залишок</CardTitle>
+          <Scale className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="p-2 pt-0">
+          <div className={cn("text-xl font-bold", "text-green-600")}>{formatCurrency(totalBalance)}</div>
+        </CardContent>
+      </Card>
+      <Card className="shadow-glass-button">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
+          <CardTitle className="text-xs font-medium">Власні кошти</CardTitle>
+          <Briefcase className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="p-2 pt-0">
+          <div className={cn("text-xl font-bold", "text-green-600")}>{formatCurrency(ownFunds)}</div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
