@@ -4,9 +4,12 @@
 import type { FamilyMember } from '@/lib/types';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { User } from 'lucide-react';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+
 
 type TransactionUserAvatarProps = {
-    member?: FamilyMember | null;
+    userId: string;
 }
 
 const getInitials = (name: string) => {
@@ -14,7 +17,16 @@ const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('');
 }
 
-export default function TransactionUserAvatar({ member }: TransactionUserAvatarProps) {
+export default function TransactionUserAvatar({ userId }: TransactionUserAvatarProps) {
+    const firestore = useFirestore();
+
+    const userDocRef = useMemoFirebase(() => {
+        if (!firestore || !userId) return null;
+        return doc(firestore, 'users', userId);
+    }, [firestore, userId]);
+    
+    const { data: member } = useDoc<FamilyMember>(userDocRef);
+
     if (!member) {
         return (
             <Avatar className="h-8 w-8">

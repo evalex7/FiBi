@@ -19,14 +19,6 @@ export default function TransactionListItem({
   children,
 }: TransactionListItemProps) {
   const { user } = useUser();
-  const firestore = useFirestore();
-  
-  const memberDocRef = useMemoFirebase(() => {
-    if (!firestore || !transaction.familyMemberId) return null;
-    return doc(firestore, 'users', transaction.familyMemberId);
-  }, [firestore, transaction.familyMemberId]);
-
-  const { data: member } = useDoc<FamilyMember>(memberDocRef);
 
   const isOwner = transaction.familyMemberId === user?.uid;
 
@@ -68,11 +60,11 @@ export default function TransactionListItem({
       className="relative flex items-center gap-3 px-1 sm:px-3 py-3 rounded-lg border bg-card/50 backdrop-blur-sm transition-all shadow-glow"
       style={
         {
-          '--glow-color': member?.color || 'hsl(var(--primary))',
+          '--glow-color': 'hsl(var(--primary))',
         } as React.CSSProperties
       }
     >
-      <TransactionUserAvatar member={member} />
+      {transaction.familyMemberId && <TransactionUserAvatar userId={transaction.familyMemberId} />}
       <div className="flex-grow space-y-1 min-w-0">
         <p className="font-medium truncate">{description}</p>
         <p className="text-xs text-muted-foreground">
@@ -95,5 +87,3 @@ export default function TransactionListItem({
     </div>
   );
 }
-
-    
