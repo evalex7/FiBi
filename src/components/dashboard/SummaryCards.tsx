@@ -35,7 +35,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const firestore = useFirestore();
   const { user } = useUser();
-  
+
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
@@ -66,7 +66,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
 
     let periodStart: Date | null = null;
     let periodEnd: Date | null = null;
-    
+
     if (selectedPeriod !== 'all') {
       const periodDate = parseISO(`${selectedPeriod}-01`);
       periodStart = startOfMonth(periodDate);
@@ -76,36 +76,38 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
     const transactionsInPeriod = transactions.filter(transaction => {
       if (selectedPeriod === 'all') return true;
       const transactionDate = toDate(transaction.date);
-      return transactionDate >= periodStart! && transactionDate <= periodEnd!;
+      return periodStart && periodEnd
+        ? transactionDate >= periodStart && transactionDate <= periodEnd
+        : true;
     });
-    
+
     const incomeInPeriod = transactionsInPeriod
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter((t): t is Transaction & { type: 'income' } => t.type === 'income')
+      .reduce((sum, t) => sum + (t.amount ?? 0), 0);
 
     const expensesInPeriod = transactionsInPeriod
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter((t): t is Transaction & { type: 'expense' } => t.type === 'expense')
+      .reduce((sum, t) => sum + (t.amount ?? 0), 0);
 
-    // All-time calculations for balances
     const totalIncomeAllTime = transactions
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
-    
+      .filter((t): t is Transaction & { type: 'income' } => t.type === 'income')
+      .reduce((sum, t) => sum + (t.amount ?? 0), 0);
+
     const totalExpensesAllTime = transactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
-      
+      .filter((t): t is Transaction & { type: 'expense' } => t.type === 'expense')
+      .reduce((sum, t) => sum + (t.amount ?? 0), 0);
+
     const creditLimitTransactions = transactions
-      .filter(t => t.type === 'credit_limit')
+      .filter((t): t is Transaction & { type: 'credit_limit' } => t.type === 'credit_limit')
       .sort((a, b) => toDate(b.date).getTime() - toDate(a.date).getTime());
+
     const creditLimit = creditLimitTransactions.length > 0 ? creditLimitTransactions[0].amount : 0;
-    
+
     const pureBalance = totalIncomeAllTime - totalExpensesAllTime;
-    
+
     const ownFunds = Math.max(0, pureBalance);
     const creditUsed = pureBalance < 0 ? Math.abs(pureBalance) : 0;
-    
+
     const totalBalance = ownFunds + (creditLimit - creditUsed);
 
     return {
@@ -129,6 +131,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <div className={cn("text-xl font-bold", "text-green-600")}>{formatCurrency(incomeInPeriod)}</div>
         </CardContent>
       </Card>
+
       <Card className="shadow-glass-button">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
           <CardTitle className="text-xs font-medium">Витрати (за період)</CardTitle>
@@ -138,6 +141,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <div className={cn("text-xl font-bold", "text-blue-600")}>{formatCurrency(expensesInPeriod)}</div>
         </CardContent>
       </Card>
+
       <Card className="shadow-glass-button">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
           <CardTitle className="text-xs font-medium">Кредитний ліміт</CardTitle>
@@ -147,6 +151,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <div className={cn("text-xl font-bold", "text-orange-500")}>{formatCurrency(creditLimit)}</div>
         </CardContent>
       </Card>
+
       <Card className="shadow-glass-button">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
           <CardTitle className="text-xs font-medium">Використано кредиту</CardTitle>
@@ -156,6 +161,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <div className={cn("text-xl font-bold", "text-orange-500")}>{formatCurrency(creditUsed)}</div>
         </CardContent>
       </Card>
+
       <Card className="shadow-glass-button">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
           <CardTitle className="text-xs font-medium">Загальний залишок</CardTitle>
@@ -165,6 +171,7 @@ export default function SummaryCards({ selectedPeriod }: SummaryCardsProps) {
           <div className={cn("text-xl font-bold", "text-green-600")}>{formatCurrency(totalBalance)}</div>
         </CardContent>
       </Card>
+
       <Card className="shadow-glass-button">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2">
           <CardTitle className="text-xs font-medium">Власні кошти</CardTitle>
