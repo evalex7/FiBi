@@ -11,7 +11,7 @@ import {
   Gift,
   Landmark,
   TrendingUp,
-  LucideIcon,
+  type LucideIcon,
   CircleDollarSign,
   Smartphone,
   Dog,
@@ -20,7 +20,6 @@ import {
   Shirt,
   Plane,
   HeartPulse,
-  Banknote
 } from 'lucide-react';
 import type { Category } from './types';
 
@@ -45,7 +44,6 @@ export const categoryIcons: { [key: string]: LucideIcon } = {
   'Shirt': Shirt,
   'Plane': Plane,
   'HeartPulse': HeartPulse,
-  'Banknote': Banknote,
 };
 
 export const defaultCategories: Omit<Category, 'id'| 'familyMemberId'>[] = [
@@ -53,7 +51,7 @@ export const defaultCategories: Omit<Category, 'id'| 'familyMemberId'>[] = [
   { name: 'Транспорт', icon: 'Car', type: 'expense', order: 1 },
   { name: 'Житло', icon: 'Home', type: 'expense', order: 2 },
   { name: 'Комунальні послуги', icon: 'Zap', type: 'expense', order: 3 },
-  { name: "Моб. зв'язок", icon: 'Smartphone', type: 'expense', order: 4 },
+  { name: 'Моб. зв\'язок', icon: 'Smartphone', type: 'expense', order: 4 },
   { name: 'Одяг', icon: 'Shirt', type: 'expense', order: 5 },
   { name: 'Здоров\'я та спорт', icon: 'HeartPulse', type: 'expense', order: 6 },
   { name: 'Розваги', icon: 'Clapperboard', type: 'expense', order: 7 },
@@ -62,9 +60,9 @@ export const defaultCategories: Omit<Category, 'id'| 'familyMemberId'>[] = [
   { name: 'Подорожі', icon: 'Plane', type: 'expense', order: 10 },
   { name: 'Подарунки', icon: 'Gift', type: 'expense', order: 11 },
   { name: 'Домашні улюбленці', icon: 'Dog', type: 'expense', order: 12 },
-  { name: 'Інше (витрати)', icon: 'CircleDollarSign', type: 'expense', order: 13 },
+  { name: 'Інше', icon: 'CircleDollarSign', type: 'expense', order: 13 },
   { name: 'Зарплата', icon: 'Landmark', type: 'income', order: 14 },
   { name: 'Інвестиції', icon: 'TrendingUp', type: 'income', order: 15 },
-  { name: 'Інше (дохід)', icon: 'CircleDollarSign', type: 'income', order: 16 },
-  { name: 'Кредитні операції', icon: 'Banknote', type: 'credit', order: 17 },
+  { name: 'Подарунки (дохід)', icon: 'Gift', type: 'income', order: 16 },
+  { name: 'Інше (дохід)', icon: 'CircleDollarSign', type: 'income', order: 17 },
 ];

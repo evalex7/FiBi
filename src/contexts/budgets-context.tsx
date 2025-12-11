@@ -2,10 +2,10 @@
 
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import type { Budget } from '@/lib/types';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { useCollection, WithId } from '@/firebase/firestore/use-collection';
 import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { WithId } from '@/firebase/firestore/use-collection';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 

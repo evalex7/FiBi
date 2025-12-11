@@ -24,9 +24,3 @@ export const BudgetAdjustmentSuggestionsOutputSchema = z.object({
 export type BudgetAdjustmentSuggestionsOutput = z.infer<
   typeof BudgetAdjustmentSuggestionsOutputSchema
 >;
-
-export const FamilyCreditDataSchema = z.object({
-  totalCreditLimit: z.number(),
-  totalCreditUsed: z.number(),
-});
-export type FamilyCreditData = z.infer<typeof FamilyCreditDataSchema>;

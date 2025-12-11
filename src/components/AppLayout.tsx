@@ -33,24 +33,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import TransactionForm from './dashboard/TransactionForm';
 import HeaderPaymentReminders from './dashboard/HeaderPaymentReminders';
 import SettingsForm from './settings/SettingsForm';
 
-const mainMenuItems = [
+const menuItems = [
   { href: '/dashboard', label: 'Головна', icon: Home },
   { href: '/budgets', label: 'Бюджети', icon: Target },
   { href: '/payments', label: 'Рахунки', icon: Receipt },
   { href: '/reports', label: 'Звіти', icon: AreaChart },
 ];
-
-const secondaryMenuItems = [
-    { href: '/settings', label: 'Налаштування', icon: Settings },
-];
-
-const allMenuItems = [...mainMenuItems, ...secondaryMenuItems];
 
 export default function AppLayout({
   children,
@@ -71,7 +65,6 @@ export default function AppLayout({
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [prefilledTransaction, setPrefilledTransaction] = useState<Partial<Transaction> | undefined>(undefined);
   const lastScrollY = useRef(0);
 
@@ -142,6 +135,14 @@ export default function AppLayout({
     });
     transactionHandler(payment);
   };
+  
+  const handleSettingsToggle = () => {
+    if (pathname === '/settings') {
+      router.back();
+    } else {
+      router.push('/settings');
+    }
+  };
 
   if (isMobile === null) {
       return (
@@ -196,7 +197,7 @@ export default function AppLayout({
 
   const DesktopNav = () => (
      <nav className="hidden md:flex items-center gap-1 rounded-lg bg-muted p-1">
-      {allMenuItems.map((item) => (
+      {menuItems.map((item) => (
         <Link 
           key={item.href} 
           href={item.href}
@@ -218,7 +219,7 @@ export default function AppLayout({
           isHeaderVisible ? "translate-y-0" : "translate-y-full"
       )}>
         <div className="grid h-full grid-cols-4 mx-auto font-medium">
-          {mainMenuItems.map((item) => (
+          {menuItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -243,14 +244,11 @@ export default function AppLayout({
           isMobile && !isHeaderVisible && "-translate-y-full"
         )}>
            <div className="flex items-center gap-2">
-              <Button asChild variant="ghost" size="icon" className="md:hidden">
-                <Link href="/settings">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Налаштування</span>
-                </Link>
+               <Button variant="ghost" size="icon" onClick={handleSettingsToggle}>
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Відкрити/закрити налаштування</span>
               </Button>
-              
-              <Link href="/dashboard" className="hidden items-center gap-2 font-semibold md:flex">
+              <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                 <Logo className="h-6 w-6" />
                 <span className={cn("text-lg", isMobile && "hidden sm:inline")}>Сімейні фінанси</span>
               </Link>
@@ -264,9 +262,25 @@ export default function AppLayout({
                 
                 <HeaderPaymentReminders onPayClick={handleOpenTransactionForm} />
                 
-                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => setIsProfileOpen(true)}>
-                  <UserAvatar />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                     <Button variant="ghost" size="icon" className="rounded-full h-10 w-10">
+                      <UserAvatar />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-80 p-4" align="end">
+                    <DropdownMenuLabel>
+                      Профіль
+                    </DropdownMenuLabel>
+                     <DropdownMenuSeparator />
+                     <SettingsForm />
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="focus:bg-destructive/80 focus:text-destructive-foreground">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Вийти</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </header>
 
@@ -274,22 +288,6 @@ export default function AppLayout({
             {children}
         </main>
         {isMobile && <MobileBottomNav />}
-
-        <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Профіль</DialogTitle>
-                    <DialogDescription>Керуйте налаштуваннями вашого профілю.</DialogDescription>
-                </DialogHeader>
-                <SettingsForm />
-                <DialogFooter>
-                    <Button variant="outline" onClick={handleLogout} className="w-full">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Вийти
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
 
         <Dialog open={isAddTransactionOpen} onOpenChange={setIsAddTransactionOpen}>
             <DialogContent>

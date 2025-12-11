@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import {
@@ -111,13 +113,6 @@ type CustomTooltipPayload = {
   left: number;
 };
 
-const getDateFromTimestamp = (date: Date | Timestamp): Date => {
-  if (date instanceof Timestamp) {
-    return date.toDate();
-  }
-  return new Date(date);
-};
-
 export default function ReportsPage() {
   const { transactions, isLoading: isTransactionsLoading } = useTransactions();
   const { categories, isLoading: isCategoriesLoading } = useCategories();
@@ -142,7 +137,7 @@ export default function ReportsPage() {
   useEffect(() => {
     if (transactions.length > 0) {
       const earliestDate = transactions.reduce((earliest, t) => {
-        const transactionDate = getDateFromTimestamp(t.date);
+        const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
         return transactionDate < earliest ? transactionDate : earliest;
       }, new Date());
       setEarliestTransactionDate(startOfMonth(earliestDate));
@@ -213,7 +208,7 @@ export default function ReportsPage() {
 
     const transactionsInPeriod = transactions.filter(t => {
       if (!startDate || !endDate) return true;
-      const transactionDate = getDateFromTimestamp(t.date);
+      const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
       return transactionDate >= startDate && transactionDate <= endDate;
     });
 
@@ -236,7 +231,7 @@ export default function ReportsPage() {
       name: 'Витрати',
       expenses: expensesInPeriod,
     }];
-  }, [filteredTransactions, period, isLoading, earliestTransactionDate, transactions]);
+  }, [filteredTransactions, period, isLoading, earliestTransactionDate]);
   
   const { data: categoryData, config: pieChartConfig } = useMemo(() => {
     if (isLoading) return { data: [], config: {} };
@@ -267,7 +262,7 @@ export default function ReportsPage() {
       .filter((t) => {
         if (t.type !== 'expense') return false;
         if (startDate && endDate) {
-             const transactionDate = getDateFromTimestamp(t.date);
+             const transactionDate = t.date && (t.date as Timestamp).toDate ? (t.date as Timestamp).toDate() : new Date(t.date);
              return transactionDate >= startDate && transactionDate <= endDate;
         }
         return true;
@@ -308,7 +303,7 @@ export default function ReportsPage() {
     }
     
     const relevantTransactions = transactions.filter(t => {
-      const transactionDate = getDateFromTimestamp(t.date);
+      const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
       return transactionDate >= startDate && transactionDate <= endDate;
     });
 
@@ -326,7 +321,7 @@ export default function ReportsPage() {
 
         relevantTransactions.forEach(t => {
             if (t.type === 'income' || t.type === 'expense') {
-                const transactionDate = getDateFromTimestamp(t.date);
+                const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
                 const monthKey = format(transactionDate, 'yyyy-MM');
                 if (monthlyData[monthKey]) {
                     if (t.type === 'income') {
@@ -348,7 +343,7 @@ export default function ReportsPage() {
     const dailyTotals: { [key: string]: { income: number, expenses: number } } = {};
     relevantTransactions.forEach(t => {
         if (t.type === 'income' || t.type === 'expense') {
-            const dayKey = format(getDateFromTimestamp(t.date), 'yyyy-MM-dd');
+            const dayKey = format(t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date), 'yyyy-MM-dd');
             if (!dailyTotals[dayKey]) {
                 dailyTotals[dayKey] = { income: 0, expenses: 0 };
             }
@@ -407,7 +402,7 @@ const { data: categoryTrendData, config: categoryTrendConfig, categories: catego
   
     filteredTransactions.forEach(t => {
         if (t.type === 'expense') {
-            const transactionDate = getDateFromTimestamp(t.date);
+            const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
             if (transactionDate >= startDate && transactionDate <= endDate) {
                 const monthKey = format(transactionDate, 'yyyy-MM');
                 if (dataByMonth[monthKey]) {
@@ -453,7 +448,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
     const currentDayOfMonth = getDate(now);
 
     const transactionsThisMonth = transactions.filter(t => {
-      const transactionDate = getDateFromTimestamp(t.date);
+      const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
       return transactionDate >= startDate && transactionDate <= endDate;
     });
 
@@ -487,7 +482,7 @@ const { dailyVaseData, dailyVaseConfig, dailyBudget, averageDailyExpense, maxDai
     const data = daysInMonth.map(day => {
         const expensesForDay = transactions
             .filter(t => {
-                const transactionDate = getDateFromTimestamp(t.date);
+                const transactionDate = t.date instanceof Timestamp ? t.date.toDate() : new Date(t.date);
                 return (t.type === 'expense') && startOfDay(transactionDate).getTime() === startOfDay(day).getTime();
             });
 

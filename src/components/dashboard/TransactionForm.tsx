@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,7 +27,7 @@ import {
   DialogClose,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock, Landmark } from 'lucide-react';
+import { Calendar as CalendarIcon, PlusCircle, Pencil, Calculator, Copy, Lock, Unlock, TrendingUp, TrendingDown, Landmark, CreditCard } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -40,13 +41,6 @@ import { Timestamp } from 'firebase/firestore';
 import ReceiptCalculator from './ReceiptCalculator';
 import { Switch } from '../ui/switch';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-// Хелпер для безпечного перетворення у Date
-const toDate = (value?: Date | Timestamp | null): Date => {
-  if (!value) return new Date();
-  if ('toDate' in value) return value.toDate();
-  return value;
-};
 
 type TransactionFormProps = {
   transaction?: Transaction;
@@ -69,35 +63,38 @@ export default function TransactionForm({
   const isMobile = useIsMobile();
 
   const isEditMode = !!transaction && !isCopy;
-
+  
   const getInitialType = (): Transaction['type'] => {
     if (initialValues?.type) return initialValues.type;
     if (isEditMode && transaction?.type) return transaction.type;
     return 'expense';
   };
-
+  
   const getInitialTypeGroup = (): TransactionTypeGroup => {
     const currentType = getInitialType();
     if (currentType === 'income') return 'income';
     if (currentType === 'expense') return 'expense';
     return 'credit';
-  };
+  }
 
   const [type, setType] = useState<Transaction['type']>(getInitialType());
   const [typeGroup, setTypeGroup] = useState<TransactionTypeGroup>(getInitialTypeGroup());
-
+  
   const valuesToSet = isEditMode ? transaction : (isCopy ? transaction : initialValues);
 
-  const [date, setDate] = useState<Date>(toDate(valuesToSet?.date));
+  const [date, setDate] = useState<Date | undefined>(
+      valuesToSet?.date instanceof Timestamp ? valuesToSet.date.toDate() : (valuesToSet?.date ? new Date(valuesToSet.date as any) : new Date())
+  );
   const [amount, setAmount] = useState(String(valuesToSet?.amount || ''));
   const [description, setDescription] = useState(valuesToSet?.description || '');
   const [category, setCategory] = useState(valuesToSet?.category || '');
   const [isPrivate, setIsPrivate] = useState(valuesToSet?.isPrivate || false);
-
+  
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
+    // When initialValues are provided, set the type and group
     if (initialValues?.type) {
       setType(initialValues.type);
       if (['credit_limit'].includes(initialValues.type)) {
@@ -109,16 +106,17 @@ export default function TransactionForm({
   }, [initialValues]);
 
   useEffect(() => {
+    // When type group changes, reset specific type and category
     if (isEditMode || isCopy) return;
-
+    
     if (typeGroup === 'credit') {
-      setType('credit_limit');
+        setType('credit_limit'); // Default to credit limit
     } else {
-      setType(typeGroup);
+        setType(typeGroup);
     }
     setCategory('');
   }, [typeGroup, isEditMode, isCopy]);
-
+  
   const categoryTypeMap: Record<Transaction['type'], 'income' | 'expense' | 'credit'> = {
     income: 'income',
     expense: 'expense',
@@ -128,6 +126,7 @@ export default function TransactionForm({
   const categories = availableCategories
     .filter((c) => c.type === categoryTypeMap[type])
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,58 +204,63 @@ export default function TransactionForm({
       </>
     );
   };
-
+  
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
         <div className="flex justify-between items-center">
-          <div className="grid gap-2 w-full">
-            <Label>Тип</Label>
-            <RadioGroup
-              className="flex gap-2 sm:gap-4 flex-wrap"
-              value={typeGroup}
-              onValueChange={(value: TransactionTypeGroup) => setTypeGroup(value)}
-            >
-              <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
-                <RadioGroupItem value="expense" />
-                <span>Витрата</span>
-              </Label>
-              <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
-                <RadioGroupItem value="income" />
-                <span>Дохід</span>
-              </Label>
-              <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
-                <RadioGroupItem value="credit" />
-                <span>Кредит</span>
-              </Label>
-            </RadioGroup>
-          </div>
+            <div className="grid gap-2 w-full">
+                <Label>Тип</Label>
+                <RadioGroup
+                className="flex gap-2 sm:gap-4 flex-wrap"
+                value={typeGroup}
+                onValueChange={(value: TransactionTypeGroup) => setTypeGroup(value)}
+                >
+                    <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
+                        <RadioGroupItem value="expense" />
+                        <span>Витрата</span>
+                    </Label>
+                    <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
+                        <RadioGroupItem value="income" />
+                        <span>Дохід</span>
+                    </Label>
+                    <Label className="flex items-center space-x-2 cursor-pointer text-sm sm:text-base">
+                        <RadioGroupItem value="credit" />
+                        <span>Кредит</span>
+                    </Label>
+                </RadioGroup>
+            </div>
         </div>
 
         {typeGroup === 'credit' && (
-          <div className="grid gap-2">
-            <Label htmlFor="credit-type">Тип кредитної операції</Label>
-            <Select required value={type} onValueChange={(value: Transaction['type']) => setType(value)} disabled>
-              <SelectTrigger>
-                <SelectValue placeholder="Оберіть тип операції" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="credit_limit">
-                  <div className="flex items-center gap-2">
-                    <Landmark className="h-4 w-4 text-blue-500" />
-                    <span>Встановити/Оновити ліміт</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="grid gap-2">
+                <Label htmlFor="credit-type">Тип кредитної операції</Label>
+                 <Select required value={type} onValueChange={(value: Transaction['type']) => setType(value)} disabled>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Оберіть тип операції" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="credit_limit">
+                             <div className="flex items-center gap-2">
+                                <Landmark className="h-4 w-4 text-blue-500" />
+                                <span>Встановити/Оновити ліміт</span>
+                            </div>
+                        </SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
         )}
 
         <div className="flex items-center space-x-2">
-          {isPrivate ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-          <Label htmlFor="is-private">Особиста</Label>
-          <Switch id="is-private" checked={isPrivate} onCheckedChange={setIsPrivate} />
+            {isPrivate ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+            <Label htmlFor="is-private">Особиста</Label>
+            <Switch
+            id="is-private"
+            checked={isPrivate}
+            onCheckedChange={setIsPrivate}
+            />
         </div>
+
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="grid gap-2">
@@ -291,61 +295,73 @@ export default function TransactionForm({
 
           <div className="grid gap-2">
             <Label htmlFor="date">Дата</Label>
-            {isMobile ? (
-              <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    type="button"
-                    onClick={() => setIsCalendarOpen(true)}
-                    className={cn('w-full justify-start text-left font-normal', !date && 'text-muted-foreground')}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="p-0 w-auto" showCloseButton={false}>
-                  <DialogHeader className="hidden">
-                    <DialogTitle>Оберіть дату</DialogTitle>
-                  </DialogHeader>
-                  <div className="flex justify-center pt-8">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={(d) => d && setDate(d)}
-                      initialFocus
-                      locale={uk}
-                    />
-                  </div>
-                  <DialogFooter className="p-4 pt-0">
-                    <DialogClose asChild>
-                      <Button type="button" className="w-full">Готово</Button>
-                    </DialogClose>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            ) : (
-              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    type="button"
-                    className={cn('w-full justify-start text-left font-normal', !date && 'text-muted-foreground')}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(d) => d && setDate(d)}
-                    initialFocus
-                    locale={uk}
-                  />
-                </PopoverContent>
-              </Popover>
+            {isMobile === true && (
+                <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <DialogTrigger asChild>
+                        <Button
+                            variant={'outline'}
+                            type="button"
+                            onClick={() => setIsCalendarOpen(true)}
+                            className={cn(
+                                'w-full justify-start text-left font-normal',
+                                !date && 'text-muted-foreground'
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="p-0 w-auto" showCloseButton={false}>
+                       <DialogHeader className="hidden">
+                           <DialogTitle>Оберіть дату</DialogTitle>
+                       </DialogHeader>
+                        <div className="flex justify-center pt-8">
+                            <Calendar
+                                mode="single"
+                                selected={date}
+                                onSelect={(selectedDate) => {
+                                    setDate(selectedDate);
+                                }}
+                                initialFocus
+                                locale={uk}
+                            />
+                        </div>
+                        <DialogFooter className="p-4 pt-0">
+                           <DialogClose asChild>
+                                <Button type="button" className="w-full">Готово</Button>
+                           </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
+            {isMobile === false && (
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <PopoverTrigger asChild>
+                         <Button
+                            variant={'outline'}
+                            type="button"
+                            className={cn(
+                                'w-full justify-start text-left font-normal',
+                                !date && 'text-muted-foreground'
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date ? format(date, 'PPP', { locale: uk }) : <span>Оберіть дату</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={(selectedDate) => {
+                                setDate(selectedDate);
+                                setIsCalendarOpen(false);
+                            }}
+                            initialFocus
+                            locale={uk}
+                        />
+                    </PopoverContent>
+                </Popover>
             )}
           </div>
         </div>
@@ -361,14 +377,11 @@ export default function TransactionForm({
           />
         </div>
 
+        
         {typeGroup !== 'credit' && (
           <div className="grid gap-2">
             <Label htmlFor="category">Категорія</Label>
-            <Select
-              required={typeGroup === 'income' || typeGroup === 'expense'}
-              value={category}
-              onValueChange={setCategory}
-            >
+            <Select required={typeGroup !== 'credit'} value={category} onValueChange={setCategory}>
               <SelectTrigger>
                 <SelectValue placeholder="Оберіть категорію" />
               </SelectTrigger>
