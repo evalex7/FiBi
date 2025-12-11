@@ -234,7 +234,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   };
 
   return (
-    <Card className="bg-card/50 backdrop-blur-sm shadow-glow" style={{ '--glow-color': 'hsl(var(--card))' } as React.CSSProperties}>
+    <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
             <div>

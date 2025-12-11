@@ -57,12 +57,7 @@ export default function TransactionListItem({
 
   return (
     <div
-      className="relative flex items-center gap-3 px-1 sm:px-3 py-3 rounded-lg border bg-card/50 backdrop-blur-sm transition-all shadow-glow"
-      style={
-        {
-          '--glow-color': 'hsl(var(--primary))',
-        } as React.CSSProperties
-      }
+      className="relative flex items-center gap-3 px-1 sm:px-3 py-3 rounded-lg border bg-card"
     >
       {transaction.familyMemberId && <TransactionUserAvatar userId={transaction.familyMemberId} />}
       <div className="flex-grow space-y-1 min-w-0">
