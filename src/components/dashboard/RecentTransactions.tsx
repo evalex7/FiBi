@@ -1,8 +1,6 @@
-
-
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -15,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { categoryIcons } from '@/lib/category-icons';
 import { cn } from '@/lib/utils';
-import { format, startOfMonth, endOfMonth, parseISO, startOfDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfDay } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { useTransactions } from '@/contexts/transactions-context';
 import { Button } from '../ui/button';
@@ -29,7 +27,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import TransactionForm from './TransactionForm';
 
-import type { Transaction, FamilyMember } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +39,7 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useCategories } from '@/contexts/categories-context';
 import TransactionUserAvatar from './TransactionUserAvatar';
 import { Input } from '../ui/input';
@@ -50,7 +48,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import TransactionListItem from './TransactionListItem';
-
+import { Timestamp } from 'firebase/firestore';
 
 type FormattedTransaction = Transaction & { formattedAmount: string };
 
@@ -58,6 +56,13 @@ type RecentTransactionsProps = {
   selectedPeriod: string;
   onAddTransaction: () => void;
 };
+
+// Функція-конвертер для безпечної роботи з Firestore Timestamp
+function toDate(value: Date | Timestamp | undefined): Date {
+  if (!value) return new Date();
+  if (value instanceof Timestamp) return value.toDate();
+  return value;
+}
 
 export default function RecentTransactions({ selectedPeriod, onAddTransaction }: RecentTransactionsProps) {
   const { transactions, deleteTransaction, isLoading } = useTransactions();
@@ -75,9 +80,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterDate, setFilterDate] = useState<Date | undefined>();
   
-  const canEditOrDelete = (transaction: Transaction) => {
-    return transaction.familyMemberId === user?.uid;
-  };
+  const canEditOrDelete = (transaction: Transaction) => transaction.familyMemberId === user?.uid;
 
   const getTransactionInfo = (transaction: Transaction) => {
     const isOwner = transaction.familyMemberId === user?.uid;
@@ -111,12 +114,12 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
       // 1. Filter by Period (Month or All)
       let filteredByPeriod = formatted.filter(t => {
         if (selectedPeriod === 'all') return true;
-        
-        const periodDate = parseISO(`${selectedPeriod}-01`);
+
+        const periodDate = toDate(new Date(`${selectedPeriod}-01`));
         const periodStart = startOfMonth(periodDate);
         const periodEnd = endOfMonth(periodDate);
 
-        const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
+        const transactionDate = toDate(t.date);
         return transactionDate >= periodStart && transactionDate <= periodEnd;
       });
 
@@ -135,18 +138,17 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
       if (filterDate) {
         const dayStart = startOfDay(filterDate);
         filteredBySearch = filteredBySearch.filter(t => {
-          const transactionDate = t.date && (t.date as any).toDate ? (t.date as any).toDate() : new Date(t.date);
+          const transactionDate = toDate(t.date);
           return startOfDay(transactionDate).getTime() === dayStart.getTime();
         });
       }
 
+      const newSorted = [...filteredBySearch].sort((a, b) => {
+        const dateA = toDate(a.date);
+        const dateB = toDate(b.date);
+        return dateB.getTime() - dateA.getTime();
+      });
 
-      const newSorted = [...filteredBySearch]
-        .sort((a, b) => {
-            const dateA = a.date && (a.date as any).toDate ? (a.date as any).toDate() : new Date(a.date);
-            const dateB = b.date && (b.date as any).toDate ? (b.date as any).toDate() : new Date(b.date);
-            return dateB.getTime() - dateA.getTime();
-        });
       setSortedTransactions(newSorted);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -167,12 +169,12 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
   const handleEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
     setTransactionToCopy(null);
-  }
+  };
   
   const closeForms = () => {
     setEditingTransaction(null);
     setTransactionToCopy(null);
-  }
+  };
 
   const TransactionActions = ({ transaction }: { transaction: Transaction }) => {
     return (
@@ -219,7 +221,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
       ))}
     </div>
   );
-  
+
   const getAmountColor = (type: Transaction['type']) => {
     switch (type) {
       case 'income':
@@ -316,16 +318,14 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
             {/* Mobile View */}
             <div className="md:hidden">
               <div className="space-y-2">
-                {sortedTransactions.map((transaction) => {
-                  return (
+                {sortedTransactions.map((transaction) => (
                     <TransactionListItem
                       key={transaction.id}
                       transaction={transaction}
                     >
                       <TransactionActions transaction={transaction} />
                     </TransactionListItem>
-                  );
-                })}
+                ))}
               </div>
             </div>
 
@@ -347,7 +347,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                      const { description, category, amountDisplay, isMasked } = getTransactionInfo(transaction);
                      const categoryInfo = category ? categories.find(c => c.name === category) : null;
                      const Icon = categoryInfo ? categoryIcons[categoryInfo.icon] : null;
-                    const date = transaction.date && (transaction.date as any).toDate ? (transaction.date as any).toDate() : new Date(transaction.date);
+                     const date = toDate(transaction.date);
 
                     return (
                       <TableRow key={transaction.id}>
@@ -362,11 +362,9 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                               {category}
                             </Badge>
                           )}
-                           {isMasked && <Badge variant="outline">***</Badge>}
+                          {isMasked && <Badge variant="outline">***</Badge>}
                         </TableCell>
-                        <TableCell>
-                          {format(date, 'd MMM, yyyy', { locale: uk })}
-                        </TableCell>
+                        <TableCell>{format(date, 'd MMM, yyyy', { locale: uk })}</TableCell>
                         <TableCell
                           className={cn(
                             'text-right font-medium',
@@ -389,23 +387,23 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
           </>
         )}
       </CardContent>
-      
+
       <Dialog open={!!editingTransaction || !!transactionToCopy} onOpenChange={(isOpen) => !isOpen && closeForms()}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{editingTransaction ? 'Редагувати' : 'Копіювати'} транзакцію</DialogTitle>
-                    <DialogDescription>
-                    {editingTransaction ? 'Оновіть деталі вашої транзакції.' : 'Створіть нову транзакцію на основі існуючої.'}
-                    </DialogDescription>
-                </DialogHeader>
-                <TransactionForm
-                    transaction={editingTransaction || transactionToCopy || undefined}
-                    onSave={closeForms}
-                    isCopy={!!transactionToCopy}
-                />
-            </DialogContent>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{editingTransaction ? 'Редагувати' : 'Копіювати'} транзакцію</DialogTitle>
+                <DialogDescription>
+                  {editingTransaction ? 'Оновіть деталі вашої транзакції.' : 'Створіть нову транзакцію на основі існуючої.'}
+                </DialogDescription>
+            </DialogHeader>
+            <TransactionForm
+                transaction={editingTransaction || transactionToCopy || undefined}
+                onSave={closeForms}
+                isCopy={!!transactionToCopy}
+            />
+        </DialogContent>
       </Dialog>
-      
+
       <AlertDialog open={!!transactionToDelete} onOpenChange={(isOpen) => !isOpen && setTransactionToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -423,5 +421,3 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
     </Card>
   );
 }
-
-    
