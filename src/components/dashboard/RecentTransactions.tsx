@@ -352,7 +352,7 @@ export default function RecentTransactions({ selectedPeriod, onAddTransaction }:
                     return (
                       <TableRow key={transaction.id}>
                         <TableCell>
-                          <TransactionUserAvatar userId={transaction.familyMemberId} />
+                          <TransactionUserAvatar userId={transaction.familyMemberId!} />
                         </TableCell>
                         <TableCell className="font-medium">{description}</TableCell>
                         <TableCell>
