@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTransactions } from '@/contexts/transactions-context';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
-import { Timestamp } from 'firebase/firestore'; // якщо використовуєш Firestore
+import { Timestamp } from 'firebase/firestore';
 
 type MonthSelectorProps = {
   selectedPeriod: string;
@@ -39,4 +39,49 @@ export default function MonthSelector({ selectedPeriod, onPeriodChange }: MonthS
         const transactionDate = toDate(t.date);
         const monthKey = format(transactionDate, 'yyyy-MM');
         if (!existingMonths.has(monthKey)) {
-          options.push(
+          options.push({
+            value: monthKey,
+            label: format(transactionDate, 'LLLL yyyy', { locale: uk }),
+          });
+          existingMonths.add(monthKey);
+        }
+      });
+    }
+
+    // Сортування за спаданням
+    options.sort((a, b) => b.value.localeCompare(a.value));
+
+    // Опція "За весь час"
+    options.push({ value: 'all', label: 'За весь час' });
+
+    return options;
+  }, [transactions]);
+
+  // Перевірка валідності обраного періоду
+  useEffect(() => {
+    if (!isLoading && selectedPeriod && !periodOptions.some(opt => opt.value === selectedPeriod)) {
+      onPeriodChange(format(new Date(), 'yyyy-MM'));
+    }
+  }, [isLoading, selectedPeriod, periodOptions, onPeriodChange]);
+
+  const handlePeriodChange = (value: string) => {
+    onPeriodChange(value);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Select value={selectedPeriod} onValueChange={handlePeriodChange} disabled={isLoading}>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Оберіть період" />
+        </SelectTrigger>
+        <SelectContent>
+          {periodOptions.map(option => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
